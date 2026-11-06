@@ -76,7 +76,7 @@ window.PK.scenes.hook = function (ctx, t, d, info) {
   // ---- camera: sinking down the line -> establishing frame (on '90미터,') -> slow push -> push into the ring ----
   const pD = P(t, -.45, tDep + .3, E.inOutQ), pPush = P(t, tJam - .3, tCut, E.inOutQ), pIn = P(t, tCut + .5, d + .05, E.inOutC);
   const chest0 = LM.diver(null, DX, dY, DS, tCut, Object.assign({}, dOpt, { adj: { T: .92, h: .22 } })).chest;
-  let cx = lerp(735, 540, pD), cy = lerp(420, 960, pD), z = lerp(1.45, 1, pD), ax = 540, ay = 960;
+  let cx = lerp(585, 540, pD), cy = lerp(585, 960, pD), z = lerp(1.34, 1, pD), ax = 540, ay = 960;
   cx = lerp(cx, 600, pPush * .5); cy = lerp(cy, 860, pPush * .5); z *= 1 + .1 * pPush;
   ax = lerp(ax, RING.x, pIn); ay = lerp(ay, RING.y, pIn); cx = lerp(cx, chest0[0], pIn); cy = lerp(cy, chest0[1], pIn); z = lerp(z, RING.r / 150, pIn);
   const dr = { x: fb(t * .35, 41) * 10, y: fb(t * .3, 50) * 10, r: fb(t * .25, 45) * .004 };
@@ -84,7 +84,7 @@ window.PK.scenes.hook = function (ctx, t, d, info) {
   const kick = after ? .05 * Math.exp(-cutU * 7) : 0;
   const C = { ax, ay, cx, cy, z: z * (1 + kick) };
   // vertical camera speed (screen px/s) for the silt streaks
-  const camY = tt => { const q = P(tt, -.45, tDep + .3, E.inOutQ); return lerp(420, 960, q) * lerp(1.45, 1, q); };
+  const camY = tt => { const q = P(tt, -.45, tDep + .3, E.inOutQ); return lerp(585, 960, q) * lerp(1.34, 1, q); };
   const vy = (camY(t + .02) - camY(t - .02)) / .04;
   const cY = camY(t);
 
@@ -103,8 +103,10 @@ window.PK.scenes.hook = function (ctx, t, d, info) {
 
   ctx.save();
   ctx.translate(C.ax + sk.x + jo.x + dr.x, C.ay + sk.y + jo.y + dr.y); ctx.rotate(sk.r + dr.r); ctx.scale(C.z, C.z); ctx.translate(-C.cx, -C.cy);
-  LM.seabed(ctx, SY - 6, tm, { dark: darkK, lights: wl, seed: 4 });
-  LM.structure(ctx, SX, SY, SS, tm, { lights: wl, amb: lerp(.08, .03, P(t, tCut, tCut + .4)) });
+  const stA = 1 - P(pIn, .35, .8);
+  if (stA > 0) LM.seabed(ctx, SY - 6, tm, { dark: darkK, lights: wl, seed: 4 });
+  // (the structure sinks into the black as the camera pushes into the ring; skipped once gone: it is costly at zoom 2)
+  if (stA > 0) LM.structure(ctx, SX, SY, SS, tm, { lights: wl, amb: lerp(.08, .03, P(t, tCut, tCut + .4)), a: stA });
   // dust puff where the line grinds on the bucket lip
   if (pull > .05) for (let i = 0; i < 10; i++) {
     const u = ((t * 1.3 + hi(i * 7)) % 1), px = hook[0] + (hi(i * 3) - .3) * 40 + u * 30 * (hi(i * 5) - .5), py = hook[1] + 8 + u * 46 * hi(i * 11);
