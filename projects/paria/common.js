@@ -263,6 +263,15 @@ function clipStage(ctx, t, d, info, { who = '', where = '', seed = 3, k = .9, wa
 Object.assign(window.PK, { K, at, water, shafts, bubbles, silt, pipeSide, pipeInside, diver, chip, sourceCard, waveBars, topTitle, lerp2,
   beat, dark, souls, tube, gapMeter, suffocate, site, clipStage });
 
+// cover (render.cjs --cover): big two-line title over the hook frame
+window.COVER = function (ctx, TL) {
+  const g = ctx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, 'rgba(0,0,0,.78)'); g.addColorStop(.3, 'rgba(0,0,0,.25)'); g.addColorStop(.62, 'rgba(0,0,0,.2)'); g.addColorStop(1, 'rgba(0,0,0,.85)');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  chip(ctx, '실화 · 2022 트리니다드 토바고', 540, 300, 1, { size: 36, color: '#ffd9a0', border: 'rgba(255,180,90,.5)' });
+  text(ctx, '송유관에 빨려 들어간', 540, 1290, { size: 96, family: FONT.disp, weight: 400, color: '#fff', stroke: '#000', strokeW: 16 });
+  text(ctx, '잠수부 5명', 540, 1410, { size: 128, family: FONT.disp, weight: 400, color: '#fff', stroke: '#000', strokeW: 18 });
+  text(ctx, '살아 나온 건 단 1명', 540, 1545, { size: 96, family: FONT.disp, weight: 400, color: C.yellow, stroke: '#000', strokeW: 16 });
+};
 window.PROJECT = {
   scenes: window.PK.scenes,
   // warm up lazily-built textures/sprites once so the first frame of each scene is not a slow outlier
