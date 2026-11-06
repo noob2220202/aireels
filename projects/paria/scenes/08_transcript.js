@@ -155,7 +155,7 @@ window.PK.scenes.transcript = function (ctx, t, d, info) {
   // the lights
   const A = [];
   for (let i = 0; i < 5; i++) {
-    let a = i < 2 ? .58 : i < 4 ? .4 : .2;
+    let a = i < 2 ? .58 : .4;
     if (i < 2) a += .32 * spk[i] + .3 * swell[i];
     if (i === 1) a += .9 * glint(XS[1]);
     if (i < 4) a *= (.93 + .07 * nz(t * 6, i + 20)) * (hi(f + i * 31) > .985 ? .7 : 1);   // the fifth stays steady

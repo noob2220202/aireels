@@ -128,7 +128,7 @@ window.PK.scenes.decision = function (ctx, t, d, info) {
     const x = xAt(i, t), g = gapAt(x), m = mvg(i, t);
     let y = Math.min(surf(x) - 24, topY(x) + .45 * g) + nz(t * (1.2 + 3 * riseV), i + 3) * (1.5 + 5 * riseV) - 4 * m;
     y = Math.max(y, topY(x) + 14);
-    let a = i < 4 ? .84 * (.9 + .1 * nz(t * 7, i + 9)) * (hi(Math.floor(t * 14) + i * 97) > .95 ? .75 : 1) : .22;
+    let a = i < 4 ? .84 * (.9 + .1 * nz(t * 7, i + 9)) * (hi(Math.floor(t * 14) + i * 97) > .95 ? .75 : 1) : .5;
     if (i === 0) a *= 1 + .18 * Math.exp(-Math.pow((t - tB + .05) / .25, 2)) + .1 * m;
     const cover = i < 4 ? 1 - clamp((g - 10) / 26) : 0;               // a crest has reached the crown here
     a *= 1 - .5 * cover;

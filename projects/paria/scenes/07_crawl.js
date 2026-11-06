@@ -195,7 +195,7 @@ window.PK.scenes.crawl = function (ctx, t, d, info) {
     let a;
     if (i < 2) a = .86;
     else if (i < 4) a = lerp(.2, .82, P(t, .25 + (i - 2) * .25, 1.5 + (i - 2) * .2, E.inOutQ));
-    else a = .24;                                             // the fifth: dim, apart, unchanged
+    else a = .5;                                              // the fifth: dim, apart, unchanged
     if (i < 4) a *= (.9 + .1 * nz(t * 7, i + 9)) * (hi(Math.floor(t * 14) + i * 97) > .95 ? .72 : 1) * (1 + .12 * m);
     L5.push({ x, y, a: clamp(a), s: i < 4 ? lerp(.62, 1, clamp((a - .2) / .6)) : .5, m });
   }
