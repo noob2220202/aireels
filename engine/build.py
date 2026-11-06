@@ -363,7 +363,8 @@ def step_tts(P):
     if V.get('clone_ref') and not os.environ.get('AIREELS_NO_CLONE'):
         ref = (ROOT / V['clone_ref']).resolve()
         steps = int(V.get('clone_steps', 25))
-        tag = hashlib.sha1(ref.read_bytes()).hexdigest()[:8] + f'_{steps}'
+        f0 = bool(V.get('clone_f0'))
+        tag = hashlib.sha1(ref.read_bytes()).hexdigest()[:8] + f'_{steps}' + ('_f0' if f0 else '')
         todo = []
         for v in voice:
             src = B / v['file']
@@ -374,7 +375,7 @@ def step_tts(P):
         if todo:
             print(f'voice clone: converting {len(todo)} clip(s) to {ref.name} (CPU, takes a while)')
             subprocess.run([str(ROOT / '.vendor' / 'vcenv' / 'bin' / 'python'), str(ROOT / 'engine' / 'voice_convert.py'),
-                            '--ref', str(ref), '--steps', str(steps), *todo], check=True)
+                            '--ref', str(ref), '--steps', str(steps), *(['--f0'] if f0 else []), *todo], check=True)
     TL = {'duration': round(cursor, 3), 'fps': S.get('fps', 30), 'scenes': scenes, 'subs': subs, 'voice': voice,
           'sfx': sfx + [dict(c) for c in S.get('global_sfx', [])], 'music': S.get('music', {}), 'title': S.get('title', {}),
           'voice_db': S.get('voice_db', 0), 'voice_match': S.get('voice_match'), 'sfx_rel_db': S.get('sfx_rel_db', 12), 'meta': S.get('meta', {})}

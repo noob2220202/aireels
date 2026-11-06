@@ -12,3 +12,4 @@ assets/fonts/*.ttf
 assets/voices/
 .vendor/
 projects/_klimt_preview/
+projects/_klimt_C/
