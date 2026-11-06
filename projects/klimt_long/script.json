@@ -1,11 +1,12 @@
 {
   "name": "klimt_wall_long",
   "voice": {
-    "name": "ko-KR-InJoonNeural",
-    "rate": "+17%",
-    "pitch": "-2Hz",
+    "name": "ko-KR-HyunsuMultilingualNeural",
+    "rate": "+18%",
+    "pitch": "+0Hz",
     "clone_ref": "assets/voices/my_voice_ref15.wav",
-    "clone_steps": 30
+    "clone_steps": 30,
+    "clone_f0": true
   },
   "start_pad": 0.08,
   "end_pad": 1.4,
@@ -612,7 +613,7 @@
     },
     {
       "id": "letter",
-      "say": "곧 자기들이 훔쳤다가 선물로 돌려줬다는 편지가 신문사에 왔지만 확인된 건 없다.",
+      "say": "곧 자기들이 훔쳤다가 선물로 돌려주었다는 편지가 신문사에 왔지만 확인된 건 없다.",
       "hl": [
         "선물로",
         "없다"
