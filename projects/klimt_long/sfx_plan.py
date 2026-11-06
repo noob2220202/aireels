@@ -59,7 +59,7 @@ S['scenes'][-1]['sfx'][-1]['from'] = 'voice_end'
 def Wa(scene, *c):
     w = W(scene, *c); return f"@{scene}:{w}" if w else f"@{scene}+1.5"
 S['music'] = {
-  "style": "calm", "bpm": 70, "rel_db": -15, "duck": 0.3, "ticks": False,
+  "style": "calm", "bpm": 70, "rel_db": -13, "duck": 0.3, "ticks": False,
   "intensity": [[0, .75], ["@culprit", .6], ["@y1996", .3], ["@xray", .42], ["@vanish", .55], ["@roof", .4], ["@staff", .5], ["@fake", .55], ["@dna", .6],
                 ["@found", .5], ["@bag", .82], ["@verdict", .95], ["@condition", .5], ["@letter", .6], ["@closed", .72], ["@ending", .4]],
   "gain": [[0, 0], ["@vanish:사라졌다+0.45", 0], ["@roof", -6], ["@roof+1.5", 0], ["@ending:누군가-0.1", 0], ["@ending:누군가+0.4", -7], ["@ending:end+0.6", -2]],
