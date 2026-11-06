@@ -1,0 +1,747 @@
+{
+ "winner": {
+  "name_en": "The Stolen Klimt Found Inside the Gallery's Own Wall (Portrait of a Lady, Piacenza)",
+  "name_ko": "사라진 클림트 명화, 23년 만에 미술관 벽 속에서 발견",
+  "country": "Italy (Piacenza)",
+  "year": "1997 (theft, Feb 22) / 2019 (found, Dec 10) / 2020 (authenticated, Jan 17)",
+  "status": "The painting was recovered after about 23 years and authenticated in Jan 2020, as announced by prosecutor Ornella Chicca. The thieves were NEVER identified, so the theft remains unsolved.",
+  "hook_ko": "23년 전 도난당한 수백억 원짜리 클림트 그림이, 정원사가 담쟁이덩굴을 걷어내자 미술관 벽 속에서 나왔습니다.",
+  "twist": "The painting was never far away. In Dec 2019 a gardener clearing ivy from the Ricci Oddi Modern Art Gallery's outer wall found a small metal panel. Behind it was a black bag holding the missing Klimt, a few meters from where it had vanished. Chilling backstory: months before the theft, 18-year-old student Claudia Maga noticed the portrait looked like a lost Klimt unseen since 1912. X-rays showed Klimt had painted over that earlier work, making it the only known 'double Klimt'. The gallery was preparing to exhibit it because of that discovery when it disappeared. The empty frame turned up on the roof, but it would not fit through the skylight. A package police seized in April 1997 held a fake. The case was reopened in 2016 over DNA traces on the frame. Value: about €60M (about $66M).",
+  "visual_ideas": "Ornate empty gold frame on a dark gallery wall, with a red 'STOLEN 1997' stamp. A roof skylight with an abstract dotted line showing the theory that it was lowered on a rope, crossed out with a 'frame doesn't fit' note. Time-lapse ivy growing over a brick wall, 1997 to 2019. A gardener silhouette pulls the ivy back to reveal a small metal hatch, and light spills from a black bag. An X-ray reveal: a stylized woman's portrait in line art (not a reproduction of the real painting) fades to show a second hidden face beneath, labeled '두 개의 그림'. Typography of the value counter '€60,000,000'. A final 'AUTHENTIC' wax-seal stamp, then '범인: ???'.",
+  "safety_notes": "SAFEST of the four: no violence or victims. Do not name or imply any individual as the thief. Gallery staff were investigated and the case against them was dismissed, so do not suggest an inside job as fact. Anonymous men who claimed responsibility to the local newspaper Libertà are unverified; mention only as '정체불명의 인물들이 자백 편지를 보냈다는 보도' or omit. Value estimates vary (€60M to €100M), so say '6천만 유로 이상' or '수백억 원대' rather than a precise KRW figure. Draw the painting yourself in stylized line art rather than reproducing the artwork image. The original is public domain, but a self-drawn version is safer for the production's 'original illustration' rule. It is unclear whether the painting sat in the wall all 23 years or was placed there later, so say '벽 속에서 발견됐다' rather than '23년 내내 벽 속에 있었다'.",
+  "key_sources": [
+   "https://www.smithsonianmag.com/smart-news/painting-found-inside-walls-italian-gallery-may-be-stolen-klimt-180973757/",
+   "https://www.nbcnews.com/news/amp/ncna1117936",
+   "https://www.pbs.org/newshour/amp/arts/portrait-found-in-italian-gallerys-walls-verified-as-stolen-work-by-klimt",
+   "https://www.thenationalnews.com/arts-culture/art/portrait-of-a-lady-stolen-klimt-painting-recovered-after-23-years-1.966160",
+   "https://news.artnet.com/art-world/stolen-klimt-discovered-authentic-1757196?amp=1"
+  ]
+ },
+ "ranking": [
+  [
+   "The Stolen Klimt Found Inside the Gallery's Own Wall (Portrait of a Lady, Piacenza)",
+   242.39999999999998
+  ],
+  [
+   "Isabella Stewart Gardner Museum Heist",
+   200.29999999999998
+  ],
+  [
+   "Disappearance of Frederick Valentich (Bass Strait)",
+   198.7
+  ],
+  [
+   "D.B. Cooper Hijacking (Northwest Orient Flight 305, FBI case 'NORJAK')",
+   193.39999999999998
+  ],
+  [
+   "The Great Impostor: Ferdinand Waldo Demara, the fake surgeon of HMCS Cayuga (Korean War)",
+   193.3
+  ],
+  [
+   "Argentina's 'Heist of the Century': the Banco Río Acassuso robbery",
+   192.89999999999998
+  ]
+ ],
+ "final": {
+  "title_ko": "도둑맞은 클림트, 22년 뒤 그 미술관 벽 속에서",
+  "cover_text_ko": "도둑맞은 명화가\n그 미술관 벽 속에서 나왔다",
+  "scenes": [
+   {
+    "narration_ko": "도둑맞은 명화가 그 미술관 벽 속에서 나왔다.",
+    "spoken_syllables": 18,
+    "onscreen_text_ko": "벽 속에서 나온 명화",
+    "visual": "HOOK, about 3.4s (measured voice 3.15s), with motion from frame 1. Frame 1 is the cover and matches the last frame of scene 8 exactly, so the video loops. Tight low-key noir close-up of a brick wall built from charcoal vector rectangles, with film grain and a heavy vignette. The framing is tight with no sky, so no time of day is implied. Two or three layers of dark-emerald ivy leaves sway in parallax at different speeds. In the centre is a small square grey metal hatch with no lock drawn. Fast push-in (scale 1.0 to 1.3) with a slight handheld shake. On '나왔다' the hatch swings open on its hinge (rotateY 0 to -75 degrees, 0.4s). A cone of warm Klimt-gold light spills out with drifting dust particles. From the dark recess, the corner of an UNFRAMED canvas on a bare wooden stretcher slides forward out of a crumpled black plastic bag. The canvas is ORIGINAL stylized line art, not a copy of the real painting: one eye and a bare shoulder in thin gold strokes on a moss-green field. Thin red evidence brackets snap around the opening on the last syllable.",
+    "sfx": "Sub-bass impact on frame 1, rusty metal hinge creak, short gold shimmer swell on the reveal"
+   },
+   {
+    "narration_ko": "범인은 아무도 모른다.",
+    "spoken_syllables": 9,
+    "onscreen_text_ko": "범인: ???",
+    "visual": "About 2s. Whip-pan to a black evidence board lit by one hanging bulb that sways slightly, so the shadows swing. One blank suspect card is pinned in the centre and rocks on its pin; it has no face, silhouette or name. A red string runs from a small gold-frame icon to the card, pulls taut, then snaps and falls into darkness. The text '범인: ???' types on in a monospace font, with an RGB-split glitch on the question marks. The vignette pulses once like a heartbeat.",
+    "sfx": "Typewriter clacks, glitch crackle, string snap, sub-bass drop"
+   },
+   {
+    "narration_ko": "천구백구십칠 년 이탈리아, 클림트 그림이 사라졌다.",
+    "spoken_syllables": 21,
+    "onscreen_text_ko": "1997.02 · 이탈리아 피아첸차",
+    "visual": "About 4s. REWIND: VHS tracking lines roll and a split-flap counter spins backward from '2019' to '1997.02'. An outline of Italy draws itself as a thin gold stroke on a near-black map, with a faint Po river line. A red pin drops on Piacenza between small labelled dots for 'Milano' and 'Parma', with a ripple ring. The camera dives into the pin and match-cuts to a flat 2D gallery interior under renovation. Scaffolding silhouettes and stacked wooden packing crates show the gallery was preparing an exhibition. The interior is dim, with flat cold grey-blue diffuse light from a skylight; there is no moon, sun or clock, so no time of day is implied. On a wall among the crates hangs an ornate gilded vector frame holding the stylized portrait, drawn in simple curves on emerald green: a young woman glancing back over her shoulder. A small grey corner tag reads '분실 확인 1997.02.22 · 반출 시점 불명'. On '사라졌다' the framed painting flickers twice like a bad film reel and vanishes, leaving only a pale dust-outline rectangle and a bare nail. Nobody is shown taking it, and there is no break-in staging.",
+    "sfx": "Tape-rewind zip, backward clock ticks, map-pin thunk, film-flicker crackle, then sudden silence"
+   },
+   {
+    "narration_ko": "지붕엔 빈 액자만 남았는데, 천창은 액자보다 작았다.",
+    "spoken_syllables": 21,
+    "onscreen_text_ko": "빈 액자 · 천창 < 액자",
+    "visual": "About 4.2s. A flat side-on rooftop under an overcast slate-grey winter sky with drifting cold haze; there is no moon, no sun and no precipitation, so time of day stays ambiguous. A small rectangular skylight is set into the roof. A stylized white evidence spotlight circle slides across the roof and stops on the EMPTY gilded frame lying beside the skylight. A dotted white line labelled '경찰 초기 추정' draws itself from inside the room up through the skylight to the frame. On '천창은', two measurement brackets snap in like an evidence diagram: a short bracket over the skylight labelled '천창' and a visibly wider bracket over the frame labelled '액자'. The frame bracket overshoots. On '작았다' a red marker X slashes across the dotted line and a red '?' pulses above the frame. The camera slowly tilts 5 degrees into a Dutch angle to add unease. No people are shown.",
+    "sfx": "Cold wind, spotlight click, two crisp ruler clicks as the brackets snap in, felt-pen slash on the X, one low piano note"
+   },
+   {
+    "narration_ko": "이십이 년 뒤 정원사가 담쟁이 속 작은 철문을 열었다.",
+    "spoken_syllables": 21,
+    "onscreen_text_ko": "22년 뒤 · 같은 미술관 외벽",
+    "visual": "About 3.7s. The split-flap counter clatters from '1997' to '2019.12.10'. The scene shifts to overcast grey winter daylight in a desaturated palette; the ivy is the only saturated green. Wide shot: the same gallery's exterior courtyard wall, smothered in thick ivy. A small tag '같은 미술관' with a dotted arrow links it to an inset thumbnail of the scene 3 interior. Close-up: only gloved hands cutting the ivy with garden shears; no faces, no full bodies and no head count. Clumps fall as layered leaf particles, and the ivy parts like a curtain to reveal a small square grey metal hatch flush with the wall, with no lock. A red outline box locks onto it. A gloved hand pulls the hatch open, a puff of dust escapes, and a faint glint catches on something black and glossy inside.",
+    "sfx": "Split-flap clatter, shears snipping, leaf rustle, dry metal hinge squeak, a slow heartbeat begins"
+   },
+   {
+    "narration_ko": "검은 쓰레기봉투 속 액자 없는 그 그림.",
+    "spoken_syllables": 15,
+    "onscreen_text_ko": "검은 쓰레기봉투 속",
+    "visual": "About 3.3s. Inside the shallow recess, silhouettes of loose debris and scrap. A flashlight beam crawls over a black plastic garbage bag drawn with glossy specular highlights and crinkle lines. The edge of the bag folds back, and the corner of a canvas on a bare wooden stretcher, with no frame, slides out. The full stylized emerald portrait, the same original line art as scene 3, is revealed in a burst of gold-leaf particles, and the shot freezes for 0.3s. CALLBACK: a thin gold divider splits the screen. On the left is the 1997 rooftop with the empty frame; on the right is the 2019 frameless canvas. The gold frame outline slides across the divider and hovers over the canvas but never snaps into place, leaving a visible gap.",
+    "sfx": "Plastic bag crinkle, reverse cymbal, heartbeat swells to two loud thumps, shimmering gold chime on the reveal"
+   },
+   {
+    "narration_ko": "감정 결과 진품, 추정가 육천만 유로 이상, 수사는 미제로 끝났다.",
+    "spoken_syllables": 25,
+    "onscreen_text_ko": "진품 · €6천만+ · 미제 종결",
+    "visual": "About 5.3s. A generic bank-vault door with no logos swings open; the canvas lies inside on a lightbox. A cyan infrared scan bar sweeps from top to bottom. As it passes, a faint ghost layer appears beneath the woman: the same pose wearing a wide hat brim and a scarf. This is an abstract nod to the hidden earlier portrait, with no text claim. A split panel labelled '1996 | 2020' slides in, and the two scan outlines line up. The canvas flips to show its back, where old paper labels, stamps and red wax seals glow one by one with check marks. On '진품' a heavy round gold-and-red seal stamps down: '진품 AUTHENTIC · 2020.01.17'. On '육천만 유로 이상' gold serif digits roll up to '€60,000,000+' and lock with a small screen shake. Hard cut on '수사는': a manila case folder slides in and slams shut, and on '끝났다' a red rubber stamp '미제 UNSOLVED · 2021' hits it at an angle with a puff of dust. No names or faces anywhere.",
+    "sfx": "Heavy vault clunk, electronic scanner hum, big seal-stamp thud, counter tick-tick-lock, folder slam, second harder stamp hit"
+   },
+   {
+    "narration_ko": "내내 벽 속에 있었을까, 누가 돌려놓았을까.",
+    "spoken_syllables": 17,
+    "onscreen_text_ko": "처음부터? 아니면 누가?",
+    "visual": "About 4.5s including the 1s end pad. Back at the ivy wall in the same tight low-key noir framing as scene 1, with no sky and cold drifting haze particles. The small hatch hangs open, black inside. Slow push-in toward the dark opening. Two choice cards fade up on either side and pulse alternately: 'A. 처음부터 벽 속에' with an hourglass icon, and 'B. 누군가 돌려놨다' with a tiny faceless shadow-hand icon and a '?'. On '누가' the heartbeat stops and the frame holds still for a beat. On the last syllable, vector ivy tendrils regrow over the wall at high speed, the hatch swings SHUT by itself, and the frame settles exactly into frame 1 of scene 1 for a seamless loop. For the final 0.8s, small gold type at the bottom reads '이 그림, 서울에도 왔었다 · 2025.12–2026.03'.",
+    "sfx": "Low drone, heartbeat cuts out abruptly, creeping ivy rustle, heavy metal hatch clank, music drops to silence"
+   }
+  ],
+  "total_spoken_syllables": 147,
+  "caption_ko": "1997년 2월, 이탈리아 피아첸차의 리치오디 현대미술관에서 클림트의 '여인의 초상'이 사라졌습니다. 전시 준비가 한창이던 때였습니다. 지붕 위에는 빈 액자만 남아 있었습니다. 경찰은 처음에 그림이 천창으로 끌어올려졌다고 추정했지만, 이후 그 액자가 천창을 통과할 수 없는 크기라는 점이 드러났다고 전해집니다.\n\n2019년 12월, 담쟁이를 걷어내던 정원사가 같은 미술관 외벽의 작은 철문을 열었습니다. 그 안의 검은 쓰레기봉투에서 액자 없는 그림이 나왔고, 2020년 1월 검찰은 진품이라고 발표했습니다. 추정가는 6천만 유로 이상입니다.\n\n범인이라고 주장하는 편지가 지역 신문에 도착하기도 했지만, 진위는 확인되지 않았습니다. 수사는 2021년 아무도 기소되지 않은 채 종결됐고, 그림이 언제부터 벽 속에 있었는지도 끝내 밝혀지지 않았습니다.\n\n이 그림 아래에는 클림트가 먼저 그렸던 초상화, 모자와 스카프 차림의 여인이 숨어 있습니다(1996년 X선 분석으로 확인). 그리고 이 그림은 2025년 12월부터 2026년 3월까지 서울 마이아트뮤지엄에서 전시되기도 했습니다.\n\n여러분의 추리는?\nA. 처음부터 벽 속에 있었다\nB. 누군가 몰래 돌려놨다\n\n#해외미제사건 #미제사건 #클림트 #여인의초상 #미술품도난 #미스터리 #실화 #쇼츠",
+  "changes_made": [
+   "Accepted FC3's timing fix, the only item rated 'wrong'. Sentence-internal periods and commas were adding about 1.3s and 0.5s of silence each, and the old punctuation measured 39.6s. I removed them, merged S4 into one sentence ('남았는데'), and joined S7 and S8 with commas. Re-measured with the repo's edge-tts pipeline (ko-KR-InJoonNeural, -2Hz, the trim logic in engine/build.py) at rate +18%: per-scene voice 3.15/1.83/3.76/3.98/3.49/3.06/5.06/3.26s, total 27.6s of voice and a 30.45s timeline including the 1s end pad.",
+   "S2: '범인은, 아직도 모른다.' changed to '범인은 아무도 모른다.' (still 9 syllables). The old line could be heard as 'the culprit still doesn't know'.",
+   "S3: '클림트가 사라졌다' changed to '클림트 그림이 사라졌다' (+2 syllables) so it can't be heard as the painter (died 1918) disappearing.",
+   "S7: '추정가 육천만 유로' changed to '추정가 육천만 유로 이상' (+2 syllables). The voice now matches the on-screen '€6천만+' and the museum's €60-100M range.",
+   "S4 narration kept: '천창은 액자보다 작았다'. I rejected FC1's softening to '천창은 너무 작았다'. WebSearch confirmed that Smithsonian ('the frame would not fit through the skylight') and Artnet both say this directly, and both dossiers support it. Wikipedia says the skylight was too small for the painting; the canvas is smaller than its frame, so that reading also means the skylight was smaller than the frame. I adopted FC2's suggestion to attribute it in the caption ('…드러났다고 전해집니다') instead of stating it as a bare physical fact.",
+   "S3/S4 visuals: removed the night, moonlight and sleet staging (FC2). It implied a night break-in through the skylight, but the removal time and method are unknown; it was probably 19-21 Feb, while works were being packed. Both scenes now use time-ambiguous overcast or dim interior light. S3 adds a small tag '분실 확인 1997.02.22 · 반출 시점 불명' and shows nobody taking the painting.",
+   "S1/S8 visuals: changed 'night' and 'rain' to tight low-key framing with no sky. The S1 reveal would otherwise suggest a night discovery, when it actually happened on a winter afternoon. The seamless loop between S8 and S1 is kept.",
+   "End card: '이 그림, 지난겨울 서울에 왔었다' changed to '이 그림, 서울에도 왔었다 · 2025.12–2026.03'. The new wording won't go out of date (FC1, FC2, FC3).",
+   "Caption: '또 다른 여인의 초상' changed to '클림트가 먼저 그렸던 초상화, 모자와 스카프 차림의 여인'. Sources disagree on whether the hidden portrait shows a different woman (FC1, FC2, FC3). I avoided both 'different' and 'same', and also dropped the colour 'black', since the only reference is a black-and-white reproduction.",
+   "Caption: removed '이탈리아 밖에서는 처음으로'. The only source for it is the Korean co-organiser (FC1, FC2, FC3). I kept the verified venue and dates (My Art Museum, Dec 2025 to Mar 2026).",
+   "Kept as before: '22년 뒤' (Italian and Korean sources say 22 anni / 22년), the unspecified number of gardeners, no names of any investigated or claiming person, the confession letter described as unverified, and S8 framed as an open question rather than '23년 내내 벽 속'."
+  ],
+  "sources": [
+   "https://www.smithsonianmag.com/smart-news/painting-found-inside-walls-italian-gallery-may-be-stolen-klimt-180973757/",
+   "https://news.artnet.com/art-world/23-years-theft-gustav-klimt-painting-may-discovered-1729515",
+   "https://en.wikipedia.org/wiki/Portrait_of_a_Lady_(Klimt)",
+   "https://www.pbs.org/newshour/amp/arts/portrait-found-in-italian-gallerys-walls-verified-as-stolen-work-by-klimt",
+   "https://www.nbcnews.com/news/amp/ncna1117936",
+   "https://www.thelocal.it/20200117/painting-found-in-italy-wall-is-stolen-klimt",
+   "https://artdaily.com/news/120160/Painting-found-in-Italy-wall-is-stolen-Klimt",
+   "https://www.theartnewspaper.com/news/missing-klimt-turns-up-in-hidden-wall-cavity-in-good-condition",
+   "https://www.finestresullarte.info/en/news/klimt-found-in-piacenza-the-painting-is-authentic-one-of-the-world-s-most-sought-after-paintings-returns-home",
+   "https://finestresullarte.info/en/exhibition-reviews/the-lady-returns-to-piacenza-here-is-the-gustav-klimt-exhibition-at-ricci-oddi",
+   "https://www.open.online/2020/01/18/come-sparito-e-come-stato-ritrovato-il-ritratto-di-signora-di-klimt",
+   "https://www.finestresullarte.info/attualita/klimt-piacenza-66enni-confessano-furto",
+   "https://www.ansa.it/emiliaromagna/notizie/2021/11/18/klimt-sparito-e-ritrovato-archiviata-linchiesta-a-piacenza_f0383024-65c2-458a-a797-286e804846f3.html",
+   "https://www.euronews.com/2021/10/27/portrait-of-a-lady-after-years-of-hiding-klimt-work-is-a-star-in-rome-show",
+   "https://www.seoul.co.kr/news/life/exhibition/2025/12/17/20251217500152",
+   "https://www.piacenzasera.it/2025/11/la-ricci-oddi-in-trasferta-a-seul-con-70-quadri-e-il-klimt-riallestimento-in-corso/619993/",
+   "https://www.finestresullarte.info/musei/dopo-seul-il-ritratto-di-signora-di-klimt-torna-nella-galleria-ricci-oddi-piacenza"
+  ],
+  "remaining_caveats": "1) Render settings. The 147-syllable script fits only with voice ko-KR-InJoonNeural, rate +18%, pitch -2Hz, and the punctuation exactly as written; I measured 27.6s of voice and a 30.45s timeline. At the repo's current +12%, or with extra periods or commas put back, it runs about 2-10s longer. At +18% the speech rate is about 5.3 syllables per second, at the top of the target range. If a slower read is wanted, drop '이상' from S7 to get 145 syllables, and keep '€6천만+' on screen.\n2) S4 'the skylight was smaller than the frame' comes from investigators' accounts relayed by Smithsonian, Artnet and BBC 2016. No Italian judicial measurement record was found. The caption attributes it accordingly.\n3) '22년 뒤' is rounded down: the actual gap is 22 years 10 months. That matches Italian and Korean usage, but some English outlets say 23 years, so expect a comment or two.\n4) S8 '누가 돌려놓았을까' is deliberately an open question. Whether the painting was placed in the wall later or was there all along was never established. Do not pin a comment answering it.\n5) Dossiers give the gardener count as 1 or 3. The Korean '정원사가' is number-neutral, and the visuals show hands only, so keep it that way.\n6) The painting must be drawn as ORIGINAL stylized line art: no tracing and no museum photos. Do not reproduce museum logos or branding."
+ },
+ "dossiers": [
+  {
+   "summary": "CASE: Gustav Klimt's \"Portrait of a Lady\" (Ritratto di signora, oil on canvas, 1916-17), stolen from the Galleria d'Arte Moderna Ricci Oddi in Piacenza, Italy, in February 1997 and found on 10 Dec 2019 by gardeners clearing ivy, inside a cavity in the same gallery's exterior wall. Prosecutor Ornella Chicca announced on 17 Jan 2020 that it was authentic. The theft was never solved: no one was charged, prosecutors closed the case in 2021, the statute of limitations on the theft had expired, and per Euronews (Oct 2021) the culprit or culprits were \"never definitively determined.\"\n\nKEY VERIFIED FACTS FOR NARRATION:\n(1) Staff found the painting missing on the morning of Sat 22 Feb 1997, while the gallery was closed for building works and preparing a special Klimt-related exhibition. Police thought it may have been taken a few days earlier; Finestre sull'Arte says between 19 and 21 Feb.\n(2) The empty frame was found on the roof next to a skylight. The early police theory was that the painting was hooked with fishing line and pulled up through the skylight. That theory was later doubted because the skylight was reportedly too small.\n(3) In 1996 an 18-year-old student, Claudia Maga, noticed it matched a lost earlier Klimt portrait. X-rays confirmed that Klimt had painted over that earlier portrait of a young woman with a hat and scarf, which made it a \"double\" Klimt.\n(4) In April 1997 (reportedly 1 April) police intercepted a package holding a high-quality forgery.\n(5) The gallery custodians were investigated, and that case was dismissed for lack of evidence.\n(6) The case was reopened for DNA testing of the frame. The Guardian dates this to March 2014; Smithsonian and some others say 2016. The year is DISPUTED, so leave it out of narration.\n(7) On 10 Dec 2019 (a Tuesday), gardeners working for the municipality cleared ivy that had not been cut for almost a decade. They found a small metal panel (described as a lockless hatch or ventilation space) on the exterior wall. Behind it was an unframed painting in a black plastic garbage bag.\n(8) Experts appointed by the prosecutor, including Guido Cauzzi and Anna Selleri, compared IR/UV images with the 1996 tests and checked the seals, stamps and labels. The result was announced on 17 Jan 2020 at a press conference at the Banca d'Italia's Piacenza branch.\n(9) Value: the museum estimated €60-100M, and many outlets used €60M (about $66M per the BBC). In KRW this is several hundred billion won (수백억 원대).\n(10) The prosecutor said it was not known whether the painting had been in the wall since 1997 or was placed there later.\n(11) In Jan 2020 two local men in their 60s claimed responsibility in a letter to the Piacenza newspaper Libertà. The claim was unverified and led to no conviction for this theft.\n(12) The painting returned to display in Piacenza (planned for 28 Nov 2020) and starred in a Rome show at Palazzo Braschi from 27 Oct 2021 to 27 Mar 2022.\n\nSUGGESTED SAFE NARRATION (146 spoken syllables, counted by hand):\n\"도난당한 수백억 원짜리 클림트 그림이, 미술관 벽 속에서 나왔습니다.(28) 천구백구십칠년 이탈리아, 전시를 앞둔 클림트 초상화가 사라졌습니다.(29) 지붕 위엔 빈 액자만 남았습니다.(13) 이천십구년 십이월, 담쟁이덩굴을 걷어내던 정원사가 외벽의 작은 덮개를 열었습니다.(35) 검은 봉지 속, 바로 그 그림이었습니다.(14) 검찰은 진품이라고 발표했지만, 범인은 끝내 밝혀지지 않았습니다.(27)\"\nOptional swap if you want the double-Klimt twist: replace the S3 roof line (13) with \"그 그림 아래엔 또 다른 클림트가 숨어 있었습니다.\" That line counts 그(1) 그림(2) 아래엔(3) 또(1) 다른(2) 클림트가(4) 숨어(2) 있었습니다(5) = 20, for a total of 153, so trim elsewhere to stay at or under 150. Recount any edit before TTS.\n\nCORRECTIONS TO THE COMPUTED BRIEF:\n- \"Reopened in 2016 over DNA\" is disputed. The Guardian and Art History News report the reopening in March 2014 for DNA testing of the frame.\n- \"A few meters from where it vanished\" has no source for a specific distance. Say \"같은 미술관 외벽 속\".\n- \"23 years\": discovery came about 22 years 10 months after the theft. Use \"약 23년\" or \"23년 가까이\"; major outlets (NBC, The National) do use \"23 years\".\n- Theft date: 22 Feb 1997 is when the loss was discovered. The actual removal may have been earlier.",
+   "timeline": [
+    {
+     "date": "1916-1917",
+     "event": "Klimt paints 'Portrait of a Lady' (young woman glancing over her shoulder, green background). He paints it over an earlier portrait of a young woman in a hat and scarf (art historian Claudia Collina dates the earlier one to about 1910).",
+     "source": "https://www.nbcnews.com/news/amp/ncna1117936"
+    },
+    {
+     "date": "1912 (reported)",
+     "event": "The earlier 'Portrait of a Young Lady' (Backfisch) was last recorded or seen around 1912, as reported by BBC-derived coverage. English Wikipedia instead says it 'disappeared in 1917'. Treat the year as reported, not certain.",
+     "source": "https://www.smithsonianmag.com/smart-news/painting-found-inside-walls-italian-gallery-may-be-stolen-klimt-180973757/"
+    },
+    {
+     "date": "1925",
+     "event": "Collector Giuseppe Ricci Oddi acquires the painting. It later belongs to the Ricci Oddi gallery in Piacenza.",
+     "source": "https://www.cbsnews.com/news/portrait-of-a-lady-painting-found-hidden-italian-gallery-confirmed-gustav-klimt/"
+    },
+    {
+     "date": "1996",
+     "event": "Claudia Maga, an 18-year-old student, notices the painting matches a lost Klimt. X-rays confirm a hidden earlier portrait underneath, the only known 'double' Klimt. The gallery plans to exhibit it.",
+     "source": "https://www.smithsonianmag.com/smart-news/painting-found-inside-walls-italian-gallery-may-be-stolen-klimt-180973757/"
+    },
+    {
+     "date": "1997-02-22 (Saturday morning)",
+     "event": "Staff find the painting missing. The gallery is closed for works and preparing works for a special exhibition. The empty frame is found on the roof next to a skylight. Police later think it may have been taken up to about 3 days earlier; Finestre sull'Arte says between 19 and 21 Feb.",
+     "source": "https://www.theartnewspaper.com/2019/12/12/stolen-klimt-found-hidden-in-a-wall-will-take-a-month-to-authenticate-officials-say"
+    },
+    {
+     "date": "1997 (early investigation)",
+     "event": "Police theorize the painting was hooked with fishing line and hauled up through an open skylight to the roof. That theory was later doubted because the skylight was reportedly too small. Gallery custodians were investigated, and the case was dismissed for lack of evidence.",
+     "source": "https://www.thenationalnews.com/arts-culture/art/portrait-of-a-lady-stolen-klimt-painting-recovered-after-23-years-1.966160"
+    },
+    {
+     "date": "1997-04 (reportedly 1 April)",
+     "event": "Police intercept a package holding a high-quality forgery of the painting, not the original.",
+     "source": "https://www.smithsonianmag.com/smart-news/painting-found-inside-walls-italian-gallery-may-be-stolen-klimt-180973757/"
+    },
+    {
+     "date": "2014-03",
+     "event": "The investigation is reopened, and investigators hope DNA testing of the frame will match suspects. The Guardian reported this on 16 Mar 2014. Smithsonian and some others give 2016 instead, so the year is disputed. Nothing came of it.",
+     "source": "https://arthistorynews.com/articles/2706_Stolen_Klimt_case_reopened"
+    },
+    {
+     "date": "2015-11",
+     "event": "A man claims to be the thief and demands a ransom. The claim leads nowhere.",
+     "source": "https://www.thenationalnews.com/arts-culture/art/portrait-of-a-lady-stolen-klimt-painting-recovered-after-23-years-1.966160"
+    },
+    {
+     "date": "2016-12-08",
+     "event": "A BBC report (Max Paradiso) carries a self-described thief's unverified claim that the original was swapped earlier and would be returned by the 20th anniversary. It was not returned.",
+     "source": "https://www.smithsonianmag.com/smart-news/painting-found-inside-walls-italian-gallery-may-be-stolen-klimt-180973757/"
+    },
+    {
+     "date": "2019-12-10 (Tuesday)",
+     "event": "Gardeners clearing ivy from the gallery's exterior wall find a small metal panel. Behind it, in a cavity, is a black plastic garbage bag holding the unframed painting. The ivy had not been cut for almost a decade.",
+     "source": "https://www.art-critique.com/en/2019/12/gustav-klimt-painting-potentially-recovered/"
+    },
+    {
+     "date": "2019-12-11/12",
+     "event": "The find is announced and reported worldwide. Officials say authentication will take up to a month, and the painting is kept in a Bank of Italy vault.",
+     "source": "https://www.theartnewspaper.com/news/missing-klimt-turns-up-in-hidden-wall-cavity-in-good-condition"
+    },
+    {
+     "date": "2020-01-17 (Friday)",
+     "event": "At a press conference at the Banca d'Italia's Piacenza branch, Piacenza prosecutor Ornella Chicca announces the painting is authentic. The prosecutor says it is unknown whether it was in the wall all along.",
+     "source": "https://www.pbs.org/newshour/amp/arts/portrait-found-in-italian-gallerys-walls-verified-as-stolen-work-by-klimt"
+    },
+    {
+     "date": "2020-01 (around 19-21 Jan)",
+     "event": "Two local men in their 60s claim responsibility in a letter and phone call to the Piacenza daily Libertà. The claim is unverified, and investigators assess its credibility.",
+     "source": "https://www.finestresullarte.info/attualita/klimt-piacenza-66enni-confessano-furto"
+    },
+    {
+     "date": "2020-02",
+     "event": "Prosecutors widen the inquiry, and a person connected to the gallery's late former director is placed under investigation for handling stolen goods. Do not name this person. No charges followed.",
+     "source": "https://www.open.online/2020/02/11/piacenza-svolta-nel-caso-del-klimt-rubato-e-ritrovato-dopo-20-anni-indagata-la-vedova-dellex-direttore"
+    },
+    {
+     "date": "2020-11-28 (planned)",
+     "event": "The painting is scheduled to go back on display in the Ricci Oddi gallery's main space in a safety case.",
+     "source": "https://www.theartnewspaper.com/2020/10/20/stolen-klimt-paintingburied-for-20-yearsto-go-back-on-show-at-italian-museum"
+    },
+    {
+     "date": "2021-03",
+     "event": "Prosecutors ask for the case to be closed because there is no evidence against the three suspects. Sky TG24 calls it likely to remain a cold case.",
+     "source": "https://tg24.sky.it/cronaca/2021/03/03/quadro-klimt-rubato-piacenza"
+    },
+    {
+     "date": "2021 (by Oct)",
+     "event": "The investigation is closed. The statute of limitations had expired, and the culprit or culprits were never definitively determined.",
+     "source": "https://www.euronews.com/2021/10/27/portrait-of-a-lady-after-years-of-hiding-klimt-work-is-a-star-in-rome-show"
+    },
+    {
+     "date": "2021-10-27 to 2022-03-27",
+     "event": "The painting stars in 'Klimt: The Secession and Italy' at the Museum of Rome, Palazzo Braschi. The show then moves to Piacenza, opening 5 Apr 2022.",
+     "source": "https://www.euronews.com/2021/10/27/portrait-of-a-lady-after-years-of-hiding-klimt-work-is-a-star-in-rome-show"
+    }
+   ],
+   "key_facts": [
+    {
+     "fact": "The painting is Gustav Klimt's 'Portrait of a Lady' (Ritratto di signora), oil on canvas, dated 1916-17. It belongs to the Galleria d'Arte Moderna Ricci Oddi in Piacenza, Italy, which acquired it in 1925.",
+     "confidence": "confirmed",
+     "sources": [
+      "https://www.cbsnews.com/news/portrait-of-a-lady-painting-found-hidden-italian-gallery-confirmed-gustav-klimt/",
+      "https://en.wikipedia.org/wiki/Portrait_of_a_Lady_(Klimt)"
+     ]
+    },
+    {
+     "fact": "The painting went missing in February 1997. The commonly cited date, 22 Feb 1997, is when staff discovered the loss that morning. Police thought it may have been removed days earlier; Finestre sull'Arte gives 19-21 Feb.",
+     "confidence": "confirmed",
+     "sources": [
+      "https://www.smithsonianmag.com/smart-news/painting-found-inside-walls-italian-gallery-may-be-stolen-klimt-180973757/",
+      "https://www.theartnewspaper.com/2019/12/12/stolen-klimt-found-hidden-in-a-wall-will-take-a-month-to-authenticate-officials-say",
+      "https://finestresullarte.info/en/news/klimt-found-in-piacenza-the-painting-is-authentic-one-of-the-world-s-most-sought-after-paintings-returns-home",
+      "https://www.thehistoryblog.com/archives/date/2019/12/13"
+     ]
+    },
+    {
+     "fact": "At the time, the gallery was closed for building and renovation works and was preparing a special exhibition. Works were being moved to Palazzo Gotico for the show 'Da Hayez a Klimt'.",
+     "confidence": "confirmed",
+     "sources": [
+      "https://www.thelocal.it/20200117/painting-found-in-italy-wall-is-stolen-klimt",
+      "https://www.nbcnews.com/news/amp/ncna1117936",
+      "https://tg24.sky.it/cronaca/2021/03/03/quadro-klimt-rubato-piacenza"
+     ]
+    },
+    {
+     "fact": "The empty frame was found on the gallery roof next to a skylight.",
+     "confidence": "confirmed",
+     "sources": [
+      "https://www.theartnewspaper.com/2019/12/12/stolen-klimt-found-hidden-in-a-wall-will-take-a-month-to-authenticate-officials-say",
+      "https://www.smithsonianmag.com/smart-news/painting-found-inside-walls-italian-gallery-may-be-stolen-klimt-180973757/"
+     ]
+    },
+    {
+     "fact": "Police first theorized the thieves used fishing line to lift the painting up through an open skylight. The theory was later doubted because the skylight was reportedly too small for the framed painting. A 2016 original investigator said it was not big enough.",
+     "confidence": "likely",
+     "sources": [
+      "https://www.thenationalnews.com/arts-culture/art/portrait-of-a-lady-stolen-klimt-painting-recovered-after-23-years-1.966160",
+      "https://www.smithsonianmag.com/smart-news/painting-found-inside-walls-italian-gallery-may-be-stolen-klimt-180973757/",
+      "https://gulfnews.com/world/europe/italian-police-think-stolen-klimt-masterpiece-found-hidden-behind-ivy-1.68417806"
+     ]
+    },
+    {
+     "fact": "In 1996 Claudia Maga, an 18-year-old student, noticed the painting matched a lost earlier Klimt portrait. X-rays confirmed that a different woman's portrait, with hat and scarf, lies beneath. Reports call it the only known 'double' Klimt.",
+     "confidence": "confirmed",
+     "sources": [
+      "https://www.smithsonianmag.com/smart-news/painting-found-inside-walls-italian-gallery-may-be-stolen-klimt-180973757/",
+      "https://www.thelocal.it/20200117/painting-found-in-italy-wall-is-stolen-klimt",
+      "https://www.thenationalnews.com/arts-culture/art/portrait-of-a-lady-stolen-klimt-painting-recovered-after-23-years-1.966160"
+     ]
+    },
+    {
+     "fact": "The hidden earlier portrait was last seen or recorded in 1912. Other sources say it disappeared in 1917, and one art historian dates it to about 1910.",
+     "confidence": "disputed",
+     "sources": [
+      "https://www.smithsonianmag.com/smart-news/painting-found-inside-walls-italian-gallery-may-be-stolen-klimt-180973757/",
+      "https://en.wikipedia.org/wiki/Portrait_of_a_Lady_(Klimt)",
+      "https://www.open.online/2020/01/18/come-sparito-e-come-stato-ritrovato-il-ritratto-di-signora-di-klimt"
+     ]
+    },
+    {
+     "fact": "In April 1997 (reportedly 1 April) police seized a package that turned out to contain a skilled forgery, not the original.",
+     "confidence": "confirmed",
+     "sources": [
+      "https://www.smithsonianmag.com/smart-news/painting-found-inside-walls-italian-gallery-may-be-stolen-klimt-180973757/",
+      "https://gulfnews.com/world/europe/italian-police-think-stolen-klimt-masterpiece-found-hidden-behind-ivy-1.68417806",
+      "https://www.thehistoryblog.com/archives/date/2019/12/13"
+     ]
+    },
+    {
+     "fact": "Gallery workers or custodians were investigated soon after the theft, and the case against them was dismissed for lack of evidence.",
+     "confidence": "confirmed",
+     "sources": [
+      "https://www.smithsonianmag.com/smart-news/painting-found-inside-walls-italian-gallery-may-be-stolen-klimt-180973757/",
+      "https://www.ilpost.it/2019/12/10/ritratto-di-signora-gustav-klimt/"
+     ]
+    },
+    {
+     "fact": "The investigation was reopened in the hope that DNA testing of the frame would match suspects. The Guardian (16 Mar 2014) and Art History News date this to 2014. Smithsonian and The History Blog say 2016, so the year is disputed.",
+     "confidence": "disputed",
+     "sources": [
+      "https://arthistorynews.com/articles/2706_Stolen_Klimt_case_reopened",
+      "https://www.thenationalnews.com/arts-culture/art/portrait-of-a-lady-stolen-klimt-painting-recovered-after-23-years-1.966160",
+      "https://www.smithsonianmag.com/smart-news/painting-found-inside-walls-italian-gallery-may-be-stolen-klimt-180973757/"
+     ]
+    },
+    {
+     "fact": "The painting was found on 10 December 2019 by a gardener (some reports say two or three) clearing ivy from the gallery's exterior wall. Behind a small metal panel (also called a lockless hatch, trap door or ventilation space) was a cavity holding a black plastic garbage bag with the unframed painting inside.",
+     "confidence": "confirmed",
+     "sources": [
+      "https://www.art-critique.com/en/2019/12/gustav-klimt-painting-potentially-recovered/",
+      "https://www.nbcnews.com/news/amp/ncna1117936",
+      "https://www.thelocal.it/20200117/painting-found-in-italy-wall-is-stolen-klimt",
+      "https://finestresullarte.info/en/news/klimt-found-in-piacenza-the-painting-is-authentic-one-of-the-world-s-most-sought-after-paintings-returns-home"
+     ]
+    },
+    {
+     "fact": "The ivy covering the hiding spot had not been cut back for almost a decade.",
+     "confidence": "confirmed",
+     "sources": [
+      "https://www.thelocal.it/20200117/painting-found-in-italy-wall-is-stolen-klimt",
+      "https://artdaily.com/news/120160/Painting-found-in-Italy-wall-is-stolen-Klimt"
+     ]
+    },
+    {
+     "fact": "The gardener said he at first thought the bag was trash and then called his superiors. Museum employee Dario Gallinari saw a corner of a painting sticking out and recognized it.",
+     "confidence": "confirmed",
+     "sources": [
+      "https://www.smithsonianmag.com/smart-news/painting-found-inside-walls-italian-gallery-may-be-stolen-klimt-180973757/",
+      "https://www.nbcnews.com/news/amp/ncna1117936"
+     ]
+    },
+    {
+     "fact": "On Friday 17 Jan 2020, Piacenza prosecutor Ornella Chicca announced the painting is authentic: 'It is with no small emotion that I can tell you the work is authentic.'",
+     "confidence": "confirmed",
+     "sources": [
+      "https://www.pbs.org/newshour/amp/arts/portrait-found-in-italian-gallerys-walls-verified-as-stolen-work-by-klimt",
+      "https://www.nbcnews.com/news/amp/ncna1117936",
+      "https://www.ilpost.it/2020/01/17/ritratto-di-signora-quadro-gustav-klimt-trovato/"
+     ]
+    },
+    {
+     "fact": "Authentication was done by experts appointed by the prosecutor. Guido Cauzzi compared infrared and UV images with the 1996 tests, and Anna Selleri checked the canvas, stretcher, stamps, wax seals and labels. The condition was 'relatively good', with one small scratch near the edge.",
+     "confidence": "confirmed",
+     "sources": [
+      "https://www.thelocal.it/20200117/painting-found-in-italy-wall-is-stolen-klimt",
+      "https://artdaily.com/news/120160/Painting-found-in-Italy-wall-is-stolen-Klimt",
+      "https://www.pbs.org/newshour/amp/arts/portrait-found-in-italian-gallerys-walls-verified-as-stolen-work-by-klimt"
+     ]
+    },
+    {
+     "fact": "The museum estimated the value at €60-100 million ($67-111M). Many outlets cite €60M, or about $66M per the BBC.",
+     "confidence": "confirmed",
+     "sources": [
+      "https://www.thelocal.it/20200117/painting-found-in-italy-wall-is-stolen-klimt",
+      "https://www.theartnewspaper.com/2020/10/20/stolen-klimt-paintingburied-for-20-yearsto-go-back-on-show-at-italian-museum",
+      "https://www.nbcnews.com/news/amp/ncna1117936"
+     ]
+    },
+    {
+     "fact": "Italian officials described it as Italy's second most valuable missing artwork, after Caravaggio's Nativity stolen from a Palermo church in 1969.",
+     "confidence": "confirmed",
+     "sources": [
+      "https://www.cbsnews.com/news/portrait-of-a-lady-painting-found-hidden-italian-gallery-confirmed-gustav-klimt/",
+      "https://www.thenationalnews.com/arts-culture/art/portrait-of-a-lady-stolen-klimt-painting-recovered-after-23-years-1.966160"
+     ]
+    },
+    {
+     "fact": "The prosecutor said she could not say whether the painting had been in the wall all along since 1997 or was placed there later.",
+     "confidence": "confirmed",
+     "sources": [
+      "https://artdaily.com/news/120160/Painting-found-in-Italy-wall-is-stolen-Klimt",
+      "https://www.thelocal.it/20200117/painting-found-in-italy-wall-is-stolen-klimt"
+     ]
+    },
+    {
+     "fact": "In January 2020 two local men in their 60s claimed responsibility in a letter to the Piacenza daily Libertà, saying they returned it as a 'gift to the city'. Their claim was unverified, and the theft was already time-barred.",
+     "confidence": "confirmed",
+     "sources": [
+      "https://www.finestresullarte.info/attualita/klimt-piacenza-66enni-confessano-furto",
+      "https://artlyst.com/stolen-gustav-klimt-portrait-thieves-confess/"
+     ]
+    },
+    {
+     "fact": "In March 2021 prosecutors requested dismissal because there was no evidence against the three people investigated. The investigation was closed, the statute of limitations had expired, and the culprit or culprits were never definitively determined.",
+     "confidence": "confirmed",
+     "sources": [
+      "https://tg24.sky.it/cronaca/2021/03/03/quadro-klimt-rubato-piacenza",
+      "https://www.euronews.com/2021/10/27/portrait-of-a-lady-after-years-of-hiding-klimt-work-is-a-star-in-rome-show"
+     ]
+    },
+    {
+     "fact": "After recovery, the painting was shown at the Museum of Rome, Palazzo Braschi, from 27 Oct 2021 to 27 Mar 2022, and was then shown again in Piacenza.",
+     "confidence": "confirmed",
+     "sources": [
+      "https://www.euronews.com/2021/10/27/portrait-of-a-lady-after-years-of-hiding-klimt-work-is-a-star-in-rome-show"
+     ]
+    }
+   ],
+   "common_myths": [
+    "'It sat inside the wall for 23 years.' This is unproven. The prosecutor said it could not be determined whether it was there all along or placed later. Use '벽 속에서 발견됐다'.",
+    "'The case was solved / the thieves were caught.' False. No one was convicted for the theft, the case was closed in 2021 as time-barred, and the culprits were never definitively determined.",
+    "'Two men confessed, so they are the thieves.' Their letter to Libertà was an unverified claim and was never proven in court. Do not present it as fact or name them.",
+    "'It was an inside job by staff or the director.' Unproven. Custodians were cleared for lack of evidence. A late director's diary entry about a staged theft is unverified, and a related person investigated in 2020 was never charged.",
+    "'Case reopened in 2016 because of DNA.' Disputed. The Guardian and Art History News report the reopening in March 2014, and some outlets say 2016. Omit the year.",
+    "'Exactly 23 years later.' Discovery came about 22 years 10 months after the theft, and authentication about 22 years 11 months after. Say '약 23년' or '23년 가까이'.",
+    "'Stolen on 22 Feb 1997' stated as the precise moment. 22 Feb is when the loss was discovered; it may have been taken days earlier.",
+    "'The thieves pulled it up through the skylight with fishing line.' This was an early police theory, later doubted because the skylight was reportedly too small.",
+    "'Found a few meters from where it was hung.' No source gives a distance. Say only that it was in the same gallery's exterior wall.",
+    "'Worth exactly $66M / 1000억 원.' Estimates range from €60M to €100M. Use '수백억 원대' or '6천만 유로 이상'.",
+    "'A single gardener found it.' Accounts differ (one, two or three gardeners or workers). '정원사' is fine in Korean, but avoid specifying a count.",
+    "'The ivy had not been cleared since 1997.' Reports say almost a decade, not 23 years.",
+    "'The April 1997 package contained the real painting.' It held a forgery.",
+    "Typos in some outlets ('stolen in 1977', 'stolen in late 1997') are wrong. The theft was in February 1997."
+   ],
+   "visual_reference_notes": "PAINTING (draw your own stylized line art, do not reproduce): a half-length young woman with brown hair, face turned and glancing over her shoulder, against an emerald-green background. Oil on canvas, about 60x55 cm (some sources give 68x55). The hidden earlier version showed a woman wearing a hat and scarf. X-ray reveal concept: the outer portrait fades to a second face beneath, with a hat brim and scarf. Gilded ornate frame, which was found on the roof. The back of the canvas carries old stamps, wax seals and labels, which were used in authentication.\n\nGALLERY: Galleria d'Arte Moderna Ricci Oddi, Piacenza (Emilia-Romagna, northern Italy). The building has gallery rooms lit by skylights. The exterior is masonry with a garden or courtyard. The ivy-covered exterior wall had a small lockless metal panel or hatch (described as a ventilation space, niche or utility cavity). Inside the cavity were rocks and metal scraps, with a black plastic garbage bag resting on them, and the painting was unframed inside the bag.\n\nROOF SCENE (Feb 1997): night or dawn winter scene, a flat roof with a skylight, and an empty gilded frame lying beside the skylight. A dotted 'fishing line' path through the skylight, crossed out with a 'too small' note.\n\nDISCOVERY (Tue 10 Dec 2019): winter daylight in northern Italy, likely grey and overcast. A gardener in work clothes (hi-vis vest optional) with shears pulling back thick ivy from a brick or plaster wall, revealing a small square metal hatch. Light catches a black trash bag.\n\nAUTHENTICATION (Fri 17 Jan 2020): press conference at the Bank of Italy (Banca d'Italia) Piacenza branch, where the painting was kept in a vault. Show IR/UV and X-ray comparison panels. Italian State Police and Carabinieri imagery is optional; avoid real logos and use generic police tape.\n\nMAP: Italy outline with a pin on Piacenza, between Milan and Parma on the Po River.\n\nTYPOGRAPHY IDEAS: 'FEB 1997' and 'DEC 10, 2019' date cards, '€60,000,000+', '진품 AUTHENTIC' seal, '범인: ???'. Palette: dark noir with ivy green and gold leaf accents (Klimt gold), and red evidence stamps.",
+   "sensitive_points": "DEFAMATION / NAMING:\n(a) Do NOT name or picture the two men who claimed responsibility in Jan 2020. Their claim is unverified and they were never convicted for this theft. If mentioned at all, say '정체불명의 인물들이 자백 편지를 보냈다는 보도도 있었지만 확인되지 않았습니다'. Omitting it is better for 30 seconds.\n(b) Do NOT name the widow or relative of the former director who was placed under investigation in Feb 2020. She was a living person, never charged, and the case was dismissed.\n(c) Do NOT name or imply that the gallery custodians or staff did it. That case was dismissed for lack of evidence. Do not say '내부자 소행'.\n(d) Do not cite the late director's diary as evidence of a staged theft. It is unverified and implies guilt.\n(e) The former PM to whom the forgery package was reportedly addressed (Bettino Craxi, deceased) is irrelevant. Omit him.\n\nACCURACY GUARDRAILS FOR NARRATION:\n- Say '벽 속에서 발견됐다', not '23년 내내 벽 속에 있었다'.\n- Say '약 23년' or '23년 가까이', or say '23년 만에' only as a rounding (NBC and The National use it).\n- Use '수백억 원대' or '6천만 유로 이상' for value, not a precise KRW figure.\n- Skip the reopening year (2014 vs 2016 dispute) and the 1912 date unless phrased as '오래전 사라진 클림트의 다른 그림'.\n- For the theft date, use '1997년 2월' rather than '2월 22일에 훔쳤다'.\n- For the ending, '범인은 끝내 밝혀지지 않았습니다' or '수사는 미제로 종결됐습니다' is supported by Euronews (Oct 2021) and Sky TG24 (Mar 2021).\n\nPLATFORM SAFETY: there is no violence, no victims and no minors (Claudia Maga was 18 and a positive figure; she can be mentioned as '18세 학생', but it is not necessary). The artwork is public domain, but per production rules draw it in original stylized line art and do not reproduce it.\n\nKRW CONVERSION NOTE: €60M is about 780억 원 at 2020 rates and higher at recent rates. Never state a specific 억 figure as fact."
+  },
+  {
+   "summary": "CASE DOSSIER: Klimt's \"Portrait of a Lady\" (Ritratto di signora), stolen from the Galleria d'Arte Moderna Ricci Oddi in Piacenza, Italy, and found in the gallery's own exterior wall. Checked against sources as of Nov 2026.\n\nWHAT IS SOLID: The painting is oil on canvas, dated 1916-17 (some sources say 1916-18). Gallery founder Giuseppe Ricci Oddi bought it in 1925. In 1996 an 18-year-old Piacenza high-school student, Claudia Maga, noticed that it matched a lost Klimt known only from an old black-and-white reproduction, usually called \"Backfisch\" (a young woman in a large hat and scarf). X-ray and infrared analysis confirmed that Klimt had painted over that earlier portrait. Maga called it \"the only double portrait Klimt ever painted\". In February 1997 the gallery was preparing its works for the exhibition \"Da Hayez a Klimt\" at Palazzo Gotico, and the building was under renovation. Staff noticed the painting missing on the morning of 22 Feb 1997; it was probably taken between 19 and 21 Feb. The empty frame was found on the roof near a skylight. Police first suspected the canvas was pulled up through the skylight with a fishing line, but the frame was too big to fit through it. In April 1997 police intercepted a high-quality forgery at Ventimiglia. Custodians were investigated and cleared. The case was reopened in March 2014 to test a partial fingerprint and DNA on the frame, DNA traces were reported in 2016, and nothing came of either.\n\nOn Tuesday 10 Dec 2019, around 3 pm, contract gardeners (three, per local reports; English-language wires say \"a gardener\") were clearing ivy from an exterior courtyard wall. They opened a small metal hatch with no lock, on a recess similar to a utility-meter box. Inside, among some rubbish, was a black plastic garbage bag holding the canvas, unframed but still on its stretcher, in very good condition. Piacenza prosecutor Ornella Chicca announced on Fri 17 Jan 2020, at a press conference at the Bank of Italy's Piacenza branch, that it was authentic: \"It's with no small emotion that I can tell you the work is authentic.\"\n\nWHAT IS NOT KNOWN: Who stole it, how, and whether it sat in the wall the whole time. Prosecutors said tests would decide whether it had been there since the theft or was put there later, and that was never settled. Its good condition and the thieves' claim point to a later placement. The theft itself was time-barred. Two men in their 60s wrote to the newspaper Libertà in Jan 2020 claiming they stole it and returned it \"as a gift to the city\". Their lawyer said they put it back about four years earlier. This was never verified. In Nov 2021 the investigating judge (GIP) archived the case for all three people who had been investigated. Nobody was ever charged. The theft remains unsolved.\n\nLATEST STATUS (2026): The painting went to Rome (Palazzo Braschi, 27 Oct 2021 to 27 Mar 2022) and to the Forte di Bard (Dec 2023 to Mar 2024). It then had its first showing outside Italy in SEOUL, at My Art Museum in Gangnam (Samseong-dong), in \"클림트와 리치오디의 기적\", 19 Dec 2025 to 22 Mar 2026. It has been back on display at the Ricci Oddi since 4 Apr 2026, and the renovated gallery reopened on 28 Apr 2026. The Seoul show is a strong local hook for Korean viewers (\"이 그림, 지난겨울 서울에 왔었습니다\").\n\nCORRECTIONS TO THE PROPOSED HOOK AND TWIST:\n(1) The gap from Feb 1997 to Dec 2019 is 22 years 10 months. Use \"22년 만에\" or \"거의 23년 만에\", not a flat \"23년 전 도난\".\n(2) €60M is about ₩1,000억 at 2025-26 exchange rates (Seoul Shinmun, Dec 2025: 약 1041억원). \"수백억 원짜리\" now slightly understates it. Prefer \"6천만 유로(육천만 유로)\" or \"천억 원 안팎\".\n(3) Say \"정원사들\" (plural) or keep it generic.\n(4) Drop \"a few meters from where it vanished\". No source gives a distance; say \"같은 미술관 외벽 속\".\n(5) The reopening year is 2014, not 2016. DNA traces were reported in 2016.\n\nSAMPLE NARRATION (147 syllables, numbers counted as spoken):\n\"도난당한 클림트 명화가, 22년 만에 미술관 벽 속에서 나왔습니다(28). 1997년, 이탈리아 피아첸차의 미술관(19). 전시를 앞둔 그림이 사라졌습니다(14). 빈 액자는 지붕에서 나왔지만, 천창을 통과할 수 없는 크기였죠(25). 2019년 12월, 담쟁이를 걷어내던 정원사들이 작은 철문을 열자(28), 검은 봉투 속에 그 그림이 있었습니다(15). 감정 결과, 진품(6). 범인은 밝혀지지 않았습니다(12).\"\nSpoken forms: 1997년 = 천구백구십칠년 (7 syllables); 2019년 = 이천십구년 (5); 12월 = 십이월 (3); 22년 = 이십이년 (4).",
+   "timeline": [
+    {
+     "date": "c.1910-1912",
+     "event": "Klimt paints an earlier portrait of a young woman in a large black hat and scarf, known as 'Backfisch' or 'Ritratto di ragazza'. Sources date it c.1910 or 1912. It was exhibited in Dresden in 1912 and is considered lost from around 1917. The only known image is a reproduction in a Franz Servaes essay, probably from 1918.",
+     "source": "https://www.turismopiacenza.it/il-mistero-del-klimt-capitolo-1-il-segreto-sotto-la-tela/"
+    },
+    {
+     "date": "1916-1917",
+     "event": "Klimt reuses the canvas and paints 'Portrait of a Lady' over it, with the same face and pose but no hat or scarf.",
+     "source": "https://finestresullarte.info/en/exhibition-reviews/the-lady-returns-to-piacenza-here-is-the-gustav-klimt-exhibition-at-ricci-oddi"
+    },
+    {
+     "date": "1925",
+     "event": "Collector Giuseppe Ricci Oddi buys the painting from Luigi Scopinich's gallery in Milan. The Ricci Oddi gallery opens to the public in 1931.",
+     "source": "https://www.piacenzasera.it/2026/04/il-ritorno-a-casa-della-signora-del-klimt-alla-ricci-oddi-dal-4-aprile/639922/"
+    },
+    {
+     "date": "1996",
+     "event": "Claudia Maga, an 18-year-old final-year student at Piacenza's art high school, spots the resemblance to the lost portrait. X-ray and infrared analysis confirm the hidden earlier image, the 'double Klimt'.",
+     "source": "https://www.turismopiacenza.it/il-mistero-del-klimt-capitolo-1-il-segreto-sotto-la-tela/"
+    },
+    {
+     "date": "1997-02-19 to 02-21 (presumed)",
+     "event": "The painting is believed to have been taken during packing for the exhibition 'Da Hayez a Klimt' at Palazzo Gotico, while the building was under renovation.",
+     "source": "https://www.finestresullarte.info/en/news/klimt-found-in-piacenza-the-painting-is-authentic-one-of-the-world-s-most-sought-after-paintings-returns-home"
+    },
+    {
+     "date": "1997-02-22 (Saturday)",
+     "event": "The painting is discovered missing. Its heavy gilded frame is found on the gallery roof near a skylight. Police theorise it was hauled up through the skylight with a fishing line, but the frame is found to be too large to fit through.",
+     "source": "https://www.smithsonianmag.com/smart-news/painting-found-inside-walls-italian-gallery-may-be-stolen-klimt-180973757/"
+    },
+    {
+     "date": "1997-04",
+     "event": "Police intercept a high-quality forgery of the painting at Ventimiglia near the French border.",
+     "source": "https://en.wikipedia.org/wiki/Portrait_of_a_Lady_(Klimt)"
+    },
+    {
+     "date": "1997 (after the theft)",
+     "event": "Gallery custodians are investigated. The case is dismissed for lack of evidence.",
+     "source": "https://www.ansa.it/emiliaromagna/notizie/2021/11/18/klimt-sparito-e-ritrovato-archiviata-linchiesta-a-piacenza_f0383024-65c2-458a-a797-286e804846f3.html"
+    },
+    {
+     "date": "2014-03",
+     "event": "Police reopen the cold case after 17 years to test a partial fingerprint and possible DNA on the frame. It leads nowhere.",
+     "source": "https://www.archaeology.wiki/blog/2014/03/24/klimt-case-resumes-after-17-years/"
+    },
+    {
+     "date": "2016",
+     "event": "Brief renewed activity: DNA traces are reported on the frame, and an unidentified man claims involvement and promises a return by the 20th anniversary. The painting is not returned by Feb 2017, and the lead stalls.",
+     "source": "https://www.smithsonianmag.com/smart-news/painting-found-inside-walls-italian-gallery-may-be-stolen-klimt-180973757/"
+    },
+    {
+     "date": "2019-12-10 (Tuesday, ~15:00)",
+     "event": "Contract gardeners clearing ivy from an exterior courtyard wall of the Ricci Oddi open a small unlocked metal hatch. Inside a recess, they find a black plastic garbage bag holding the unframed canvas, still on its stretcher. Staff and police are called.",
+     "source": "https://www.piacenzasera.it/2021/12/per-primo-ho-capito-di-avere-davanti-il-ritratto-di-signora-unemozione-fortissima/409868/"
+    },
+    {
+     "date": "2020-01-17 (Friday)",
+     "event": "At a press conference at the Bank of Italy's Piacenza branch, prosecutor Ornella Chicca announces that experts have authenticated the painting as Klimt's 'Portrait of a Lady'. Analysis took about a month.",
+     "source": "https://www.pbs.org/newshour/amp/arts/portrait-found-in-italian-gallerys-walls-verified-as-stolen-work-by-klimt"
+    },
+    {
+     "date": "2020-01 (around Jan 11-21)",
+     "event": "Two men in their 60s write to journalist Ermanno Mariani of the Piacenza paper Libertà, claiming they stole the painting and returned it 'as a gift to the city'. Unverified. Their lawyer says they claim they put it back about four years earlier.",
+     "source": "https://hyperallergic.com/two-thieves-say-they-stole-a-gustav-klimt-painting-and-returned-it-over-20-years-later"
+    },
+    {
+     "date": "2020-11-28",
+     "event": "The painting is back on display at the Ricci Oddi gallery.",
+     "source": "https://artsandculture.google.com/story/portrait-of-a-lady-belvedere/HwVBbygjxNlhKw?hl=en"
+    },
+    {
+     "date": "2021-10-27 to 2022-03-27",
+     "event": "Loaned to 'Klimt. La Secessione e l'Italia' at the Museo di Roma, Palazzo Braschi.",
+     "source": "https://www.museodiroma.it/en/node/1009433"
+    },
+    {
+     "date": "2021-11 (reported 18 Nov 2021)",
+     "event": "At the prosecutor's request, the Piacenza GIP archives the theft and receiving-stolen-goods investigation for all three people investigated. Nobody is charged, and the case is effectively closed as unsolved.",
+     "source": "https://www.ansa.it/emiliaromagna/notizie/2021/11/18/klimt-sparito-e-ritrovato-archiviata-linchiesta-a-piacenza_f0383024-65c2-458a-a797-286e804846f3.html"
+    },
+    {
+     "date": "2023-12-01 to 2024-03-10",
+     "event": "Exhibited at the Forte di Bard in the Aosta Valley.",
+     "source": "https://www.artribune.com/?p=1034973"
+    },
+    {
+     "date": "2025-12-19 to 2026-03-22",
+     "event": "First exhibition outside Italy: 'The Miracle of Klimt and Other Treasures from Galleria d'Arte Moderna Ricci Oddi' (클림트와 리치오디의 기적) at My Art Museum in Gangnam (Samseong-dong), Seoul. About 70 works were shown.",
+     "source": "https://www.seoul.co.kr/news/life/exhibition/2025/12/17/20251217500152"
+    },
+    {
+     "date": "2026-04-04",
+     "event": "The painting is back in the Ricci Oddi galleries in Piacenza. The renovated gallery, designed by Lissoni & Partners, reopens fully on 28 Apr 2026.",
+     "source": "https://www.finestresullarte.info/musei/dopo-seul-il-ritratto-di-signora-di-klimt-torna-nella-galleria-ricci-oddi-piacenza"
+    }
+   ],
+   "key_facts": [
+    {
+     "fact": "Painting: Gustav Klimt, 'Portrait of a Lady' (Ritratto di signora), oil on canvas, 1916-1917 (some sources say 1916-1918). It shows a young woman glancing over her shoulder against a green background.",
+     "confidence": "confirmed",
+     "sources": [
+      "https://www.pbs.org/newshour/amp/arts/portrait-found-in-italian-gallerys-walls-verified-as-stolen-work-by-klimt",
+      "https://en.wikipedia.org/wiki/Portrait_of_a_Lady_(Klimt)"
+     ]
+    },
+    {
+     "fact": "Dimensions are disputed. Most Italian museum and press sources say 68 x 55 cm, while English Wikipedia and Newsis say 60 x 55 cm. Avoid stating them on screen.",
+     "confidence": "disputed",
+     "sources": [
+      "https://finestresullarte.info/en/news/klimt-theft-in-piacenza-two-66-year-old-local-men-confess-we-stole-it-returned-it-to-make-a-gift-to-the-city",
+      "https://en.wikipedia.org/wiki/Portrait_of_a_Lady_(Klimt)"
+     ]
+    },
+    {
+     "fact": "Location: Galleria d'Arte Moderna Ricci Oddi, Via San Siro, Piacenza, northern Italy. Giuseppe Ricci Oddi acquired the painting in 1925.",
+     "confidence": "confirmed",
+     "sources": [
+      "https://www.piacenzasera.it/2019/12/dalledera-della-ricci-oddi-spunta-il-ritratto-di-signora-indagini-in-corso/322974/",
+      "https://www.piacenzasera.it/2026/04/il-ritorno-a-casa-della-signora-del-klimt-alla-ricci-oddi-dal-4-aprile/639922/"
+     ]
+    },
+    {
+     "fact": "In 1996 Claudia Maga, an 18-year-old Piacenza art high-school student, noticed the portrait matched a lost Klimt known only from an old reproduction. X-rays confirmed that Klimt had painted over that earlier portrait. Maga told the BBC it is 'the only double portrait Klimt has ever painted'.",
+     "confidence": "confirmed",
+     "sources": [
+      "https://www.smithsonianmag.com/smart-news/painting-found-inside-walls-italian-gallery-may-be-stolen-klimt-180973757/",
+      "https://www.turismopiacenza.it/il-mistero-del-klimt-capitolo-1-il-segreto-sotto-la-tela/",
+      "https://artsandculture.google.com/story/portrait-of-a-lady-belvedere/HwVBbygjxNlhKw?hl=en"
+     ]
+    },
+    {
+     "fact": "The underlying portrait ('Backfisch' or 'Ritratto di ragazza con cappello') shows the same face and pose with a large black hat and scarf. It is dated c.1910 by some sources and 1912 by others; it was exhibited in Dresden in 1912 and considered lost from around 1917. Smithsonian and Reuters say 'not seen since 1912'.",
+     "confidence": "likely",
+     "sources": [
+      "https://finestresullarte.info/en/exhibition-reviews/the-lady-returns-to-piacenza-here-is-the-gustav-klimt-exhibition-at-ricci-oddi",
+      "https://www.turismopiacenza.it/il-mistero-del-klimt-capitolo-1-il-segreto-sotto-la-tela/",
+      "https://www.thestar.com.my/news/world/2020/01/18/italy-confirms-long-lost-klimt-painting-hidden-in-wall-is-authentic"
+     ]
+    },
+    {
+     "fact": "The painting vanished while being prepared for the exhibition 'Da Hayez a Klimt' at Palazzo Gotico, with the gallery under renovation. The disappearance was noticed on the morning of 22 Feb 1997, and the painting was probably taken between 19 and 21 Feb.",
+     "confidence": "confirmed",
+     "sources": [
+      "https://finestresullarte.info/en/exhibition-reviews/the-lady-returns-to-piacenza-here-is-the-gustav-klimt-exhibition-at-ricci-oddi",
+      "https://www.finestresullarte.info/en/news/klimt-found-in-piacenza-the-painting-is-authentic-one-of-the-world-s-most-sought-after-paintings-returns-home",
+      "https://www.nbcnews.com/news/amp/ncna1117936"
+     ]
+    },
+    {
+     "fact": "The empty frame was found on the gallery roof near a skylight. Police theorised the canvas was hooked off the wall and pulled up through the open skylight with a fishing line, but the frame was later found to be too big to fit through the skylight.",
+     "confidence": "confirmed",
+     "sources": [
+      "https://www.smithsonianmag.com/smart-news/painting-found-inside-walls-italian-gallery-may-be-stolen-klimt-180973757/",
+      "https://www.thenationalnews.com/arts-culture/art/portrait-of-a-lady-stolen-klimt-painting-recovered-after-23-years-1.966160",
+      "https://en.wikipedia.org/wiki/Portrait_of_a_Lady_(Klimt)"
+     ]
+    },
+    {
+     "fact": "In April 1997 police intercepted a package containing a high-quality forgery of the painting, at Ventimiglia per Wikipedia.",
+     "confidence": "confirmed",
+     "sources": [
+      "https://www.smithsonianmag.com/smart-news/painting-found-inside-walls-italian-gallery-may-be-stolen-klimt-180973757/",
+      "https://en.wikipedia.org/wiki/Portrait_of_a_Lady_(Klimt)"
+     ]
+    },
+    {
+     "fact": "Gallery custodians were investigated in 1997 and the case against them was dismissed for lack of evidence.",
+     "confidence": "confirmed",
+     "sources": [
+      "https://www.smithsonianmag.com/smart-news/painting-found-inside-walls-italian-gallery-may-be-stolen-klimt-180973757/",
+      "https://www.ansa.it/emiliaromagna/notizie/2021/11/18/klimt-sparito-e-ritrovato-archiviata-linchiesta-a-piacenza_f0383024-65c2-458a-a797-286e804846f3.html"
+     ]
+    },
+    {
+     "fact": "The cold case was reopened in March 2014 to test a partial fingerprint and DNA on the frame. DNA traces were reported in 2016. Neither produced a suspect.",
+     "confidence": "confirmed",
+     "sources": [
+      "https://www.archaeology.wiki/blog/2014/03/24/klimt-case-resumes-after-17-years/",
+      "https://www.goodmorningamerica.com/news/story/66-million-klimt-painting-stolen-20-years-ago-67716441",
+      "https://en.wikipedia.org/wiki/Portrait_of_a_Lady_(Klimt)"
+     ]
+    },
+    {
+     "fact": "Discovery on 10 Dec 2019 (Tuesday) around 3 pm. Gardeners clearing ivy from an exterior courtyard wall opened a small metal hatch with no lock on a recess resembling a utility-meter box. Inside was a black plastic garbage bag holding the canvas, unframed but still on its stretcher, with exhibition stamps on the back.",
+     "confidence": "confirmed",
+     "sources": [
+      "https://www.piacenzasera.it/2019/12/dalledera-della-ricci-oddi-spunta-il-ritratto-di-signora-indagini-in-corso/322974/",
+      "https://www.artribune.com/?p=1034973",
+      "https://www.goodmorningamerica.com/news/story/66-million-klimt-painting-stolen-20-years-ago-67716441",
+      "https://www.pbs.org/newshour/amp/arts/portrait-found-in-italian-gallerys-walls-verified-as-stolen-work-by-klimt"
+     ]
+    },
+    {
+     "fact": "The number of finders is disputed. A Ricci Oddi custodian (piacenzasera, Dec 2021) and Italian Wikipedia say three gardeners. AP, NBC and Smithsonian say 'a gardener', and piacenzasera's 2019 report says 'some workers'. Use '정원사들' to be safe.",
+     "confidence": "disputed",
+     "sources": [
+      "https://www.piacenzasera.it/2021/12/per-primo-ho-capito-di-avere-davanti-il-ritratto-di-signora-unemozione-fortissima/409868/",
+      "https://it.wikipedia.org/wiki/Ritratto_di_signora_(Klimt)",
+      "https://www.nbcnews.com/news/amp/ncna1117936"
+     ]
+    },
+    {
+     "fact": "Authenticity was announced on Friday 17 Jan 2020 at a press conference at the Bank of Italy's Piacenza branch. Prosecutor Ornella Chicca said: 'It's with no small emotion that I can tell you the work is authentic.' Experts compared the canvas with the 1996 X-ray and infrared analyses. The painting was in remarkably good condition, with only a scratch near the edge.",
+     "confidence": "confirmed",
+     "sources": [
+      "https://www.pbs.org/newshour/amp/arts/portrait-found-in-italian-gallerys-walls-verified-as-stolen-work-by-klimt",
+      "https://www.ilpost.it/2020/01/17/ritratto-di-signora-quadro-gustav-klimt-trovato/",
+      "https://www.nbcnews.com/news/amp/ncna1117936"
+     ]
+    },
+    {
+     "fact": "The time from theft to discovery was 22 years 10 months. Italian and some Korean sources say '22 anni' or '22년'; English and some Korean sources round to '23 years' or '23년'.",
+     "confidence": "confirmed",
+     "sources": [
+      "https://www.newsis.com/view/NISX20251113_0003402035",
+      "https://www.pbs.org/newshour/amp/arts/portrait-found-in-italian-gallerys-walls-verified-as-stolen-work-by-klimt"
+     ]
+    },
+    {
+     "fact": "Value is usually given as €60 million (about $66M). The museum and city have cited €60-100M, since the painting has never been sold. KRW conversions vary with the exchange rate: ₩772-773억 in 2020 and ₩1,041억 in Dec 2025. It was called the second most valuable missing artwork in Italy, after the Caravaggio Nativity stolen in Palermo in 1969.",
+     "confidence": "likely",
+     "sources": [
+      "https://hyperallergic.com/two-thieves-say-they-stole-a-gustav-klimt-painting-and-returned-it-over-20-years-later",
+      "https://www.vogue.co.kr/2020/01/23/%ED%81%B4%EB%A6%BC%ED%8A%B8-%EC%97%AC%EC%9D%B8%EC%9D%98-%EC%B4%88%EC%83%81-%EB%8F%84%EB%82%9C-%EB%AF%B8%EC%8A%A4%ED%84%B0%EB%A6%AC",
+      "https://www.seoul.co.kr/news/life/exhibition/2025/12/17/20251217500152",
+      "https://www.thenationalnews.com/arts-culture/art/portrait-of-a-lady-stolen-klimt-painting-recovered-after-23-years-1.966160"
+     ]
+    },
+    {
+     "fact": "It is unknown how long the painting was in the wall. Prosecutors said tests would decide whether it had been there since the theft or was placed later. Officials said 'We don't know anything about how it was put there.' The ivy had covered the recess for about 10 years. The painting's good condition and the thieves' claim suggest it was placed later, but this was never established.",
+     "confidence": "confirmed",
+     "sources": [
+      "https://www.theartnewspaper.com/news/missing-klimt-turns-up-in-hidden-wall-cavity-in-good-condition",
+      "https://en.wikipedia.org/wiki/Portrait_of_a_Lady_(Klimt)",
+      "https://www.pbs.org/newshour/amp/arts/portrait-found-in-italian-gallerys-walls-verified-as-stolen-work-by-klimt"
+     ]
+    },
+    {
+     "fact": "In January 2020 two men in their 60s, already convicted for unrelated art and home thefts, wrote to the newspaper Libertà claiming they stole the painting and returned it 'as a gift to the city'. Their lawyer said they claimed to have put it back about four years earlier. The claim was never verified, and some suspected the return was meant to win leniency.",
+     "confidence": "confirmed",
+     "sources": [
+      "https://hyperallergic.com/two-thieves-say-they-stole-a-gustav-klimt-painting-and-returned-it-over-20-years-later",
+      "https://finestresullarte.info/en/news/klimt-theft-in-piacenza-two-66-year-old-local-men-confess-we-stole-it-returned-it-to-make-a-gift-to-the-city"
+     ]
+    },
+    {
+     "fact": "The theft itself is time-barred under Italy's statute of limitations. Prosecutors said in Jan 2020: 'Il furto è prescritto, non la ricettazione' (the theft is time-barred, but receiving stolen goods is not).",
+     "confidence": "confirmed",
+     "sources": [
+      "https://www.open.online/2020/01/18/come-sparito-e-come-stato-ritrovato-il-ritratto-di-signora-di-klimt"
+     ]
+    },
+    {
+     "fact": "In Nov 2021 the Piacenza GIP, at prosecutor Chicca's request, archived the theft and receiving-stolen-goods investigation for all three people investigated. Nobody was ever charged or convicted. As of Jan 2025 the case was still described as a mystery, and no 2026 developments were found.",
+     "confidence": "confirmed",
+     "sources": [
+      "https://www.ansa.it/emiliaromagna/notizie/2021/11/18/klimt-sparito-e-ritrovato-archiviata-linchiesta-a-piacenza_f0383024-65c2-458a-a797-286e804846f3.html",
+      "https://www.piacenzasera.it/2025/01/dopo-5-anni-il-klimt-resta-ancora-il-dipinto-dei-misteri/575810/"
+     ]
+    },
+    {
+     "fact": "The painting was shown in Seoul at My Art Museum (Gangnam, Samseong-dong) from 19 Dec 2025 to 22 Mar 2026, its first showing outside Italy, in the exhibition '클림트와 리치오디의 기적' with about 70 works. It returned to Piacenza and has been on display since 4 Apr 2026.",
+     "confidence": "confirmed",
+     "sources": [
+      "https://www.seoul.co.kr/news/life/exhibition/2025/12/17/20251217500152",
+      "https://www.piacenzasera.it/2025/11/la-ricci-oddi-in-trasferta-a-seul-con-70-quadri-e-il-klimt-riallestimento-in-corso/619993/",
+      "https://www.finestresullarte.info/musei/dopo-seul-il-ritratto-di-signora-di-klimt-torna-nella-galleria-ricci-oddi-piacenza"
+     ]
+    },
+    {
+     "fact": "The gallery's exhibition plan was linked to the 1996 double-portrait discovery. Smithsonian says the discovery prompted a special exhibition, and the painting vanished during the preparations. Italian sources name the show 'Da Hayez a Klimt' at Palazzo Gotico.",
+     "confidence": "likely",
+     "sources": [
+      "https://www.smithsonianmag.com/smart-news/painting-found-inside-walls-italian-gallery-may-be-stolen-klimt-180973757/",
+      "https://finestresullarte.info/en/exhibition-reviews/the-lady-returns-to-piacenza-here-is-the-gustav-klimt-exhibition-at-ricci-oddi"
+     ]
+    }
+   ],
+   "common_myths": [
+    "'It sat inside the wall for 23 years.' Not established. Prosecutors never determined when it was placed there; its good condition and the thieves' claim (about 2016) suggest a later placement. Say '벽 속에서 발견됐다'.",
+    "'Exactly 23 years later.' The gap from Feb 1997 to Dec 2019 is 22 years 10 months. '23 years' is rounding, so use '22년 만에' or '거의 23년 만에'.",
+    "'Stolen on 22 February 1997.' That is when the loss was noticed; the painting was probably taken 19-21 Feb. One outlet (GMA/ABC) wrongly printed 'Oct. 22, 1997', and an Artribune piece gives '9 February 1997'.",
+    "'A single gardener found it.' Italian local sources say three contract gardeners; the English wires simplified this to 'a gardener'.",
+    "'It was sealed inside the wall / bricked in.' It was in a small recess behind a metal hatch with no lock, like a utility-meter box, on an exterior courtyard wall. The Belvedere/Google Arts text even calls it an 'unlocked shed adjacent to the Gallery'.",
+    "'The case was reopened in 2016 over DNA.' The formal reopening for DNA and fingerprint testing was March 2014; 2016 brought reports of DNA traces and a man claiming involvement.",
+    "'The thieves confessed, so the case is solved.' The two men's letter to Libertà was never verified, nobody was charged, and the case was archived in Nov 2021 with the theft time-barred. It is officially unsolved.",
+    "'It was an inside job / a staged theft by the director.' This is speculation only. Staff were investigated and cleared in 1997, and the later investigation of three people was archived for lack of evidence. Never present it as fact.",
+    "'Klimt painted over the portrait of a lover who died suddenly.' This romantic legend is repeated in Korean coverage (e.g. Seoul Shinmun) and on Wikipedia, but no primary evidence supports it. The sitters of both versions are unidentified.",
+    "'Klimt painted the same woman's face twice for unknown reasons.' Some Korean articles frame it this way. The documented fact is that the earlier portrait was reused and altered (hat and scarf removed); the motive is speculative.",
+    "'Worth ₩772억', '₩1,041억', '$66M' or '€100M' stated as a single precise value. These are exchange-rate-dependent conversions of an estimate (€60M, range €60-100M); no sale price exists.",
+    "'Hidden portrait unseen since exactly 1912.' Sources variously date it c.1910 or 1912 and say it was lost from 1917. Keep the year off screen or say '사라진 줄 알았던'.",
+    "'Dimensions 60 x 55 cm.' Most Italian sources give 68 x 55 cm, so this is disputed; don't show dimensions.",
+    "'The thieves pulled it out through the skylight.' This was the initial police theory, but the frame couldn't fit through the skylight, and how the painting left (or whether it left) remains unknown.",
+    "'Found a few meters from where it disappeared.' No source gives a distance; say '같은 미술관 외벽'.",
+    "Klimt's death date is sometimes misprinted as 16 Feb 1918 (e.g. in Il Post's bio box); he died on 6 Feb 1918. This is irrelevant to the script, but don't copy it."
+   ],
+   "visual_reference_notes": "PLACES\n- Galleria d'Arte Moderna Ricci Oddi: an early-1930s brick and stone museum in Piacenza's historic centre on Via San Siro, with internal cloisters and courtyards ('chiostri') and garden areas.\n- The discovery spot is an exterior courtyard wall heavily covered by ivy, about a decade's growth. In it is a small, square, grey metal hatch or panel with no lock, resembling a utility-meter box. Behind it is a shallow recess containing some debris and a large black plastic garbage bag.\n- The canvas was unframed but still on its wooden stretcher, with exhibition stamps and wax seals on the back. Use these for close-ups of the back of the canvas only.\n\nTIME AND WEATHER\n- Discovery: Tuesday afternoon, about 3 pm, 10 Dec 2019. Northern Italian winter, cold, overcast or low winter sun, and the run-up to Christmas (Italian reports note the Christmas season).\n- Theft: February 1997, winter. The gallery was under renovation and paintings were being packed for an exhibition at Palazzo Gotico, a red-brick medieval town hall in Piazza Cavalli, Piacenza. Show crates, packing materials and scaffolding.\n\nROOF SCENE\n- An ornate, heavy gilded empty frame lying on a tiled roof beside a skylight.\n- Show the 'fishing line' theory as a dotted line up through the skylight, then crossed out with a 'too big to fit' label, since the frame was wider than the opening.\n\nTHE PAINTING (draw your own stylized version; do not reproduce it)\n- A young woman, head turned and glancing back over her shoulder, against a soft moss-green background with loose late-Klimt brushwork.\n- X-ray reveal: the same face and pose underneath, but wearing a large black hat and a scarf around the neck.\n\nAUTHENTICATION\n- 17 Jan 2020: a press conference inside the Bank of Italy's Piacenza branch, where the painting was kept in the vault.\n- Visual ideas: a bank vault door, an infrared or X-ray scanner glow, and an 'AUTHENTIC' seal.\n\nAPRIL 1997 FORGERY\n- A parcel intercepted at the Ventimiglia border, near France on the Ligurian coast.\n\nSEOUL TIE-IN\n- My Art Museum, Gangnam (Teheran-ro, Samseong-dong), Seoul. Exhibition '클림트와 리치오디의 기적', 19 Dec 2025 to 22 Mar 2026.\n- Could appear as a final card: a Seoul skyline silhouette with the line '이 그림, 지난겨울 서울에 왔었다'.\n\nMAP\n- Piacenza sits in Emilia-Romagna, northern Italy, on the Po river, about 70 km southeast of Milan.\n- Ventimiglia sits on the French border, on the Ligurian coast.\n\nON-SCREEN TEXT SUGGESTIONS\n- 'STOLEN · 1997.02'\n- 'FOUND · 2019.12.10'\n- 'AUTHENTIC · 2020.01.17'\n- '€60,000,000+'\n- '범인: ???'\n- '사건 종결(미제) · 2021.11'",
+   "sensitive_points": "DEFAMATION: never name or imply any person as the thief. Italian reports name three people who were investigated after the discovery, and all three were archived in Nov 2021 with no evidence found:\n- The late gallery director, who died in 2009. A 2016 BBC report on his diary said he had mused about staging a fake theft as a publicity stunt.\n- His widow, since deceased.\n- A man with prior art-theft convictions who publicly claimed responsibility but would not answer prosecutors.\nThe 1997 custodians were also cleared. Do not use any of these names, do not show the 'staged by the director' theory, and do not say '내부자 소행'.\n\nTHIEVES' CONFESSION: the two men's January 2020 letter to Libertà is unverified. If used at all, say '범인이라 주장하는 편지가 지역 신문에 도착했지만, 진위는 확인되지 않았다'. Also avoid the Banca di Piacenza reward story from 2015 (amount unknown, connection unproven), and avoid naming Bettino Craxi in connection with the forgery parcel. That detail rests mainly on Wikipedia and is irrelevant, and it would invite claims of implying wrongdoing.\n\nLEGAL STATUS: say '범인은 끝내 밝혀지지 않았다' or '수사는 미제로 종결됐다'. Do not say '범인이 자백했다' or 'solved'. The theft is time-barred.\n\nNO VIOLENCE OR MINORS: there are no victims, violence or minors in this case. Claudia Maga was 18, an adult, in 1996. She is a private individual, so mention her only neutrally, or say '한 미술 학도' without a name to be safest.\n\nARTWORK REPRODUCTION: the original is public domain, but per the production rule, draw a stylized line-art woman glancing over her shoulder. Do not trace the real painting or use museum photos. The Ricci Oddi and My Art Museum names and logos should not be imitated as branding; a plain-text mention of the place is fine.\n\nNUMBERS TO SAY SAFELY:\n- '1997년 2월' (not '2월 22일 도난'; if a date is wanted, '2월 22일 사라진 사실이 발견됐다').\n- '2019년 12월'.\n- '22년 만에' or '거의 23년 만에'.\n- '6천만 유로 이상' or '천억 원 안팎'. '수백억 원' understates the value at 2025-26 rates.\n- '진품 확인 2020년 1월'.\n\nTTS SYLLABLE COUNTS (spoken forms):\n- 천구백구십칠년 = 7\n- 이천십구년 = 5\n- 이천이십년 = 5\n- 십이월 = 3\n- 이십이년 = 4\n- 이십삼년 = 4\n- 육천만 유로 = 5\n\nATTRIBUTION OF UNCERTAINTY: phrase the location as '벽 속에서 발견됐다', not '23년 내내 벽 속에 있었다'. The hatch was unlocked and accessible, so avoid '봉인된 벽'."
+  }
+ ]
+}

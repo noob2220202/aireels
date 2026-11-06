@@ -1,0 +1,862 @@
+{
+  "name": "klimt_wall_long",
+  "voice": {
+    "name": "ko-KR-InJoonNeural",
+    "rate": "+19%",
+    "pitch": "-2Hz"
+  },
+  "start_pad": 0.08,
+  "end_pad": 0.9,
+  "maxu": 10.5,
+  "title": {
+    "l1": "도둑맞은 클림트 명화",
+    "l2": "22년 뒤 벽 속에서 발견"
+  },
+  "scenes": [
+    {
+      "id": "hook",
+      "say": "도둑맞은 명화가 22년 만에 그 미술관 벽 속에서 나왔다.",
+      "hl": [],
+      "tail": 0.16,
+      "tts": "도둑맞은 명화가 이십이년 만에 그 미술관 벽 속에서 나왔다.",
+      "sfx": [
+        {
+          "type": "impact",
+          "size": 1.0,
+          "at": 0.0
+        },
+        {
+          "type": "creak",
+          "dur": 0.6,
+          "db": -3,
+          "word": "나왔다",
+          "off": -0.25
+        },
+        {
+          "type": "shimmer",
+          "db": -2,
+          "word": "나왔다",
+          "off": 0.05
+        }
+      ]
+    },
+    {
+      "id": "culprit",
+      "say": "범인은 지금도 아무도 모른다.",
+      "hl": [],
+      "tail": 0.16,
+      "trans": {
+        "type": "whip",
+        "dur": 0.32
+      },
+      "sfx": [
+        {
+          "type": "whoosh",
+          "dur": 0.45,
+          "db": -4,
+          "at": -0.2
+        },
+        {
+          "type": "type",
+          "db": -8,
+          "at": 0.18
+        },
+        {
+          "type": "type",
+          "db": -8,
+          "at": 0.25
+        },
+        {
+          "type": "type",
+          "db": -8,
+          "at": 0.32
+        },
+        {
+          "type": "type",
+          "db": -8,
+          "at": 0.39
+        },
+        {
+          "type": "type",
+          "db": -8,
+          "at": 0.46
+        },
+        {
+          "type": "snap",
+          "db": -3,
+          "word": "모른다",
+          "off": 0.0
+        },
+        {
+          "type": "glitch",
+          "dur": 0.3,
+          "db": -9,
+          "word": "모른다",
+          "off": 0.25
+        }
+      ]
+    },
+    {
+      "id": "y1996",
+      "say": "1996년, 한 학생이 이 클림트 그림에서 사라진 옛 작품의 얼굴을 알아봤다.",
+      "hl": [],
+      "tail": 0.16,
+      "tts": "천구백구십육년, 한 학생이 이 클림트 그림에서 사라진 옛 작품의 얼굴을 알아봤다.",
+      "trans": {
+        "type": "glitch",
+        "dur": 0.32
+      },
+      "sfx": [
+        {
+          "type": "glitch",
+          "dur": 0.25,
+          "db": -10,
+          "at": -0.12
+        },
+        {
+          "type": "flap",
+          "count": 6,
+          "dur": 0.45,
+          "db": -7,
+          "at": 0.05
+        },
+        {
+          "type": "thunk",
+          "db": -4,
+          "at": 0.6
+        },
+        {
+          "type": "whoosh",
+          "dur": 0.4,
+          "db": -9,
+          "word": "학생이",
+          "off": -0.35
+        },
+        {
+          "type": "bell",
+          "f": 880.0,
+          "db": -6,
+          "word": "얼굴",
+          "off": 0.1
+        }
+      ]
+    },
+    {
+      "id": "xray",
+      "say": "엑스레이를 찍자 그 아래 모자 쓴 여인이 숨어 있었다, 알려진 유일한 이중 클림트.",
+      "hl": [],
+      "tail": 0.16,
+      "trans": {
+        "type": "zoom",
+        "dur": 0.32
+      },
+      "sfx": [
+        {
+          "type": "scan",
+          "dur": 1.6,
+          "db": -12,
+          "at": 0.1
+        },
+        {
+          "type": "shimmer",
+          "db": -7,
+          "word": "모자",
+          "off": 0.0
+        },
+        {
+          "type": "stamp",
+          "db": -4,
+          "word": "유일한",
+          "off": 0.0
+        }
+      ]
+    },
+    {
+      "id": "vanish",
+      "say": "그런데 특별전을 준비하던 1997년 2월, 그림이 사라졌다.",
+      "hl": [],
+      "tail": 0.16,
+      "tts": "그런데 특별전을 준비하던 천구백구십칠년 2월, 그림이 사라졌다.",
+      "trans": {
+        "type": "dip",
+        "dur": 0.32
+      },
+      "sfx": [
+        {
+          "type": "flap",
+          "count": 9,
+          "dur": 0.55,
+          "db": -7,
+          "word": "1997년",
+          "off": -0.1
+        },
+        {
+          "type": "glitch",
+          "dur": 0.22,
+          "db": -10,
+          "word": "사라졌다",
+          "off": 0.15
+        },
+        {
+          "type": "impact",
+          "size": 0.6,
+          "db": -6,
+          "word": "사라졌다",
+          "off": 0.4
+        }
+      ]
+    },
+    {
+      "id": "roof",
+      "say": "지붕엔 빈 액자뿐, 경찰은 천창으로 끌어올렸다고 봤지만 액자는 천창보다 컸다.",
+      "hl": [],
+      "tail": 0.16,
+      "trans": {
+        "type": "whipV",
+        "dur": 0.32
+      },
+      "sfx": [
+        {
+          "type": "wind",
+          "dur": 6.6,
+          "db": -16,
+          "at": 0.0
+        },
+        {
+          "type": "thunk",
+          "db": -8,
+          "word": "액자뿐",
+          "off": 0.0
+        },
+        {
+          "type": "whoosh",
+          "dur": 0.6,
+          "db": -12,
+          "word": "천창으로",
+          "off": 0.0
+        },
+        {
+          "type": "tick",
+          "db": -2,
+          "word": "액자는",
+          "off": -0.2
+        },
+        {
+          "type": "tick",
+          "db": -2,
+          "word": "액자는",
+          "off": 0.15
+        },
+        {
+          "type": "slash",
+          "db": -4,
+          "word": "컸다",
+          "off": 0.05
+        },
+        {
+          "type": "piano",
+          "f": 146.83,
+          "db": -4,
+          "word": "컸다",
+          "off": 0.1
+        }
+      ]
+    },
+    {
+      "id": "staff",
+      "say": "직원들까지 조사했지만 증거는 없었다.",
+      "hl": [],
+      "tail": 0.16,
+      "trans": {
+        "type": "push",
+        "dur": 0.32
+      },
+      "sfx": [
+        {
+          "type": "slam",
+          "db": -6,
+          "at": 0.08
+        },
+        {
+          "type": "thunk",
+          "db": -8,
+          "at": 0.4
+        },
+        {
+          "type": "whoosh",
+          "dur": 0.5,
+          "db": -12,
+          "word": "증거",
+          "off": -0.2
+        },
+        {
+          "type": "stamp",
+          "db": 0,
+          "word": "없었다",
+          "off": 0.02
+        }
+      ]
+    },
+    {
+      "id": "fake",
+      "say": "그해 4월 압수된 그림은 정교한 가짜.",
+      "hl": [],
+      "tail": 0.16,
+      "trans": {
+        "type": "whip",
+        "dur": 0.32
+      },
+      "sfx": [
+        {
+          "type": "rustle",
+          "dur": 0.9,
+          "db": -8,
+          "at": 0.1
+        },
+        {
+          "type": "thunk",
+          "db": -10,
+          "at": 0.2
+        },
+        {
+          "type": "scan",
+          "dur": 0.8,
+          "db": -14,
+          "word": "정교한",
+          "off": -0.1
+        },
+        {
+          "type": "stamp",
+          "db": 0,
+          "word": "가짜",
+          "off": 0.02
+        },
+        {
+          "type": "impact",
+          "size": 0.5,
+          "db": -8,
+          "word": "가짜",
+          "off": 0.05
+        }
+      ]
+    },
+    {
+      "id": "dna",
+      "say": "훗날 액자의 DNA로 재수사했지만 소득은 없었다.",
+      "hl": [],
+      "tail": 0.16,
+      "tts": "훗날 액자의 디엔에이로 재수사했지만 소득은 없었다.",
+      "trans": {
+        "type": "glitch",
+        "dur": 0.32
+      },
+      "sfx": [
+        {
+          "type": "glitch",
+          "dur": 0.25,
+          "db": -10,
+          "at": -0.12
+        },
+        {
+          "type": "scan",
+          "dur": 2.4,
+          "db": -13,
+          "at": 0.1
+        },
+        {
+          "type": "tick",
+          "db": -4,
+          "word": "재수사",
+          "off": 0.0
+        },
+        {
+          "type": "glitch",
+          "dur": 0.3,
+          "db": -8,
+          "word": "소득은",
+          "off": -0.05
+        },
+        {
+          "type": "thunk",
+          "db": -5,
+          "word": "소득은",
+          "off": 0.0
+        }
+      ]
+    },
+    {
+      "id": "found",
+      "say": "그리고 2019년 12월, 정원사들이 담쟁이 속 작은 철문을 열었다.",
+      "hl": [],
+      "tail": 0.16,
+      "tts": "그리고 이천십구년 12월, 정원사들이 담쟁이 속 작은 철문을 열었다.",
+      "trans": {
+        "type": "whipV",
+        "dur": 0.32
+      },
+      "sfx": [
+        {
+          "type": "flap",
+          "count": 10,
+          "dur": 0.6,
+          "db": -6,
+          "at": 0.0
+        },
+        {
+          "type": "whoosh",
+          "dur": 0.5,
+          "db": -10,
+          "word": "정원사들이",
+          "off": -0.1
+        },
+        {
+          "type": "snip",
+          "db": -6,
+          "word": "정원사들이",
+          "off": 0.43
+        },
+        {
+          "type": "rustle",
+          "dur": 0.9,
+          "db": -9,
+          "word": "정원사들이",
+          "off": 0.46
+        },
+        {
+          "type": "snip",
+          "db": -6,
+          "word": "담쟁이",
+          "off": 0.25
+        },
+        {
+          "type": "snip",
+          "db": -7,
+          "word": "담쟁이",
+          "off": 0.55
+        },
+        {
+          "type": "rustle",
+          "dur": 0.8,
+          "db": -9,
+          "word": "담쟁이",
+          "off": 0.3
+        },
+        {
+          "type": "creak",
+          "dur": 0.55,
+          "db": -4,
+          "word": "열었다",
+          "off": -0.02
+        }
+      ]
+    },
+    {
+      "id": "bag",
+      "say": "검은 쓰레기봉투 속, 액자 없는 그 그림.",
+      "hl": [],
+      "tail": 0.16,
+      "trans": {
+        "type": "zoom",
+        "dur": 0.32
+      },
+      "sfx": [
+        {
+          "type": "crinkle",
+          "dur": 1.0,
+          "db": -8,
+          "word": "쓰레기봉투",
+          "off": 0.0
+        },
+        {
+          "type": "revcymbal",
+          "dur": 1.4,
+          "db": -6,
+          "word": "그림",
+          "off": -1.35
+        },
+        {
+          "type": "braam",
+          "db": -2,
+          "word": "그림",
+          "off": 0.0
+        },
+        {
+          "type": "shimmer",
+          "db": -4,
+          "word": "그림",
+          "off": 0.02
+        }
+      ]
+    },
+    {
+      "id": "verdict",
+      "say": "엑스레이와 뒷면 봉인을 대조한 결과 진품, 추정가 6천만 유로 이상.",
+      "hl": [],
+      "tail": 0.16,
+      "tts": "엑스레이와 뒷면 봉인을 대조한 결과 진품, 추정가 육천만 유로 이상.",
+      "trans": {
+        "type": "flash",
+        "dur": 0.24
+      },
+      "sfx": [
+        {
+          "type": "scan",
+          "dur": 1.0,
+          "db": -12,
+          "at": 0.0
+        },
+        {
+          "type": "whoosh",
+          "dur": 0.35,
+          "db": -10,
+          "word": "뒷면",
+          "off": -0.15
+        },
+        {
+          "type": "tick",
+          "db": -3,
+          "word": "뒷면",
+          "off": 0.15
+        },
+        {
+          "type": "tick",
+          "db": -3,
+          "word": "뒷면",
+          "off": 0.33
+        },
+        {
+          "type": "tick",
+          "db": -3,
+          "word": "뒷면",
+          "off": 0.51
+        },
+        {
+          "type": "stamp",
+          "db": 0,
+          "word": "진품",
+          "off": 0.08
+        },
+        {
+          "type": "flap",
+          "count": 12,
+          "dur": 0.75,
+          "db": -10,
+          "word": "6천만",
+          "off": 0.0
+        },
+        {
+          "type": "tick",
+          "db": -3,
+          "word": "이상",
+          "off": 0.1
+        }
+      ]
+    },
+    {
+      "id": "condition",
+      "say": "상태는 비교적 양호했고, 검찰도 언제부터 벽 속에 있었는지 모른다고 했다.",
+      "hl": [],
+      "tail": 0.16,
+      "trans": {
+        "type": "fade",
+        "dur": 0.32
+      },
+      "sfx": [
+        {
+          "type": "piano",
+          "f": 196.0,
+          "db": -6,
+          "at": 0.05
+        },
+        {
+          "type": "tick",
+          "db": -5,
+          "word": "검찰도",
+          "off": 0.0
+        },
+        {
+          "type": "piano",
+          "f": 185.0,
+          "db": -5,
+          "word": "모른다고",
+          "off": 0.0
+        }
+      ]
+    },
+    {
+      "id": "letter",
+      "say": "곧 우리가 훔쳤다가 선물로 돌려줬다는 편지가 신문사에 왔지만, 진위는 미확인.",
+      "hl": [],
+      "tail": 0.16,
+      "trans": {
+        "type": "push",
+        "dur": 0.32
+      },
+      "sfx": [
+        {
+          "type": "rustle",
+          "dur": 0.6,
+          "db": -10,
+          "at": 0.05
+        },
+        {
+          "type": "type",
+          "db": -10,
+          "word": "우리가",
+          "off": 0.05
+        },
+        {
+          "type": "type",
+          "db": -10,
+          "word": "우리가",
+          "off": 0.16
+        },
+        {
+          "type": "type",
+          "db": -10,
+          "word": "우리가",
+          "off": 0.27
+        },
+        {
+          "type": "type",
+          "db": -10,
+          "word": "우리가",
+          "off": 0.38
+        },
+        {
+          "type": "type",
+          "db": -10,
+          "word": "우리가",
+          "off": 0.49
+        },
+        {
+          "type": "type",
+          "db": -10,
+          "word": "우리가",
+          "off": 0.6000000000000001
+        },
+        {
+          "type": "type",
+          "db": -10,
+          "word": "우리가",
+          "off": 0.7100000000000001
+        },
+        {
+          "type": "type",
+          "db": -10,
+          "word": "우리가",
+          "off": 0.8200000000000001
+        },
+        {
+          "type": "type",
+          "db": -10,
+          "word": "우리가",
+          "off": 0.93
+        },
+        {
+          "type": "type",
+          "db": -10,
+          "word": "우리가",
+          "off": 1.04
+        },
+        {
+          "type": "stamp",
+          "db": 0,
+          "word": "미확인",
+          "off": 0.05
+        }
+      ]
+    },
+    {
+      "id": "closed",
+      "say": "공소시효는 이미 끝났고, 2021년 수사는 아무도 기소하지 못한 채 종결됐다.",
+      "hl": [],
+      "tail": 0.16,
+      "tts": "공소시효는 이미 끝났고, 이천이십일년 수사는 아무도 기소하지 못한 채 종결됐다.",
+      "trans": {
+        "type": "whip",
+        "dur": 0.32
+      },
+      "sfx": [
+        {
+          "type": "slam",
+          "db": -2,
+          "at": 0.05
+        },
+        {
+          "type": "tick",
+          "db": -4,
+          "word": "공소시효는",
+          "off": 0.2
+        },
+        {
+          "type": "tick",
+          "db": -4,
+          "word": "2021년",
+          "off": 0.1
+        },
+        {
+          "type": "stamp",
+          "db": 0,
+          "word": "종결됐다",
+          "off": 0.1
+        },
+        {
+          "type": "impact",
+          "size": 0.7,
+          "db": -5,
+          "word": "종결됐다",
+          "off": 0.12
+        }
+      ]
+    },
+    {
+      "id": "ending",
+      "say": "처음부터 벽 속에 있었을까, 누군가 몰래 돌려놓았을까.",
+      "hl": [],
+      "tail": 0.16,
+      "trans": {
+        "type": "dip",
+        "dur": 0.32
+      },
+      "sfx": [
+        {
+          "type": "piano",
+          "f": 110.0,
+          "db": -4,
+          "at": 0.05
+        },
+        {
+          "type": "piano",
+          "f": 103.83,
+          "db": -3,
+          "word": "누군가",
+          "off": 0.0
+        },
+        {
+          "type": "rustle",
+          "dur": 0.7,
+          "db": -6,
+          "at": 0.05,
+          "from": "voice_end"
+        },
+        {
+          "type": "slam",
+          "db": -6,
+          "at": 0.62,
+          "from": "voice_end"
+        }
+      ]
+    }
+  ],
+  "music": {
+    "root": 73.42,
+    "rel_db": -7,
+    "intensity": [
+      [
+        0,
+        0.75
+      ],
+      [
+        "@culprit",
+        0.6
+      ],
+      [
+        "@y1996",
+        0.3
+      ],
+      [
+        "@xray",
+        0.42
+      ],
+      [
+        "@vanish",
+        0.55
+      ],
+      [
+        "@roof",
+        0.4
+      ],
+      [
+        "@staff",
+        0.5
+      ],
+      [
+        "@fake",
+        0.55
+      ],
+      [
+        "@dna",
+        0.6
+      ],
+      [
+        "@found",
+        0.5
+      ],
+      [
+        "@bag",
+        0.82
+      ],
+      [
+        "@verdict",
+        0.95
+      ],
+      [
+        "@condition",
+        0.5
+      ],
+      [
+        "@letter",
+        0.6
+      ],
+      [
+        "@closed",
+        0.72
+      ],
+      [
+        "@ending",
+        0.4
+      ]
+    ],
+    "gain": [
+      [
+        0,
+        0
+      ],
+      [
+        "@vanish:사라졌다+0.45",
+        0
+      ],
+      [
+        "@roof",
+        -14
+      ],
+      [
+        "@roof+1.2",
+        -3
+      ],
+      [
+        "@staff",
+        0
+      ],
+      [
+        "@ending:누군가-0.1",
+        0
+      ],
+      [
+        "@ending:누군가+0.15",
+        -18
+      ]
+    ],
+    "pulse_start": "@found",
+    "pulse_end": "@condition",
+    "ticks": true,
+    "tick_db": -4,
+    "bells": [
+      "@hook:나왔다+0.1",
+      "@xray:유일한",
+      "@bag:그림+0.1"
+    ],
+    "bell_oct": 1.0
+  }
+}
