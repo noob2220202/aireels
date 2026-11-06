@@ -13,9 +13,9 @@ const { W, H, E, P, clamp, lerp, rgba } = L;
 const PK = window.PK, LM = PK.LM, COL = LM.COL, { hi, nz, fb } = LM;
 
 // ---- world (identity camera = the establishing frame) ----
-const SX = 330, SY = 1215, SS = 1.22;                 // structure base centre / scale (top deck at SY - 344*SS)
-const DX = 505, DS = .64;                             // diver on the top deck
-const TOP = [1030, -1700];                            // the umbilical runs up to the bell, far above
+const SX = 296, SY = 1215, SS = 1.22;                 // structure base centre / scale (top deck at SY - 344*SS)
+const DX = 470, DS = .64;                             // diver on the top deck
+const TOP = [985, -1700];                            // the umbilical runs up to the bell, far above
 const RING = { x: 540, y: 830, r: 300 };              // where the gas clock lands for the cut into 'math'
 const DOPT = { pose: 'crouch', dir: -1, anchor: 'base', rim: '#9fd8ff', halo: .26 };
 
@@ -54,6 +54,7 @@ window.PK.scenes.hook = function (ctx, t, d, info) {
   const dOpt = Object.assign({}, DOPT, {
     adj: { T: lerp(.7, .5, pull) + .22 * fallK, h: lerp(.1, -.08, pull) + .12 * fallK },
     life: 1, bpm: after ? 112 : lerp(80, 104, strain), tremble: .5 * pull,
+    rim: after ? '#ffc58a' : '#9fd8ff', rimA: lerp(1, .5, fallK), rim2A: lerp(.18, .08, fallK), halo: lerp(.26, .1, fallK),
   });
   const dX = DX + 9 * pull - 4 * fallK + fb(tm * .4, 7) * 3, dY = st.topY + 6;
   const lampOn = t < tCut ? 1 : (hi(Math.floor(t * 38)) > .45 ? .75 : .08) * (1 - P(t, tCut + .04, tCut + .34));
@@ -75,7 +76,7 @@ window.PK.scenes.hook = function (ctx, t, d, info) {
   // ---- camera: sinking down the line -> establishing frame (on '90미터,') -> slow push -> push into the ring ----
   const pD = P(t, -.45, tDep + .3, E.inOutQ), pPush = P(t, tJam - .3, tCut, E.inOutQ), pIn = P(t, tCut + .5, d + .05, E.inOutC);
   const chest0 = LM.diver(null, DX, dY, DS, tCut, Object.assign({}, dOpt, { adj: { T: .92, h: .22 } })).chest;
-  let cx = lerp(905, 540, pD), cy = lerp(60, 960, pD), z = lerp(1.32, 1, pD), ax = 540, ay = 960;
+  let cx = lerp(735, 540, pD), cy = lerp(420, 960, pD), z = lerp(1.45, 1, pD), ax = 540, ay = 960;
   cx = lerp(cx, 600, pPush * .5); cy = lerp(cy, 860, pPush * .5); z *= 1 + .1 * pPush;
   ax = lerp(ax, RING.x, pIn); ay = lerp(ay, RING.y, pIn); cx = lerp(cx, chest0[0], pIn); cy = lerp(cy, chest0[1], pIn); z = lerp(z, RING.r / 150, pIn);
   const dr = { x: fb(t * .35, 41) * 10, y: fb(t * .3, 50) * 10, r: fb(t * .25, 45) * .004 };
@@ -83,7 +84,7 @@ window.PK.scenes.hook = function (ctx, t, d, info) {
   const kick = after ? .05 * Math.exp(-cutU * 7) : 0;
   const C = { ax, ay, cx, cy, z: z * (1 + kick) };
   // vertical camera speed (screen px/s) for the silt streaks
-  const camY = tt => { const q = P(tt, -.45, tDep + .3, E.inOutQ); return lerp(60, 960, q) * lerp(1.32, 1, q); };
+  const camY = tt => { const q = P(tt, -.45, tDep + .3, E.inOutQ); return lerp(420, 960, q) * lerp(1.45, 1, q); };
   const vy = (camY(t + .02) - camY(t - .02)) / .04;
   const cY = camY(t);
 
