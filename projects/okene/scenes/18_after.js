@@ -31,9 +31,10 @@ function legPts(side, o) {
     : { hip: [-10, 110], knee: [-16 + 7 * k, 218], ank: [-44 - 5 * k, 312], fa: .34 + .2 * k };
 }
 function armPts(side, o) {
-  if (!side) return { sh: [6, -34], el: [20, 36], ha: [44, 82] };
+  const f = Math.sin(o.t * .8);            // a slow float in the relaxed arms
+  if (!side) return { sh: [6, -34], el: [30, 30 + 3 * f], ha: [lerp(72, 50, o.reach), lerp(58, 80, o.reach) + 4 * f] };
   const r = clamp(o.reach), hy = -70 + 8 * Math.sin(o.t * .7);
-  return { sh: [26, -30], el: [lerp(52, 66, r), lerp(40, 18, r)], ha: [lerp(66, o.lineX - 4, r), lerp(84, hy, r)] };
+  return { sh: [26, -30], el: [lerp(64, 66, r), lerp(24, 18, r) + 3 * f * (1 - r)], ha: [lerp(100, o.lineX - 4, r), lerp(46 + 5 * f, hy, r)] };
 }
 function diverShape(c, o) {
   // every part is filled on its own (overlapping sub-paths of opposite winding would punch holes)
@@ -95,7 +96,11 @@ function diver(ctx, t, o) {
   rx.clearRect(0, 0, BW, BH); rx.drawImage(mb, 0, 0); rx.globalCompositeOperation = 'source-in'; rx.fillStyle = o.rim; rx.fillRect(0, 0, BW, BH);
   const X0 = o.x - AX, Y0 = o.y - AY;
   ctx.save();
-  if (o.halo > 0) { ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = clamp(o.halo * o.a); ctx.filter = 'blur(12px)'; ctx.drawImage(rbuf, X0, Y0); ctx.filter = 'none'; }
+  if (o.halo > 0) {   // soft halo: the rim mask shrunk in steps and drawn back up (cheap blur, no ctx.filter)
+    const [h1, h1x] = L.buf('finDivH1', BW / 4, BH / 4), [h2, h2x] = L.buf('finDivH2', BW / 8, BH / 8);
+    h1x.clearRect(0, 0, BW / 4, BH / 4); h1x.drawImage(rbuf, 0, 0, BW / 4, BH / 4); h2x.clearRect(0, 0, BW / 8, BH / 8); h2x.drawImage(h1, 0, 0, BW / 8, BH / 8);
+    ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = clamp(o.halo * o.a); ctx.drawImage(h2, X0 - 6, Y0 - 6, BW + 12, BH + 12);
+  }
   ctx.globalCompositeOperation = 'source-over';
   ctx.globalAlpha = clamp(o.rim2A * o.a); ctx.drawImage(rbuf, X0 + o.rim2[0], Y0 + o.rim2[1]);
   ctx.globalAlpha = clamp(o.rimA * o.a); ctx.drawImage(rbuf, X0 + o.rimOff[0], Y0 + o.rimOff[1]);
@@ -209,7 +214,7 @@ window.PK.scenes.after = function (ctx, t, d, info) {
   diver(ctx, t, Object.assign({}, o, { reveal: rev, a: P(t, tJik - .1, tJik + .4), reach: 1, rim: '#9fdcff', rimA: .9 + 1.2 * shim, halo: .18 + .3 * shim + .1 * lamp }));
   // exhaled bubbles once he breathes from the helmet
   const [ex, ey] = dpt(o, EXH[0], EXH[1]);
-  if (rev > .6) exhale(ctx, t, [tJam + .55, tJam + 1.85, tJam + 3.1], ex, ey, .8 * P(rev, .6, 1));
+  if (rev > .6) { ctx.save(); ctx.beginPath(); ctx.rect(0, 712, W, H); ctx.clip(); exhale(ctx, t, [tJam + .55, tJam + 1.85, tJam + 3.1], ex, ey, .8 * P(rev, .6, 1)); ctx.restore(); }
   // his light: the same warm heartbeat, now in the chest
   const [hx, hy] = dpt(o, 10 * rev, -4 * rev);
   heart(ctx, t, hx, hy, 1 - .25 * rev, lerp(58, 64, rest), lerp(1.25, .95, rev));

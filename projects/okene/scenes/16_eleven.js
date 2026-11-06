@@ -248,7 +248,7 @@ window.PK.scenes.eleven = function (ctx, t, d, info) {
   // ---- quiet frame: dark top under the title, dark subtitle band ----
   { const g = ctx.createLinearGradient(0, 0, 0, 480); g.addColorStop(0, 'rgba(1,2,3,.85)'); g.addColorStop(.75, 'rgba(1,2,3,.5)'); g.addColorStop(1, 'rgba(1,2,3,0)'); ctx.fillStyle = g; ctx.fillRect(0, 0, W, 480); }
   subBand(ctx, .88, 1105);
-  L.vignette(ctx, .35);
+
 
   // ---- footnote (data.note), two lines; '1명 실종' lifts on '1명은' ----
   const note = D.note || '', parts = note.split(' · ');

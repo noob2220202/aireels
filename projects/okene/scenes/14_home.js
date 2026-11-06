@@ -25,7 +25,7 @@ function bellSil(ctx, x, y, s, warm, t) {
   ctx.fillRect(-33, -6, 6, 34); ctx.fillRect(27, -6, 6, 34);               // frame / ballast
   ctx.fillRect(-10, -36, 20, 8);                                            // padeye
   ctx.fillStyle = rgba('#ffd9a0', .55 + .4 * warm); ctx.beginPath(); ctx.ellipse(0, 27, 12, 4, 0, 0, 7); ctx.fill();   // lit hatch
-  ctx.fillStyle = rgba('#ffd9a0', .35 + .4 * warm); ctx.beginPath(); ctx.arc(-12, -4, 4.5, 0, 7); ctx.arc(12, -4, 4.5, 0, 7); ctx.fill();   // viewports
+  ctx.fillStyle = rgba('#ffd9a0', .35 + .4 * warm); ctx.beginPath(); ctx.arc(9, -6, 6, 0, 7); ctx.fill();   // one side porthole
   ctx.restore();
 }
 function arcsDown(ctx, tc, list, A, B, color) {
@@ -52,7 +52,7 @@ window.PK.scenes.home = function (ctx, t, d, info) {
   const meet = P(t, .02, 1.1, E.inOutQ), rise = P(t, .8, d + .9, E.inOutQ);
   const bob = Math.sin(t * .9) * 5;
   const hc = { x: lerp(HC.x, 560, meet) + 100 * rise + RV.fb(t * .3, 401) * 10 * (1 - meet), y: lerp(HC.y, 842, meet) - 180 * rise + bob };
-  const ok = { x: lerp(OK.x, 704, meet) + 100 * rise + RV.fb(t * .35, 402) * 5, y: lerp(OK.y, 904, meet) - 180 * rise + Math.sin(t * 1.1 + 1) * 4 };
+  const ok = { x: lerp(OK.x, 742, meet) + 100 * rise + RV.fb(t * .35, 402) * 5, y: lerp(OK.y, 884, meet) - 180 * rise + Math.sin(t * 1.1 + 1) * 4 };
   const toBell = Math.atan2(BELL.y - hc.y, BELL.x - hc.x);
   const a0 = Math.atan2(OK.y - HC.y, OK.x - HC.x) - .08, hAng = lerp(a0, toBell + .12, P(t, .35, 1.4, E.inOutQ));
   const s = 1.38, ca = Math.cos(hAng), sa = Math.sin(hAng);
@@ -69,16 +69,17 @@ window.PK.scenes.home = function (ctx, t, d, info) {
   HG.darkFast(ctx, t + 80, .5, 15);
   ctx.save();
   ctx.translate(540, 860); ctx.rotate(RV.fb(t * .22, 413) * .004); ctx.scale(z, z); ctx.translate(-cx, -cy);
-  HG.wall(ctx, b, { amb: 0, gain: .95 * (1 - P(t, .15, 1.25, E.inOutQ)) });
+  const WO = (PK.RVN && PK.RVN.WO) || { x: 260, y: 120 }, wg = .8 * (1 - P(t, .25, 1.5, E.inOutQ));
+  if (wg > 0) { ctx.save(); ctx.translate(WO.x, WO.y); HG.wall(ctx, { ...b, x: b.x - WO.x, y: b.y - WO.y }, { amb: 0, gain: wg }); ctx.restore(); }
   HG.light(ctx, q => {
     // the bell's warm light high above, rays reaching down toward them
-    glow(q, BELL.x, BELL.y, 520, '#ff9a3c', .1 * bellA); glow(q, BELL.x, BELL.y, 190, '#ffcf8a', .3 * bellA);
-    godrays(q, BELL.x, BELL.y + 20, Math.atan2(mid.y - BELL.y, mid.x - BELL.x), .55, 760, '#ffcf8a', .1 * bellA, t, 7);
+    glow(q, BELL.x, BELL.y, 620, '#ff9a3c', .16 * bellA); glow(q, BELL.x, BELL.y, 210, '#ffcf8a', .4 * bellA);
+    godrays(q, BELL.x, BELL.y + 20, Math.atan2(mid.y - BELL.y, mid.x - BELL.x), .6, 820, '#ffcf8a', .16 * bellA, t, 7);
     HG.cone(q, t, b, { lamp: .95 });
     HG.heart(q, ok.x, ok.y, .85 + .2 * bellA, bt, 1.3);
   });
   HG.silt(ctx, t * .8 + 4.4, b, { n: 140, seed: 23, area: [-60, 200, 1200, 1000], ambient: .025 });
-  bellSil(ctx, BELL.x, BELL.y, 1.05, bellA, t);
+  bellSil(ctx, BELL.x, BELL.y, 1.25, bellA, t);
   arcsDown(ctx, tc, LIST, { x: BELL.x, y: BELL.y + 20 }, mid, '#ffe1b0');
   // umbilical from the helmet back up toward the bell
   ctx.save(); ctx.lineCap = 'round';

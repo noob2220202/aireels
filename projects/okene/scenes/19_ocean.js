@@ -38,7 +38,7 @@ window.PK.scenes.ocean = function (ctx, t, d, info) {
   const up = P(t, s2 - .1, s2 + 2.2, E.inOutQ);                // lifts his head toward the light
   const glowUp = P(t, s2, v1, E.inOutQ);
   // camera: from the after scene's framing, easing back to show the open water
-  const z = lerp(1, .9, P(t, s1, v1 + .3, E.inOutQ));
+  const z = lerp(1, .95, P(t, s1, v1 + .3, E.inOutQ));
   const dr = { x: fb(t * .25, 191) * 7, y: fb(t * .22, 192) * 6 };
   const SX = x => 540 + (x - 540) * z + dr.x, SY = y => 892 + (y - 892) * z + dr.y;
 

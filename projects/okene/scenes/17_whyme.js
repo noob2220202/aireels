@@ -127,7 +127,7 @@ window.PK.scenes.whyme = function (ctx, t, d, info) {
   // ---- quiet frame + document card ----
   { const g = ctx.createLinearGradient(0, 0, 0, 470); g.addColorStop(0, 'rgba(1,2,3,.8)'); g.addColorStop(.8, 'rgba(1,2,3,.4)'); g.addColorStop(1, 'rgba(1,2,3,0)'); ctx.fillStyle = g; ctx.fillRect(0, 0, W, 470); }
   FIN.subBand(ctx, .88, 1120);
-  const ba = P(t, .15, .55, E.outQ) * (1 - P(t, d - .25, d + .1));
-  docCard(ctx, D.badge || '', D.src || '', 1183 + 8 * (1 - ba), ba, P(t, .35, .8, E.outQ));
+  const ba = P(t, .3, .7, E.outQ) * (1 - P(t, d - .25, d + .1));
+  docCard(ctx, D.badge || '', D.src || '', 1183 + 8 * (1 - ba), ba, P(t, .45, .9, E.outQ));
 };
 })();

@@ -20,7 +20,8 @@ const V = 600, R0 = 46;                      // ring speed (px/s), start radius
 
 // world (screen at z = 1): the diver's helmet upper left, his light in the dark doorway lower right
 const HC = { x: 282, y: 700 }, OK = { x: 772, y: 968 };
-PK.RVN = { HC, OK };                         // shared with home (same positions at the cut)
+const WO = { x: 260, y: 120 };                  // offset of the hook's wall sprite in this framing
+PK.RVN = { HC, OK, WO };                         // shared with home (same positions at the cut)
 
 let RINGS = null;
 function rings(loud) {
@@ -88,7 +89,8 @@ window.PK.scenes.name = function (ctx, t, d, info) {
   const lamp = { x: hc.x + (58 * ca + 67 * sa) * s, y: hc.y + (58 * sa - 67 * ca) * s };
   const bAng = Math.atan2(ok.y - lamp.y, ok.x - lamp.x) + .05 + RV.fb(t * .4, 414) * .02;
   const b = { x: lamp.x, y: lamp.y, ang: bAng, spread: .24, len: 900, a: .62 + .08 * aR };
-  HG.wall(ctx, b, { amb: 0, gain: .95 });
+  // the hook's bulkhead, shifted so his light sits just inside the doorway's left edge
+  ctx.save(); ctx.translate(WO.x, WO.y); HG.wall(ctx, { ...b, x: b.x - WO.x, y: b.y - WO.y }, { amb: 0, gain: .8 }); ctx.restore();
   const warmK = .75 + .5 * lO + .45 * rvO + .2 * aO;
   HG.light(ctx, q => {
     HG.cone(q, t, b, { lamp: .9 + .3 * lR + .3 * rvR });

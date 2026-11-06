@@ -42,7 +42,7 @@ RV.tears = function (ctx, t, amt, x0 = 0, y0 = 0, w = W, h = H) {
   ctx.globalCompositeOperation = 'lighter';
   for (let i = 0; i < 6; i++) { const y = y0 + hi(f * 13 + i + 400) * h; ctx.fillStyle = rgba('#cfeaff', .18 * amt * hi(f + i * 3)); ctx.fillRect(x0, y, w, 1 + 2 * hi(i + f * 5)); }
   ctx.globalCompositeOperation = 'overlay'; ctx.globalAlpha = .55 * amt;
-  const g = L.TEX.grain[f % L.TEX.grain.length], pat = ctx.createPattern(g, 'repeat'); pat.setTransform(new DOMMatrix().translate(-hi(f) * 512, -hi(f + 9) * 512).scale(1.6, .5));
+  const ng = L.TEX.grain.length, g = L.TEX.grain[((f % ng) + ng) % ng], pat = ctx.createPattern(g, 'repeat'); pat.setTransform(new DOMMatrix().translate(-hi(f) * 512, -hi(f + 9) * 512).scale(1.6, .5));
   ctx.fillStyle = pat; ctx.fillRect(x0, y0, w, h);
   ctx.restore();
 };
@@ -58,7 +58,7 @@ function helmetPath() {
   p.roundRect(10, -78, 46, 22, 7);                  // lamp housing on top-front
   p.roundRect(-30, -74, 30, 16, 6);                 // second housing (camera)
   const port = new Path2D(); port.roundRect(34, -26, 32, 58, 14);
-  const sh = new Path2D(); sh.moveTo(-40, 70); sh.quadraticCurveTo(-110, 84, -124, 150); sh.lineTo(-130, 215); sh.lineTo(118, 215); sh.lineTo(112, 150); sh.quadraticCurveTo(96, 86, 36, 72); sh.closePath();
+  const sh = new Path2D(); sh.moveTo(-36, 72); sh.quadraticCurveTo(-92, 82, -102, 136); sh.lineTo(-104, 180); sh.lineTo(92, 180); sh.lineTo(90, 136); sh.quadraticCurveTo(80, 86, 34, 74); sh.closePath();
   RV._hp = { p, port, sh }; return RV._hp;
 }
 RV.helmet = function (ctx, x, y, s, { ang = 0, body = null, rx = x + 400, ry = y + 200, rim = '#ffb36b', rimA = .5, cold = .25, a = 1, t = 0 } = {}) {
@@ -68,7 +68,7 @@ RV.helmet = function (ctx, x, y, s, { ang = 0, body = null, rx = x + 400, ry = y
   // shoulders: they stay below the helmet (the body turns much less than the head)
   { const bA = body == null ? ang * .3 : body, [lx, ly] = ldir(bA);
     ctx.save(); ctx.globalAlpha *= a; ctx.translate(x, y); ctx.rotate(bA); ctx.scale(s, s);
-    const sg = ctx.createLinearGradient(0, 70, 0, 210); sg.addColorStop(0, '#05080a'); sg.addColorStop(.6, 'rgba(5,8,10,.85)'); sg.addColorStop(1, 'rgba(5,8,10,0)');
+    const sg = ctx.createLinearGradient(0, 70, 0, 180); sg.addColorStop(0, '#05080a'); sg.addColorStop(.45, 'rgba(5,8,10,.7)'); sg.addColorStop(1, 'rgba(5,8,10,0)');
     ctx.save(); ctx.translate(lx * 3, ly * 3); const rg = ctx.createLinearGradient(0, 80, 0, 190); rg.addColorStop(0, rgba(rim, rimA * .55)); rg.addColorStop(1, rgba(rim, 0)); ctx.fillStyle = rg; ctx.fill(sh); ctx.restore();
     ctx.fillStyle = sg; ctx.fill(sh); ctx.restore(); }
   const [lx, ly] = ldir(ang);
@@ -145,6 +145,19 @@ function feed(ctx, th, tI, dH, o) {
   for (const tf of o.bursts) HG.bubbles(ctx, th, tf, { x: vx + 30, y: vy, n: 22, seed: 50 + Math.round(tf * 10), b, spread: 70, rise: 420, drift: 50, life: 1.5, size: 1.1 });
   return { bt, b, tm, M: ctx.getTransform(), heart: ctx.getTransform().transformPoint(new DOMPoint(hx, hy)) };
 }
+// the monitor's glass: cold tint, scanlines, vignette, reflection (one cached layer at the final screen size)
+let FX = null;
+function screenFX() {
+  if (FX) return FX;
+  const w = MON.hw * 2, h = MON.hh * 2, c = document.createElement('canvas'); c.width = w; c.height = h; const x = c.getContext('2d');
+  x.fillStyle = 'rgba(20,70,84,.14)'; x.fillRect(0, 0, w, h);
+  x.globalAlpha = .55; x.fillStyle = x.createPattern(scanTex(), 'repeat'); x.fillRect(0, 0, w, h); x.globalAlpha = 1;
+  const vg = x.createRadialGradient(w / 2, h / 2, h * .45, w / 2, h / 2, w * .62); vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,.62)');
+  x.fillStyle = vg; x.fillRect(0, 0, w, h);
+  const gl = x.createLinearGradient(0, 0, w * .6, h); gl.addColorStop(0, 'rgba(255,255,255,.07)'); gl.addColorStop(.45, 'rgba(255,255,255,.015)'); gl.addColorStop(.46, 'rgba(255,255,255,0)');
+  x.fillStyle = gl; x.fillRect(0, 0, w, h);
+  FX = c; return c;
+}
 // radio panel with a scrolling waveform of the real voice
 function radio(ctx, t, tc, a, hot) {
   if (a <= 0) return;
@@ -196,25 +209,26 @@ window.PK.scenes.alive = function (ctx, t, d, info) {
   const wf = (t > tF1 - .08 ? .75 * Math.exp(-Math.max(0, t - tF1) * 3.2) * P(t, tF1 - .08, tF1) : 0) + (t > tF2 - .08 ? Math.exp(-Math.max(0, t - tF2) * 2.6) * P(t, tF2 - .08, tF2) : 0);
   const warmHold = P(t, tF2, tF2 + 1, E.inOutQ);
   const keep = P(t, w('keep') - .1, w('end') + .3, E.inOutQ);
+  // each 'keep him there': a softer warm pulse of his light (no kick)
+  const kp = [w('keep'), w('keep2')].reduce((a, tk) => a + (t > tk - .06 ? .32 * Math.exp(-Math.max(0, t - tk) * 3.4) * P(t, tk - .06, tk + .02) : 0), 0);
   const grip = P(t, w('keep') - .05, w('keep') + .25, E.outQ) * .6 + P(t, w('keep2') - .05, w('keep2') + .25, E.outQ) * .4;
   const tearIn = Math.max(0, 1 - t / .32) * (t < .02 ? .2 : 1), tearOut = P(t, d - .32, d - .02, E.inQ);
   const tear = Math.max(tearIn * .9, tearOut);
 
   // ---- room camera: still at first (matches the hand shot), kicks on the flashes, slow push on 'keep him there' ----
-  const zr = 1 + .075 * P(t, w('okay') - .2, d, E.inOutQ) + .012 * wf;
+  const zr = 1 + .05 * P(t, w('okay') - .2, d + .2, E.inOutQ) + .012 * wf;
   const [kx, ky, kr] = RV.shake(t, .3 * wf + .08 * tearOut, 21);
   const dr = { x: fb(t * .3, 211) * 9 * p, y: fb(t * .27, 212) * 9 * p, r: fb(t * .22, 213) * .004 * p };
 
-  // background: dark room (oily dark, a faint cold spill of the monitor on the wall)
-  HG.darkFast(ctx, t + 40, .35, 9);
+  // background: the dark room (plain: the monitor's spill is the only light in it)
+  ctx.fillStyle = '#010203'; ctx.fillRect(0, 0, W, H);
   ctx.save();
   ctx.translate(540 + kx + dr.x, MON.cy + ky + dr.y); ctx.rotate(kr + dr.r); ctx.scale(zr, zr); ctx.translate(-540, -MON.cy);
   const m = mon(p);
   // spill of the screen into the room: cold, warm on the flashes
   if (p > .02) {
-    glow(ctx, m.cx, m.cy, 760, '#5fb8d8', .07 * p);
-    glow(ctx, m.cx, m.cy, 900, '#ff9a3c', (.55 * wf + .08 * warmHold) * p);
-    glow(ctx, m.cx, m.cy + 260, 700, '#ffcf8a', .25 * wf * p);
+    const wa = (.55 * wf + .25 * kp + .08 * warmHold) * p;        // drawn at 1/3 resolution (one blit)
+    HG.light(ctx, q => { glow(q, m.cx, m.cy, 760, '#5fb8d8', .07 * p); if (wa > .004) glow(q, m.cx, m.cy, 900, '#ff9a3c', wa); if (wf > .02) glow(q, m.cx, m.cy + 260, 700, '#ffcf8a', .25 * wf * p); });
   }
   // bezel
   if (p > .001) {
@@ -237,34 +251,27 @@ window.PK.scenes.alive = function (ctx, t, d, info) {
   ctx.save();
   ctx.translate(m.cx, m.cy); ctx.scale(m.k, m.k); ctx.translate(-540, -860);
   const bursts = [tF1 + .02, tF2 + .02].map(x => x + dH);
-  const fd = feed(ctx, th, tI, dH, { push: .07 * P(t, w('okay'), d + .4, E.inOutQ), kick: .25 * wf, bpm: lerp(118, 104, P(t, tF2, d)), keep, grip,
-    glowA: 1.2 + .5 * warmHold + 3 * wf, glowR: 1.1 + .6 * wf + .12 * warmHold, warm: wf, bursts });
+  const fd = feed(ctx, th, tI, dH, { push: .17 * P(t, w('okay') - .2, d + .3, E.inOutQ), kick: .25 * wf, bpm: lerp(118, 104, P(t, tF2, d)), keep, grip,
+    glowA: 1.2 + .5 * warmHold + 3 * wf + 2.2 * kp, glowR: 1.1 + .6 * wf + .12 * warmHold + .3 * kp, warm: wf, bursts });
   ctx.restore();
   // the hand scene's lens motes and tunnel vision, handing over to the monitor's own vignette
   if (p < 1) HG.bokeh(ctx, fd.tm, fd.b, fd.M, { n: 8, a: .3 * (1 - p) });
   if (p < 1) HG.iris(ctx, .46 * (1 - p), .6 * fd.bt * (1 - p), 560, 880);
   // warm bloom of his light on the flashes
-  if (wf > .01) {
+  const wb = wf + .6 * kp;
+  if (wb > .01) {
     ctx.save(); ctx.globalCompositeOperation = 'lighter';
-    const g = ctx.createRadialGradient(fd.heart.x, fd.heart.y, 0, fd.heart.x, fd.heart.y, 760); g.addColorStop(0, rgba('#fff0d8', .95 * wf)); g.addColorStop(.25, rgba('#ffb35c', .5 * wf)); g.addColorStop(1, rgba('#ff9a3c', .12 * wf));
+    const g = ctx.createRadialGradient(fd.heart.x, fd.heart.y, 0, fd.heart.x, fd.heart.y, 760); g.addColorStop(0, rgba('#fff0d8', .95 * wb)); g.addColorStop(.25, rgba('#ffb35c', .5 * wb)); g.addColorStop(1, rgba('#ff9a3c', .12 * wb));
     ctx.fillStyle = g; ctx.fillRect(m.cx - m.hw, m.cy - m.hh, 2 * m.hw, 2 * m.hh);
-    ctx.fillStyle = rgba('#ffcf8a', .16 * wf); ctx.fillRect(m.cx - m.hw, m.cy - m.hh, 2 * m.hw, 2 * m.hh); ctx.restore();
+    ctx.fillStyle = rgba('#ffcf8a', .16 * wb); ctx.fillRect(m.cx - m.hw, m.cy - m.hh, 2 * m.hw, 2 * m.hh); ctx.restore();
   }
   // monitor treatment: cold tint, scanlines, rolling bar, vignette, glass
   if (p > 0) {
     const sx0 = m.cx - m.hw, sy0 = m.cy - m.hh, sw = 2 * m.hw, sh = 2 * m.hh;
-    ctx.save(); ctx.globalAlpha = p;
-    ctx.globalCompositeOperation = 'soft-light'; ctx.fillStyle = 'rgba(40,120,140,.5)'; ctx.fillRect(sx0, sy0, sw, sh);
-    ctx.globalCompositeOperation = 'source-over';
-    const pat = ctx.createPattern(scanTex(), 'repeat'); ctx.fillStyle = pat; ctx.globalAlpha = .55 * p; ctx.fillRect(sx0, sy0, sw, sh);
-    ctx.globalAlpha = p; ctx.globalCompositeOperation = 'lighter';
+    ctx.save(); ctx.globalAlpha = p; ctx.drawImage(screenFX(), sx0, sy0, sw, sh);      // tint + scanlines + vignette + glass (cached)
+    ctx.globalCompositeOperation = 'lighter';
     const ry = sy0 + ((t * .42) % 1.3 - .15) * sh, rb = ctx.createLinearGradient(0, ry - 70, 0, ry + 70); rb.addColorStop(0, 'rgba(160,220,240,0)'); rb.addColorStop(.5, 'rgba(160,220,240,.045)'); rb.addColorStop(1, 'rgba(160,220,240,0)');
     ctx.fillStyle = rb; ctx.fillRect(sx0, ry - 70, sw, 140);
-    ctx.globalCompositeOperation = 'source-over';
-    const vg = ctx.createRadialGradient(m.cx, m.cy, sh * .45, m.cx, m.cy, sw * .62); vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,.62)');
-    ctx.fillStyle = vg; ctx.fillRect(sx0, sy0, sw, sh);
-    const gl = ctx.createLinearGradient(sx0, sy0, sx0 + sw * .6, sy0 + sh); gl.addColorStop(0, 'rgba(255,255,255,.07)'); gl.addColorStop(.45, 'rgba(255,255,255,.015)'); gl.addColorStop(.46, 'rgba(255,255,255,0)');
-    ctx.fillStyle = gl; ctx.fillRect(sx0, sy0, sw, sh);
     ctx.restore();
   }
   ctx.restore();

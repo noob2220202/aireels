@@ -14,12 +14,12 @@ const { W, H, E, P, clamp, lerp, rgba, glow, text, measure, roundRect, FONT } = 
 const PK = window.PK;
 
 // ---- diagram world ----
-const YS = 600, YB = 1110;                                    // sea surface / seabed
+const YS = 600, YB = 1000;                                    // sea surface / seabed
 const MP = { x: 560, y0: 552, y1: 642, hw: 42 };              // moonpool through the vessel
 const CH = { x: 560, y: 510, hl: 128, r: 34 };                // deck chamber (centre, half length, radius)
 const TR = { y0: 544, y1: 572 };                              // mating trunk under the chamber
-const BELL_R = 30, BELL0 = { x: 560, y: 925 }, DOCK_Y = TR.y1 + BELL_R + 6;
-const HIM0 = { x: 668, y: 994 }, GUIDE0 = { x: 630, y: 968 };
+const BELL_R = 30, BELL0 = { x: 560, y: 836 }, DOCK_Y = TR.y1 + BELL_R + 6;
+const HIM0 = { x: 668, y: 884 }, GUIDE0 = { x: 630, y: 860 };
 
 function surfY(x, t) { return YS + Math.sin(x * .02 + t * 1.4) * 3 + Math.sin(x * .051 - t * .9) * 1.5; }
 function seaAndSky(ctx, t, day) {
@@ -108,7 +108,8 @@ function bell(ctx, x, y, warm, hot) {
   ctx.fillStyle = '#2a353c'; ctx.fillRect(-8, -BELL_R - 6, 16, 8);                                          // padeye
   ctx.fillStyle = '#0b1013'; ctx.fillRect(-11, BELL_R - 4, 22, 9);                                            // bottom hatch
   ctx.fillStyle = rgba('#ffd9a0', .15 + .75 * warm); ctx.fillRect(-9, BELL_R - 2, 18, 5);
-  for (const vx of [-12, 12]) { ctx.fillStyle = '#05080a'; ctx.beginPath(); ctx.arc(vx, -3, 6, 0, 7); ctx.fill(); ctx.fillStyle = rgba('#ffd9a0', .8 * warm); ctx.beginPath(); ctx.arc(vx, -3, 4.5, 0, 7); ctx.fill(); }
+  ctx.fillStyle = '#05080a'; ctx.beginPath(); ctx.arc(10, -6, 8, 0, 7); ctx.fill(); ctx.fillStyle = rgba('#ffd9a0', .1 + .8 * warm); ctx.beginPath(); ctx.arc(10, -6, 6, 0, 7); ctx.fill();   // one porthole
+  ctx.strokeStyle = 'rgba(20,28,32,.7)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-BELL_R, 8); ctx.lineTo(BELL_R, 8); ctx.stroke();
   ctx.restore();
   if (warm > .02) glow(ctx, x, y, 90, '#ffb347', .3 * warm);
 }
@@ -134,7 +135,7 @@ function gauge(ctx, t, x, y, R, v, a, danger, calm, label) {
   ctx.beginPath(); ctx.moveTo(x - Math.cos(q) * 12, y - Math.sin(q) * 12); ctx.lineTo(x + Math.cos(q) * (R - 18), y + Math.sin(q) * (R - 18)); ctx.stroke();
   ctx.shadowBlur = 0; ctx.fillStyle = '#dfe9ef'; ctx.beginPath(); ctx.arc(x, y, 8, 0, 7); ctx.fill();
   ctx.restore();
-  text(ctx, label, x, y + R + 46, { size: 28, weight: 800, color: '#dff1ff', stroke: '#000', strokeW: 6, alpha: a });
+  text(ctx, label, x, y + R + 42, { size: 30, weight: 800, color: '#dff1ff', stroke: '#000', strokeW: 6, alpha: a });
 }
 // the dashed arrow straight up, and the red X
 function upArrow(ctx, x, y0, y1, p, red, a) {
@@ -197,7 +198,7 @@ window.PK.scenes.chamber = function (ctx, t, d, info) {
 
   // ---- camera: the whole column -> follow the bell up -> close on the chamber ----
   const cam1 = P(t, tGa - .05, tDock + .1, E.inOutQ), cam2 = P(t, tDock, d + .3, E.inOutQ);
-  let cx = lerp(612, 560, cam1), cy = lerp(900, 600, cam1), z = lerp(1.1, 1.56, cam1);
+  let cx = lerp(600, 560, cam1), cy = lerp(814, 600, cam1), z = lerp(1.12, 1.56, cam1);
   cy = lerp(cy, 605, cam2); z *= lerp(1, 1.08, cam2);
   cy += lerp(-14, 0, P(t, -.3, .6, E.outQ));                                // a slow settle as it fades in
   const [kx, ky, kr] = RV.shake(t, .35 * dock * Math.exp(-Math.max(0, t - tDock) * 5) + .25 * xP * Math.exp(-Math.max(0, t - tWi - .1) * 6), 51);
@@ -251,17 +252,17 @@ window.PK.scenes.chamber = function (ctx, t, d, info) {
   HG.iris(ctx, .26 - .1 * cam2, .2 * bt, 540, 820);
   // ---- HUD: gauge (lower left) + counter (lower right) ----
   const hudA = P(t, -.2, .35, E.outQ);
-  gauge(ctx, t, 196, 1040, 80, v, hudA, danger, calm, D.gauge || '');
+  gauge(ctx, t, 196, 1010, 80, v, hudA, danger, calm, D.gauge || '');
   const cA = P(t, tYak - .1, tYak + .2, E.outQ), cP = E.outBack(P(t, t60 - .08, t60 + .3));
   if (cA > 0) {
     const full = D.dur || '', i = full.indexOf(' ('), main = i > 0 ? full.slice(0, i) : full, sub = i > 0 ? full.slice(i + 1) : '';
-    const g = ctx.createLinearGradient(0, 960, 0, 1200); g.addColorStop(0, 'rgba(1,2,3,0)'); g.addColorStop(.3, 'rgba(1,2,3,.55)'); g.addColorStop(1, 'rgba(1,2,3,.55)');
-    ctx.save(); ctx.globalAlpha = cA; ctx.fillStyle = g; ctx.fillRect(380, 960, 700, 240); ctx.restore();
-    clock(ctx, 456, 1046, 30, pass, cA, t);
+    ctx.save(); ctx.globalAlpha = cA; ctx.translate(640, 1066); ctx.scale(1.9, 1); const g = ctx.createRadialGradient(0, 0, 0, 0, 0, 200); g.addColorStop(0, 'rgba(1,2,3,.62)'); g.addColorStop(.6, 'rgba(1,2,3,.4)'); g.addColorStop(1, 'rgba(1,2,3,0)');
+    ctx.fillStyle = g; ctx.fillRect(-200, -200, 400, 400); ctx.restore();
+    clock(ctx, 452, 1040, 32, pass, cA, t);
     ctx.save(); ctx.translate(510, 1034); const sc = lerp(.8, 1, cP); ctx.scale(sc, sc);
-    text(ctx, main, 0, 0, { size: 62, weight: 900, color: '#ffd27a', align: 'left', stroke: '#000', strokeW: 10, alpha: cA });
+    text(ctx, main, 0, 0, { size: 72, weight: 900, color: '#ffd27a', align: 'left', stroke: '#000', strokeW: 10, alpha: cA });
     ctx.restore();
-    if (sub) text(ctx, sub, 512, 1094, { size: 30, weight: 800, color: '#cfe8ff', align: 'left', stroke: '#000', strokeW: 6, alpha: cA * P(t, t60 + .1, t60 + .45) });
+    if (sub) text(ctx, sub, 512, 1100, { size: 32, weight: 800, color: '#cfe8ff', align: 'left', stroke: '#000', strokeW: 6, alpha: cA * P(t, t60 + .1, t60 + .45) });
   }
   HG.subBand(ctx);
 };
