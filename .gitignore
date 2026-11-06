@@ -7,3 +7,7 @@ __pycache__/
 # large binary fonts are fetched by scripts/fetch_fonts.sh
 assets/fonts/*.otf
 assets/fonts/*.ttf
+
+# personal voice samples (never commit)
+assets/voices/
+.vendor/
