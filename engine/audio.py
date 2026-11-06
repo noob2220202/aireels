@@ -33,6 +33,56 @@ def filt(x, kind, f, order=2):
     return signal.sosfilt(sos(kind, f, order), x)
 
 
+def shelf(x, f0, gain_db, kind='high', q=.707):
+    """RBJ cookbook shelving biquad."""
+    A = 10 ** (gain_db / 40)
+    w0 = 2 * np.pi * f0 / SR
+    alpha = np.sin(w0) / (2 * q)
+    cw = np.cos(w0)
+    sA = 2 * np.sqrt(A) * alpha
+    if kind == 'high':
+        b = [A * ((A + 1) + (A - 1) * cw + sA), -2 * A * ((A - 1) + (A + 1) * cw), A * ((A + 1) + (A - 1) * cw - sA)]
+        a = [(A + 1) - (A - 1) * cw + sA, 2 * ((A - 1) - (A + 1) * cw), (A + 1) - (A - 1) * cw - sA]
+    else:
+        b = [A * ((A + 1) - (A - 1) * cw + sA), 2 * A * ((A - 1) - (A + 1) * cw), A * ((A + 1) - (A - 1) * cw - sA)]
+        a = [(A + 1) + (A - 1) * cw + sA, -2 * ((A - 1) + (A + 1) * cw), (A + 1) + (A - 1) * cw - sA]
+    return signal.lfilter(np.array(b) / a[0], np.array(a) / a[0], x)
+
+
+def peaking(x, f0, gain_db, q=1.0):
+    A = 10 ** (gain_db / 40)
+    w0 = 2 * np.pi * f0 / SR
+    alpha = np.sin(w0) / (2 * q)
+    b = [1 + alpha * A, -2 * np.cos(w0), 1 - alpha * A]
+    a = [1 + alpha / A, -2 * np.cos(w0), 1 - alpha / A]
+    return signal.lfilter(np.array(b) / a[0], np.array(a) / a[0], x)
+
+
+MATCH_BANDS = [(120, 70, 200), (300, 200, 450), (800, 450, 1400), (2200, 1400, 3500), (5500, 3500, 9000)]
+
+
+def band_profile(x):
+    F = np.abs(np.fft.rfft(x * np.hanning(len(x)))) ** 2
+    f = np.fft.rfftfreq(len(x), 1 / SR)
+    tot = F[(f > 70) & (f < 9000)].sum()
+    return np.array([10 * np.log10(F[(f >= lo) & (f < hi)].sum() / tot + 1e-12) for _, lo, hi in MATCH_BANDS])
+
+
+def match_voice(x, ref_path, limit=6.0):
+    """tonal match of (converted) narration to the owner's real recording."""
+    r, sr = sf.read(ref_path, always_2d=False)
+    if r.ndim > 1:
+        r = r.mean(axis=1)
+    if sr != SR:
+        r = signal.resample_poly(r, SR, sr)
+    diff = np.clip(band_profile(r) - band_profile(x), -limit, limit)
+    for (fc, _, _), g in zip(MATCH_BANDS, diff):
+        if abs(g) > .5:
+            x = peaking(x, fc, g * .8, q=.9)
+    print('voice match EQ (dB):', ', '.join(f'{fc}Hz {g * .8:+.1f}' for (fc, _, _), g in zip(MATCH_BANDS, diff)))
+    return x
+
+
 def env_ad(n, a, d, curve=4.0):
     t = np.arange(n) / SR
     e = np.where(t < a, t / max(a, 1e-4), np.exp(-(t - a) / max(d, 1e-4) * curve / 4))
@@ -462,8 +512,125 @@ SFX = {
 }
 
 
+# ---------------- calm piano bed ----------------
+def mtof(m):
+    return 440.0 * 2 ** ((m - 69) / 12)
+
+
+def felt_piano(m, dur=4.0, vel=.6):
+    """soft felt piano note: inharmonic partials, rounded attack, warm top end."""
+    f = mtof(m)
+    t = secs(dur)
+    y = np.zeros_like(t)
+    B = .00018
+    base_tau = 2.8 * (220 / f) ** .35
+    for h in range(1, 13):
+        fh = h * f * np.sqrt(1 + B * h * h)
+        if fh > SR / 2.4:
+            break
+        amp = (1 / h ** 1.0) * np.exp(-h * (.2 - .1 * vel))
+        tau = base_tau / (1 + .35 * (h - 1))
+        y += np.sin(2 * np.pi * fh * t + h * .7) * amp * np.exp(-t / tau)
+    att = np.minimum(1, t / .012)
+    thump = filt(noise(len(t)), 'lowpass', 300) * np.exp(-t * 60) * .08
+    y = (y * att + thump) * vel
+    rel = np.minimum(1, (dur - t) / .25)
+    return filt(y * rel, 'lowpass', 3800 + 3500 * vel)
+
+
+def string_pad(midis, dur, att=1.1, rel=1.4):
+    t = secs(dur)
+    y = np.zeros_like(t)
+    for m in midis:
+        f = mtof(m)
+        for det in (-.08, .07):
+            y += saw_additive(f * 2 ** (det / 12), t, nh=12, bright=.15) / len(midis)
+    y = filt(y, 'lowpass', 1100)
+    vib = 1 + .03 * np.sin(2 * np.pi * .23 * t)
+    env = np.minimum(1, t / att) * np.minimum(1, (dur - t) / rel)
+    return y * env * vib
+
+
+CALM_CHORDS = {  # bass, upper voicing
+    'Am9': (45, [57, 60, 64, 71]), 'Fmaj7': (41, [53, 57, 60, 64]), 'C': (48, [55, 60, 64, 67]),
+    'G/B': (47, [55, 59, 62, 67]), 'Dm7': (50, [53, 57, 60, 62]), 'Esus4': (40, [57, 59, 62, 64]), 'E': (40, [56, 59, 64, 68]),
+}
+
+
+def calm_bed(TL):
+    M = TL.get('music', {})
+    dur = TL['duration'] + 2.5
+    n = int(dur * SR)
+    bus = np.zeros((2, n))
+    bpm = M.get('bpm', 70)
+    beat = 60 / bpm
+    bar = beat * 4
+    prog = M.get('prog', ['Am9', 'Fmaj7', 'C', 'G/B', 'Am9', 'Fmaj7', 'Dm7', 'Esus4'])
+    t = secs(dur)
+    kf = M.get('intensity', [[0, .4], [dur, .5]])
+    inten = lambda x: float(np.interp(x, [k[0] for k in kf], [k[1] for k in kf]))
+    melody = [76, None, 74, 72, 72, None, 71, 69, 69, None, 72, 71, 67, None, None, None,
+              76, None, 74, 72, 72, None, 74, 76, 77, None, 76, 74, 71, None, 68, None]
+    nbars = int(np.ceil(dur / bar))
+    pad = np.zeros(n)
+    sub = np.zeros(n)
+    for b in range(nbars):
+        name = prog[b % len(prog)]
+        if name == 'Esus4' and (b // len(prog)) % 2 == 1:
+            name = 'E'
+        bass, ch = CALM_CHORDS[name]
+        t0 = b * bar
+        loop = b // len(prog)
+        k = inten(t0)
+        # pad (overlapping for smooth chord changes)
+        seg = string_pad(ch, bar + 1.6)
+        i0 = int(t0 * SR)
+        m = min(len(seg), n - i0)
+        if m > 0:
+            pad[i0:i0 + m] += seg[:m] * (.55 + .5 * k)
+        # sub bass
+        sb = felt_piano(bass, bar + .5, .5) + np.sin(2 * np.pi * mtof(bass) * secs(bar + .5)) * np.exp(-secs(bar + .5) / 1.6) * .35
+        m = min(len(sb), n - i0)
+        if m > 0:
+            sub[i0:i0 + m] += sb[:m] * .3
+        # arpeggio: sparse first loop, flowing after
+        tones = [bass + 12] + ch + [ch[1] + 12]
+        pattern = [0, 2, 3, 4] if loop == 0 else ([0, 2, 3, 4] if b % 2 else [0, 2, 4, 5])
+        step = bar / (len(pattern))
+        for j, idx in enumerate(pattern):
+            tt = t0 + j * step
+            if tt >= dur - .5:
+                break
+            vel = (.42 + .25 * k) * (1.0 if j == 0 else .78) * (.9 + .1 * np.sin(j * 1.7 + b))
+            note = felt_piano(tones[idx], 3.2, vel)
+            pan = -.35 + .7 * (idx / 5)
+            place(bus, stereo(note, pan), tt + .008 * np.sin(j * 3.1 + b), gain=.85)  # tiny humanised timing
+        # melody from the second loop on (quiet, high register)
+        if loop >= 1:
+            for q in range(4):
+                mi = melody[(b % 8) * 4 + q] if (b % 8) * 4 + q < len(melody) else None
+                if mi:
+                    place(bus, stereo(felt_piano(mi, 3.0, .38 + .2 * k), .25), t0 + q * beat, gain=.6)
+    bus += stereo(pad, -.2) * .2
+    bus += stereo(filt(sub, 'highpass', 55, 2), 0) * .5
+    bus = np.stack([shelf(shelf(c, 2500, 4.5, 'high'), 220, -3, 'low') for c in bus])
+    bus = reverb(bus, rt=3.0, mix=.28, bright=8000)
+    if M.get('gain'):
+        g = np.interp(t, [k[0] for k in M['gain']], [k[1] for k in M['gain']])
+        bus = bus * db(g)[:bus.shape[1]]
+    bus = np.stack([filt(c, 'highpass', 50, 4) for c in bus])
+    fade = int(2.0 * SR)
+    end = int((TL['duration'] + .4) * SR)
+    if end < n:
+        bus[:, max(0, end - fade):end] *= np.linspace(1, 0, min(fade, end))
+        bus[:, end:] = 0
+    return bus
+
+
 # ---------------- music bed ----------------
 def music_bed(TL):
+    if TL.get('music', {}).get('style') == 'calm':
+        return calm_bed(TL)
     dur = TL['duration'] + 1.5
     n = int(dur * SR)
     bus = np.zeros((2, n))
@@ -547,6 +714,8 @@ def mix(project):
     voice = np.zeros((2, n))
     for v in TL['voice']:
         x = load_voice(B / v['file'])
+        if TL.get('voice_match'):
+            x = match_voice(x, str(Path(__file__).resolve().parent.parent / TL['voice_match']))
         place(voice, process_voice(x), v['t'], 1.0)
     music = music_bed(TL)[:, :n]
     if music.shape[1] < n:
@@ -558,7 +727,7 @@ def mix(project):
     # ducking: music follows voice envelope
     venv = filt(np.abs(voice.mean(axis=0)), 'lowpass', 6)
     venv = venv / (venv.max() + 1e-9)
-    duck = 1 - .55 * np.clip(venv * 4, 0, 1)
+    duck = 1 - TL.get('music', {}).get('duck', .55) * np.clip(venv * 4, 0, 1)
     duck = filt(duck, 'lowpass', 3)
     M = TL.get('music', {})
     # auto-gain: music bed sits rel_db under the voice (RMS), sfx peaks relative to voice

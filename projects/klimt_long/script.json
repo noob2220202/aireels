@@ -26,7 +26,7 @@
       "sfx": [
         {
           "type": "impact",
-          "size": 1.0,
+          "size": 0.55,
           "at": 0.0
         },
         {
@@ -52,8 +52,8 @@
         "끝내"
       ],
       "trans": {
-        "type": "whip",
-        "dur": 0.32
+        "type": "fade",
+        "dur": 0.4
       },
       "sfx": [
         {
@@ -112,16 +112,10 @@
       ],
       "tts": "천구백구십육년, 한 여고생이 이 그림에서 사라진 클림트 초상화를 알아봤다.",
       "trans": {
-        "type": "glitch",
-        "dur": 0.32
+        "type": "dip",
+        "dur": 0.55
       },
       "sfx": [
-        {
-          "type": "glitch",
-          "dur": 0.25,
-          "db": -10,
-          "at": -0.12
-        },
         {
           "type": "flap",
           "count": 6,
@@ -160,7 +154,7 @@
       ],
       "trans": {
         "type": "zoom",
-        "dur": 0.32
+        "dur": 0.45
       },
       "sfx": [
         {
@@ -193,8 +187,8 @@
       ],
       "tts": "그런데 특별전을 준비하던 천구백구십칠년 이월, 그림이 사라졌다.",
       "trans": {
-        "type": "dip",
-        "dur": 0.32
+        "type": "fade",
+        "dur": 0.45
       },
       "sfx": [
         {
@@ -214,7 +208,7 @@
         },
         {
           "type": "impact",
-          "size": 0.6,
+          "size": 0.55,
           "db": -6,
           "word": "사라졌다",
           "off": 0.4
@@ -230,8 +224,8 @@
         "컸다"
       ],
       "trans": {
-        "type": "whipV",
-        "dur": 0.32
+        "type": "push",
+        "dur": 0.45
       },
       "sfx": [
         {
@@ -288,8 +282,8 @@
         "증거"
       ],
       "trans": {
-        "type": "push",
-        "dur": 0.32
+        "type": "fade",
+        "dur": 0.4
       },
       "sfx": [
         {
@@ -325,8 +319,8 @@
         "가짜"
       ],
       "trans": {
-        "type": "whip",
-        "dur": 0.32
+        "type": "push",
+        "dur": 0.4
       },
       "sfx": [
         {
@@ -373,16 +367,10 @@
       ],
       "tts": "훗날 액자에 남은 디엔에이로 재수사했지만 소득은 없었다.",
       "trans": {
-        "type": "glitch",
-        "dur": 0.32
+        "type": "fade",
+        "dur": 0.4
       },
       "sfx": [
-        {
-          "type": "glitch",
-          "dur": 0.25,
-          "db": -10,
-          "at": -0.12
-        },
         {
           "type": "scan",
           "dur": 2.4,
@@ -420,8 +408,8 @@
       ],
       "tts": "그리고 이천십구년 십이월, 담쟁이를 걷어내던 정원사들이 미술관 철문을 열었다.",
       "trans": {
-        "type": "whipV",
-        "dur": 0.32
+        "type": "dip",
+        "dur": 0.55
       },
       "sfx": [
         {
@@ -489,7 +477,7 @@
       ],
       "trans": {
         "type": "zoom",
-        "dur": 0.32
+        "dur": 0.45
       },
       "sfx": [
         {
@@ -530,8 +518,8 @@
       ],
       "tts": "엑스레이와 뒷면 봉인을 대조한 결과 진품, 추정가 육천만 유로 이상.",
       "trans": {
-        "type": "flash",
-        "dur": 0.24
+        "type": "fade",
+        "dur": 0.45
       },
       "sfx": [
         {
@@ -597,7 +585,7 @@
       ],
       "trans": {
         "type": "fade",
-        "dur": 0.32
+        "dur": 0.4
       },
       "sfx": [
         {
@@ -631,7 +619,7 @@
       ],
       "trans": {
         "type": "push",
-        "dur": 0.32
+        "dur": 0.45
       },
       "sfx": [
         {
@@ -718,8 +706,8 @@
       ],
       "tts": "절도 공소시효는 지났고, 발견 후 수사도 이천이십일년 기소 없이 종결됐다.",
       "trans": {
-        "type": "whip",
-        "dur": 0.32
+        "type": "fade",
+        "dur": 0.4
       },
       "sfx": [
         {
@@ -747,7 +735,7 @@
         },
         {
           "type": "impact",
-          "size": 0.7,
+          "size": 0.55,
           "db": -5,
           "word": "종결됐다",
           "off": 0.12
@@ -764,7 +752,7 @@
       ],
       "trans": {
         "type": "dip",
-        "dur": 0.32
+        "dur": 0.55
       },
       "sfx": [
         {
@@ -798,8 +786,11 @@
     }
   ],
   "music": {
-    "root": 73.42,
-    "rel_db": -7,
+    "style": "calm",
+    "bpm": 70,
+    "rel_db": -15,
+    "duck": 0.3,
+    "ticks": false,
     "intensity": [
       [
         0,
@@ -877,14 +868,10 @@
       ],
       [
         "@roof",
-        -14
+        -6
       ],
       [
-        "@roof+1.2",
-        -3
-      ],
-      [
-        "@staff",
+        "@roof+1.5",
         0
       ],
       [
@@ -892,21 +879,17 @@
         0
       ],
       [
-        "@ending:누군가+0.15",
-        -18
+        "@ending:누군가+0.4",
+        -7
+      ],
+      [
+        "@ending:end+0.6",
+        -2
       ]
-    ],
-    "pulse_start": "@found",
-    "pulse_end": "@condition",
-    "ticks": true,
-    "tick_db": -4,
-    "bells": [
-      "@hook:나왔다+0.1",
-      "@xray:캔버스에",
-      "@bag:그림+0.1"
-    ],
-    "bell_oct": 1.0
+    ]
   },
   "narration": "continuous",
-  "max_pause": 0.4
+  "max_pause": 0.4,
+  "sfx_rel_db": 6,
+  "voice_match": "assets/voices/my_voice_full.mp3"
 }

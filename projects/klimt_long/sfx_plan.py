@@ -59,14 +59,22 @@ S['scenes'][-1]['sfx'][-1]['from'] = 'voice_end'
 def Wa(scene, *c):
     w = W(scene, *c); return f"@{scene}:{w}" if w else f"@{scene}+1.5"
 S['music'] = {
-  "root": 73.42, "rel_db": -7,
+  "style": "calm", "bpm": 70, "rel_db": -15, "duck": 0.3, "ticks": False,
   "intensity": [[0, .75], ["@culprit", .6], ["@y1996", .3], ["@xray", .42], ["@vanish", .55], ["@roof", .4], ["@staff", .5], ["@fake", .55], ["@dna", .6],
                 ["@found", .5], ["@bag", .82], ["@verdict", .95], ["@condition", .5], ["@letter", .6], ["@closed", .72], ["@ending", .4]],
-  "gain": [[0, 0], [Wa('vanish', '사라졌다') + "+0.45" if W('vanish', '사라졌다') else "@vanish+3.5", 0], ["@roof", -14], ["@roof+1.2", -3], ["@staff", 0],
-           [Wa('ending', '누군가') + "-0.1" if W('ending', '누군가') else "@ending+1.6", 0], [Wa('ending', '누군가') + "+0.15" if W('ending', '누군가') else "@ending+1.9", -18]],
-  "pulse_start": "@found", "pulse_end": "@condition",
-  "ticks": True, "tick_db": -4,
-  "bells": [Wa('hook', '나왔다') + "+0.1", Wa('xray', '캔버스에', '유일한') , Wa('bag', '그림') + "+0.1"], "bell_oct": 1.0,
+  "gain": [[0, 0], ["@vanish:사라졌다+0.45", 0], ["@roof", -6], ["@roof+1.5", 0], ["@ending:누군가-0.1", 0], ["@ending:누군가+0.4", -7], ["@ending:end+0.6", -2]],
 }
+# smoother feel: no glitch hits on scene changes, softer impacts
+for s_ in S['scenes']:
+    s_['sfx'] = [c for c in s_['sfx'] if not (c['type'] == 'glitch' and c.get('at', 0) < 0)]
+    for c in s_['sfx']:
+        if c['type'] == 'impact':
+            c['size'] = min(c.get('size', 1.0), .55)
+TRANS = {"culprit": ("fade", .4), "y1996": ("dip", .55), "xray": ("zoom", .45), "vanish": ("fade", .45), "roof": ("push", .45),
+         "staff": ("fade", .4), "fake": ("push", .4), "dna": ("fade", .4), "found": ("dip", .55), "bag": ("zoom", .45),
+         "verdict": ("fade", .45), "condition": ("fade", .4), "letter": ("push", .45), "closed": ("fade", .4), "ending": ("dip", .55)}
+for s_ in S['scenes']:
+    if s_['id'] in TRANS:
+        s_['trans'] = {"type": TRANS[s_['id']][0], "dur": TRANS[s_['id']][1]}
 json.dump(S, open(p, 'w'), ensure_ascii=False, indent=2)
 print('ok', sum(len(s['sfx']) for s in S['scenes']), 'cues')

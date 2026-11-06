@@ -338,7 +338,7 @@ def step_tts(P):
                             '--ref', str(ref), '--steps', str(steps), *todo], check=True)
     TL = {'duration': round(cursor, 3), 'fps': S.get('fps', 30), 'scenes': scenes, 'subs': subs, 'voice': voice,
           'sfx': sfx + [dict(c) for c in S.get('global_sfx', [])], 'music': S.get('music', {}), 'title': S.get('title', {}),
-          'voice_db': S.get('voice_db', 0), 'sfx_rel_db': S.get('sfx_rel_db', 12), 'meta': S.get('meta', {})}
+          'voice_db': S.get('voice_db', 0), 'voice_match': S.get('voice_match'), 'sfx_rel_db': S.get('sfx_rel_db', 12), 'meta': S.get('meta', {})}
     # global music keyframes may reference scene ids: ["@scene_id", value] or ["@scene_id+0.5", v]
     def resolve(tk):
         # "@scene", "@scene+0.3", "@scene:word-0.1", "@scene:end" (voice end)
