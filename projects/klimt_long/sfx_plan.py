@@ -40,7 +40,7 @@ SFX = {
          cue("braam", "bag", ("그림",), 0.0, at=2.4, db=-2), cue("shimmer", "bag", ("그림",), 0.02, at=2.4, db=-4)],
  "verdict": [cue("scan", "verdict", at=0.0, dur=1.0, db=-12), cue("whoosh", "verdict", ("뒷면",), -0.15, at=1.0, dur=0.35, db=-10),
              cue("tick", "verdict", ("뒷면",), 0.15, at=1.2, db=-3), cue("tick", "verdict", ("뒷면",), 0.33, at=1.4, db=-3), cue("tick", "verdict", ("뒷면",), 0.51, at=1.6, db=-3),
-             cue("stamp", "verdict", ("진품",), 0.08, at=2.4, db=0), cue("flap", "verdict", ("6천만",), 0.0, at=3.2, count=12, dur=0.75, db=-10), cue("tick", "verdict", ("이상",), 0.1, at=4.0, db=-3)],
+             cue("stamp", "verdict", ("진품",), 0.08, at=2.4, db=0), cue("flap", "verdict", ("6천만",), 0.0, at=3.2, count=12, dur=0.75, db=-10), cue("tick", "verdict", ("유로",), 0.25, at=4.0, db=-3)],
  "condition": [cue("piano", "condition", at=0.05, f=196.0, db=-6), cue("tick", "condition", ("검찰은", "검찰도"), 0.0, at=2.2, db=-5),
                cue("piano", "condition", ("모른다고", "모른다"), 0.0, at=4.5, f=185.0, db=-5)],
  "letter": [cue("rustle", "letter", at=0.05, dur=0.6, db=-10)] + [cue("type", "letter", ("자기들이", "우리가"), 0.05 + i * 0.11, at=0.5 + i * 0.11, db=-10) for i in range(10)] +
