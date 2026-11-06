@@ -1,0 +1,626 @@
+{
+ "final": {
+  "scenes": [
+   {
+    "id": "hook",
+    "say": "도둑맞은 명화가 22년 만에 바로 그 미술관의 벽 속에서 나왔다.",
+    "tts": "도둑맞은 명화가 이십이년 만에 바로 그 미술관의 벽 속에서 나왔다.",
+    "labels": [
+     "1997.2 도난 → 2019.12.10 발견",
+     "이탈리아 피아첸차 · 리치 오디 미술관"
+    ]
+   },
+   {
+    "id": "culprit",
+    "say": "범인은 끝내 밝혀지지 않았다.",
+    "tts": "범인은 끝내 밝혀지지 않았다.",
+    "labels": [
+     "미제 사건",
+     "기소된 사람 없음"
+    ]
+   },
+   {
+    "id": "y1996",
+    "say": "1996년, 한 여고생이 이 그림에서 사라진 클림트 초상화를 알아봤다.",
+    "tts": "천구백구십육년, 한 여고생이 이 그림에서 사라진 클림트 초상화를 알아봤다.",
+    "labels": [
+     "1996 · 고교생 클라우디아 마가",
+     "사라진 클림트 〈Backfisch〉와 같은 얼굴"
+    ]
+   },
+   {
+    "id": "xray",
+    "say": "엑스레이를 찍자 물감 밑에 모자 쓴 그 여인이 있었다, 한 캔버스에 두 점의 클림트.",
+    "tts": "엑스레이를 찍자 물감 밑에 모자 쓴 그 여인이 있었다, 한 캔버스에 두 점의 클림트.",
+    "labels": [
+     "X선·적외선: 모자·스카프 쓴 같은 여인",
+     "알려진 유일한 '두 겹의 클림트'",
+     "1916~17년경 클림트가 덧그림"
+    ]
+   },
+   {
+    "id": "vanish",
+    "say": "그런데 특별전을 준비하던 1997년 2월, 그림이 사라졌다.",
+    "tts": "그런데 특별전을 준비하던 천구백구십칠년 이월, 그림이 사라졌다.",
+    "labels": [
+     "1997.2.22 아침 도난 확인",
+     "보수공사 중 · 특별전 준비"
+    ]
+   },
+   {
+    "id": "roof",
+    "say": "빈 액자는 지붕 위에, 경찰은 그림을 천장 창으로 빼냈다고 봤지만 액자가 그 창보다 컸다.",
+    "tts": "빈 액자는 지붕 위에, 경찰은 그림을 천장 창으로 빼냈다고 봤지만 액자가 그 창보다 컸다.",
+    "labels": [
+     "낚싯줄 가설",
+     "액자 > 천장 창"
+    ]
+   },
+   {
+    "id": "staff",
+    "say": "당시 관리인 조사도 증거 없이 끝났다.",
+    "tts": "당시 관리인 조사도 증거 없이 끝났다.",
+    "labels": [
+     "1997 · 관리인 조사",
+     "증거 불충분 → 종결"
+    ]
+   },
+   {
+    "id": "fake",
+    "say": "4월에 찾았다 싶던 그림은 정교한 가짜.",
+    "tts": "사월에 찾았다 싶던 그림은 정교한 가짜.",
+    "labels": [
+     "1997.4 · 벤티밀리아(이탈리아-프랑스 국경)",
+     "위작 판명"
+    ]
+   },
+   {
+    "id": "dna",
+    "say": "훗날 액자에 남은 DNA로 재수사했지만 소득은 없었다.",
+    "tts": "훗날 액자에 남은 디엔에이로 재수사했지만 소득은 없었다.",
+    "labels": [
+     "2014 재수사 · 2016 액자 DNA 흔적",
+     "결정적 단서 없음"
+    ]
+   },
+   {
+    "id": "found",
+    "say": "그리고 2019년 12월, 정원사들이 미술관 담쟁이 속 철문을 열었다.",
+    "tts": "그리고 이천십구년 십이월, 정원사들이 미술관 담쟁이 속 철문을 열었다.",
+    "labels": [
+     "2019.12.10 · 담쟁이 제거 작업 중",
+     "외벽의 잠기지 않은 작은 철제 덮개"
+    ]
+   },
+   {
+    "id": "bag",
+    "say": "검은 쓰레기봉투 안에, 액자 없는 그 그림.",
+    "tts": "검은 쓰레기봉투 안에, 액자 없는 그 그림.",
+    "labels": [
+     "검은 비닐봉투 · 액자 없는 캔버스"
+    ]
+   },
+   {
+    "id": "verdict",
+    "say": "엑스레이와 뒷면 봉인을 대조한 결과 진품, 추정가 6천만 유로 이상.",
+    "tts": "엑스레이와 뒷면 봉인을 대조한 결과 진품, 추정가 육천만 유로 이상.",
+    "labels": [
+     "2020.1.17 검찰 발표 · 진품",
+     "1996년 X선·적외선 기록과 대조",
+     "미술관 추정 6천만~1억 유로"
+    ]
+   },
+   {
+    "id": "condition",
+    "say": "상태는 비교적 양호했고, 검찰은 내내 벽 속에 있었는지 모른다고 했다.",
+    "tts": "상태는 비교적 양호했고, 검찰은 내내 벽 속에 있었는지 모른다고 했다.",
+    "labels": [
+     "검찰: '내내 거기 있었는지 지금은 알 수 없다'"
+    ]
+   },
+   {
+    "id": "letter",
+    "say": "곧 자기들이 훔쳤다가 선물로 돌려줬다는 편지가 신문사에 왔지만 확인된 건 없다.",
+    "tts": "곧 자기들이 훔쳤다가 선물로 돌려줬다는 편지가 신문사에 왔지만 확인된 건 없다.",
+    "labels": [
+     "2020.1 · 지역 일간지 「Libertà」 앞",
+     "'도시에 주는 선물' 주장 · 진위 미확인"
+    ]
+   },
+   {
+    "id": "closed",
+    "say": "절도 공소시효는 지났고, 발견 후 수사도 2021년 기소 없이 종결됐다.",
+    "tts": "절도 공소시효는 지났고, 발견 후 수사도 이천이십일년 기소 없이 종결됐다.",
+    "labels": [
+     "절도죄 시효 만료 · 장물죄는 시효 남음",
+     "2021.11 판사 결정 · 기소 없이 종결"
+    ]
+   },
+   {
+    "id": "ending",
+    "say": "처음부터 벽 속에 있었을까, 누군가 몰래 돌려놓았을까.",
+    "tts": "처음부터 벽 속에 있었을까, 누군가 몰래 돌려놓았을까.",
+    "labels": [
+     "가설 ① 처음부터 벽 속",
+     "가설 ② 누군가 몰래 반환"
+    ]
+   }
+  ],
+  "changes": [
+   "Timing: I measured with edge-tts ko-KR-InJoonNeural +19% / -2Hz, using the same trim rule as engine/build.py. The current script measures 72.42 s, which matches timeline.json. The final script measures 72.39 s. Net change is +5 spoken syllables (399 to 404). No periods inside sentences. say and tts have the same word count in every scene.",
+   "Intelligibility: I transcribed every final clip with faster-whisper small. Every line came back as written except for small artefacts: '담쟁이' heard as '담증이' (a known one-run artefact), '캔버스에' heard as '캔버스의' (same sound), and verdict's final syllables heard as '짐품/이사'. The verdict line is unchanged from the current script.",
+   "hook: 'the museum' became 'that very museum' (바로 그 미술관의 벽 속에서) so the twist that it was the same museum is explicit. Adding '의' fixed a Whisper mishearing of the first word. It still does not claim the painting was in the wall for all 22 years.",
+   "culprit: '범인은 지금도 아무도 모른다' became '범인은 끝내 밝혀지지 않았다'. The old line stacked two subjects and read literally as false.",
+   "y1996: now says what the student recognised, a vanished KLIMT portrait in this painting ('한 여고생이 이 그림에서 사라진 클림트 초상화를 알아봤다'). This is -2 syllables. Her age is not narrated because sources give 17 or 18.",
+   "xray: replaced '이중 클림트', which means nothing to a Korean listener, with '물감 밑에 모자 쓴 그 여인이 있었다, 한 캔버스에 두 점의 클림트'. 'Only known' moved to a label.",
+   "vanish: tts '2월' is now spelled out as '이월'.",
+   "roof: the old line had no object, '천창' sounded like '천장', and '지붕엔/액자뿐' was misheard. New line: '빈 액자는 지붕 위에, 경찰은 그림을 천장 창으로 빼냈다고 봤지만 액자가 그 창보다 컸다' (+3 syllables). The fishing-line theory is in a label.",
+   "staff: '직원들까지 조사했지만 증거는 없었다' became '당시 관리인 조사도 증거 없이 끝났다'. '관리인' fits both the one-custodian and several-custodians versions in the sources. The old wording hinted at an insider.",
+   "fake: '그해 4월 압수된 그림은' became '4월에 찾았다 싶던 그림은 정교한 가짜'. 'Seized' is contested by the sources, and the new wording says why the fake mattered. I dropped '그해' because Whisper heard it as '그의' in three separate syntheses. The 1997 date is in a label.",
+   "dna: '액자의 DNA' became '액자에 남은 DNA' (+2 syllables).",
+   "found: '작은' was replaced with '미술관' so the museum's own wall is stated. tts '12월' is now '십이월'. The small unlocked hatch is in a label.",
+   "bag: '쓰레기봉투 속,' became '쓰레기봉투 안에,' because '속' was misheard.",
+   "verdict: narration unchanged. The 17 Jan 2020 announcement date, the comparison with the 1996 X-ray/IR records, and the EUR 60-100M range are in labels.",
+   "condition: '검찰도 언제부터' became '검찰은 내내', matching the prosecutor's 'per tutto questo tempo' (-2 syllables).",
+   "letter: '우리가 훔쳤다가 ... 진위는 미확인' became '자기들이 훔쳤다가 ... 왔지만 확인된 건 없다'. It is now plainly someone else's claim. No writer is named or described, and the comma was removed to save 0.25 s.",
+   "closed: fixed the factual error. Only the THEFT is time-barred; receiving stolen goods was not. The post-discovery investigation (theft plus receiving) was archived in Nov 2021 with no charges. New line: '절도 공소시효는 지났고, 발견 후 수사도 2021년 기소 없이 종결됐다'. I chose this exact wording because Whisper misheard '절도죄 시효는' and '발견 뒤'.",
+   "Still to do in script.json: these SFX/music word anchors no longer exist and should be re-pointed. culprit '모른다' → '않았다'. xray '유일한' (stamp and music bell '@xray:유일한') → '클림트' or '두'. roof '액자뿐' → '액자는', '천창으로' → '창으로', tick '액자는' → '액자가'. staff '없었다' → '끝났다'. condition '검찰도' → '검찰은'. letter '우리가' (typing sfx) → '자기들이', stamp '미확인' → '없다'. All other anchors still match."
+  ],
+  "rejected": [
+   "R1 closed '장물죄 수사도 ...': not used. The 2019-21 investigation covered both theft and receiving stolen goods, so I used the neutral '발견 후 수사도'.",
+   "R2 closed '절도죄 시효는 이미 지났고, 발견 뒤 수사도 ... 끝났다': the meaning is right, but Whisper heard '절도제 시오는' and '발견디'. I replaced it with the wording that tested clean. I also dropped '이미' to save 0.3 s.",
+   "R3 closed '아무도 기소되지 않은 채': '기소 없이' says the same thing for fewer syllables, and 'no one charged' is also in a label.",
+   "R1 fake '발견된': still has no clear referent. R3 fake '경찰이 압수한 소포 속': sources disagree (package intercepted at Ventimiglia per Wikipedia and Smithsonian, copy found at Ventimiglia station per Linkiesta and Artribune), so I used the neutral '찾았다 싶던'. The Craxi addressee is excluded as agreed.",
+   "R1 staff '관리인까지' and R3 staff '직원들도': '까지' insinuates, and the plural '직원들' is not supported by Libertà, which says one custodian. I used R2's neutral 'investigation ended without evidence' framing.",
+   "R1 xray narration '두 겹의 클림트': kept as an on-screen label only. R3's plainer phrasing went into the narration.",
+   "R2 letter '주장하는 ... 끝내 확인되지 않았다': longer, and R3's reported-speech form already marks it as a claim and tested clean.",
+   "R3 optional verdict '예전 엑스레이와...': not needed. The 1996 reference goes in a label at no time cost.",
+   "R3 doubt about the Nov 2021 judge's decision: resolved. Sky TG24 (18 Nov 2021) and Libertà (17 Nov 2021) confirm that GIP Luca Milani archived the theft and receiving investigation at prosecutor Chicca's request.",
+   "R3 label '특별전 준비로 그림 이동 중': unsupported, not used. R3 label '10년 넘게 담쟁이에 가려져 있던 벽감': weakly sourced, not used.",
+   "Labels giving the 1912 'lost since' date or the student's age (18): sources give 1917 or are unclear on the date, and give 17 or 18 for her age, so both are omitted.",
+   "No label, line or caption names or describes the investigated people (late director, widow, man with prior convictions), the director's diary, or the letter writers' ages or records."
+  ],
+  "sources": [
+   "https://tg24.sky.it/bologna/2021/11/18/klimt-sparito-e-ritrovato-archiviata-linchiesta-a-piacenza",
+   "https://liberta.it/news/territorio/citta/piacenza/klimt-verita-impossibile-archiviata-linchiesta-sul-furto/13983",
+   "https://tg24.sky.it/cronaca/2021/03/03/quadro-klimt-rubato-piacenza",
+   "https://www.ansa.it/english/news/lifestyle/arts/2021/03/03/charges-dropped-over-stolen-klimt-painting_9f7114dc-fd3d-42ea-a649-67ff2068f3e1.html",
+   "https://www.smithsonianmag.com/smart-news/painting-found-inside-walls-italian-gallery-may-be-stolen-klimt-180973757/",
+   "https://en.wikipedia.org/wiki/Portrait_of_a_Lady_(Klimt)",
+   "https://www.linkiesta.it/2020/11/klimt-signora-vera-storia/",
+   "https://www.artribune.com/?p=35458",
+   "https://news.artnet.com/art-world/italys-gustav-klimt-theft-investigation-reopened-after-17-years-5895",
+   "https://www.pbs.org/newshour/arts/portrait-found-in-italian-gallerys-walls-verified-as-stolen-work-by-klimt",
+   "https://www.agi.it/cronaca/news/2020-01-17/quadro_klimt_ritrovato_piacenza_furto-6903891/",
+   "https://www.open.online/2020/01/21/piacenza-due-ladri-di-66-anni-dietro-al-furto-del-quadro-di-klimt-la-lettera-restituirlo-e-il-nostro-regalo-alla-citta",
+   "https://www.finestresullarte.info/attualita/klimt-piacenza-66enni-confessano-furto",
+   "https://finestresullarte.info/en/exhibition-reviews/the-lady-returns-to-piacenza-here-is-the-gustav-klimt-exhibition-at-ricci-oddi",
+   "https://www.quotidiano.net/magazine/klimt-e-i-segreti-del-ritratto-di-signora-77e96a46",
+   "https://theartnewspaper.com/news/missing-klimt-turns-up-in-hidden-wall-cavity-in-good-condition"
+  ],
+  "caption_ko": "1997년 2월, 이탈리아 피아첸차의 리치 오디 미술관에서 클림트의 〈여인의 초상〉이 사라졌습니다.\n\n그 1년 전, 한 고교생이 이 그림 속 얼굴이 행방불명된 클림트 초상화와 같다는 걸 알아챘고, X선 촬영으로 물감 아래에서 모자 쓴 같은 여인이 확인됐습니다. 알려진 유일한 '두 겹의 클림트'였죠.\n\n지붕에는 빈 액자가 남아 있었지만, 그 액자는 경찰이 범행 경로로 본 천장 창보다 컸습니다. 당시 관리인 조사는 증거 없이 끝났고, 그해 4월 나타난 그림은 정교한 위작이었습니다. 2014년 재수사와 액자 DNA 분석도 결정적 단서가 되지 못했습니다.\n\n2019년 12월 10일, 담쟁이를 걷어내던 정원사들이 미술관 외벽의 작은 철문을 열자 검은 봉투 속에서 액자 없는 그림이 나왔습니다. 2020년 1월 17일 검찰은 진품이라고 발표했습니다(미술관 추정가 6천만~1억 유로). 하지만 언제부터 벽 속에 있었는지는 알 수 없다고 했습니다.\n\n자신들이 훔쳤다가 도시에 선물로 돌려줬다고 주장하는 편지가 신문사에 왔지만 확인된 것은 없습니다. 절도죄 공소시효는 이미 지났고, 발견 후 시작된 수사도 2021년 11월 아무도 기소되지 않은 채 종결됐습니다.\n\nA. 처음부터 벽 속에 숨겨져 있었다\nB. 누군가 나중에 몰래 돌려놓았다\n여러분은 A와 B 중 어느 쪽이라고 생각하나요?\n\n#클림트 #여인의초상 #미술품도난 #미제사건 #피아첸차 #미스터리 #실화"
+ },
+ "checks": [
+  {
+   "verdict": "Most of the script is accurate. Checked against reliable sources, these all hold up: 22 years (Feb 1997 to 10 Dec 2019 is 22 years 10 months), the 1996 student and X-ray (hat and scarf under the same face), \"only known double Klimt\", the exhibition being prepared in Feb 1997, the frame on the roof being bigger than the skylight, April 1997 fake, 2014 reopening and 2016 DNA traces, gardeners and ivy and the unlocked metal hatch, black garbage bag with no frame, comparison with the 1996 images plus seals and stamps on the back, the EUR 60-100M museum estimate, condition \"relatively good\" (AFP: expert Cauzzi; AP even says \"remarkably good\"), the prosecutor saying in Jan 2020 \"we can't say whether it has been there all along\", the Jan 2020 letter to a Libertà journalist (unverified), and the GIP closing the case in Nov 2021 with no charges. There is one factual error to fix: the 'closed' line says \"공소시효는 이미 끝났고\" with no qualifier, but prosecutor Chicca said only the theft was time-barred and receiving stolen goods was not (\"il furto è prescritto, non la ricettazione\"). That is why the case ran until Nov 2021. The other points are smaller: 'staff' (Libertà says one custodian was investigated, Sky says several), 'fake' (reports differ on how it was found: a seized package or a copy left on a train at Ventimiglia), and 'xray' (\"이중 클림트\" is unclear in Korean). The fixes change the total by -1 syllable and add no sentence-internal periods, so the timing stays within the 73 s limit. No source found shows any arrest or new finding after Nov 2021, so \"범인은 지금도 아무도 모른다\" holds as of Nov 2026.",
+   "issues": [
+    {
+     "scene": "closed",
+     "problem": "'공소시효는 이미 끝났고' reads as though every possible charge has expired. The prosecutor said only the theft was time-barred and receiving stolen goods (ricettazione) was not. That is why three people were investigated in 2020-21 for joint theft and ricettazione, and why the GIP formally closed the case in Nov 2021. As written, the line also makes the 2021 investigation sound pointless. Fix: name the theft, and say the receiving-stolen-goods investigation also ended with no charges. Syllables: 33 now, 31 after the fix (-2).",
+     "severity": "wrong",
+     "fix_ko": "절도죄 시효는 이미 끝났고, 장물죄 수사도 2021년 기소 없이 종결됐다.",
+     "source": "Sky TG24 2021-03-03 (pm Chicca: 'il furto è prescritto, non la ricettazione'; 3 indagati per concorso in furto e ricettazione) https://tg24.sky.it/cronaca/2021/03/03/quadro-klimt-rubato-piacenza ; Sky TG24 2021-11-18 / Libertà 2021-11-17 (gip Luca Milani archivia l'inchiesta per furto e ricettazione) https://tg24.sky.it/bologna/2021/11/18/klimt-sparito-e-ritrovato-archiviata-linchiesta-a-piacenza , https://liberta.it/news/territorio/citta/piacenza/klimt-verita-impossibile-archiviata-linchiesta-sul-furto/13983"
+    },
+    {
+     "scene": "staff",
+     "problem": "'직원들까지' (plural 'staff') goes further than the sources. Libertà, the local paper of record, says one gallery custodian was investigated and then cleared ('fu indagato un custode... la sua posizione fu archiviata'). Sky says 'i custodi' (plural). '관리인' covers both versions, since it can be one person or several, and avoids suggesting a wide insider case. Syllable count is unchanged.",
+     "severity": "risk",
+     "fix_ko": "관리인까지 조사했지만 증거는 없었다.",
+     "source": "Libertà 2021-11-17 https://liberta.it/news/territorio/citta/piacenza/klimt-verita-impossibile-archiviata-linchiesta-sul-furto/13983 ; Sky TG24 2021-03-03 https://tg24.sky.it/cronaca/2021/03/03/quadro-klimt-rubato-piacenza"
+    },
+    {
+     "scene": "fake",
+     "problem": "'압수된' (seized) states one version of events as fact. Sources disagree. Smithsonian says police seized a package they believed held the painting. Wikipedia says a forgery was 'discovered at Ventimiglia'. Artribune says the copy was 'abbandonato su un treno a Ventimiglia' (left on a train). '발견된' is true under every version and has the same syllable count. Do not mention the Craxi addressee (agreed rule).",
+     "severity": "risk",
+     "fix_ko": "그해 4월 발견된 그림은 정교한 가짜.",
+     "source": "Smithsonian https://www.smithsonianmag.com/smart-news/painting-found-inside-walls-italian-gallery-may-be-stolen-klimt-180973757/ ; Wikipedia https://en.wikipedia.org/wiki/Portrait_of_a_Lady_(Klimt) ; Artribune https://www.artribune.com/?p=35458"
+    },
+    {
+     "scene": "xray",
+     "problem": "The fact checks out: X-rays in 1996 showed the same model with a dark hat and scarf, and Smithsonian, the Guardian and others report it as the 'only known double Klimt'. The problem is wording. '이중 클림트' is not natural Korean and a listener will not know what it means. '두 겹의 클림트' keeps the meaning (one Klimt painted over another) and stays hedged with '알려진'. Avoid '이중 초상화', which suggests a portrait of two people. Syllables: +1.",
+     "severity": "unclear",
+     "fix_ko": "엑스레이를 찍자 그 아래 모자 쓴 여인이 숨어 있었다, 알려진 유일한 '두 겹의 클림트'.",
+     "source": "Smithsonian (X-rays: 'only known double Klimt') https://www.smithsonianmag.com/smart-news/painting-found-inside-walls-italian-gallery-may-be-stolen-klimt-180973757/ ; Finestre sull'Arte (Backfisch: same face and pose, large black hat; Klimt removed hat and scarf 1916-17) https://finestresullarte.info/en/exhibition-reviews/the-lady-returns-to-piacenza-here-is-the-gustav-klimt-exhibition-at-ricci-oddi"
+    },
+    {
+     "scene": "verdict",
+     "problem": "The narration goes straight from the discovery (10 Dec 2019) to the authentication, which sounds immediate. The prosecutor actually announced it on 17 Jan 2020, more than a month later. The methods are correctly described: infrared and UV images compared with the 1996 tests, X-ray of the hidden portrait, and wax seals and stamps on the back. The value is also correct: the museum estimates EUR 60-100M, so '6천만 유로 이상' is accurate. No narration change is needed, but the date should go in an on-screen label.",
+     "severity": "style",
+     "fix_ko": "엑스레이와 뒷면 봉인을 대조한 결과 진품, 추정가 6천만 유로 이상.",
+     "source": "AFP via Artdaily https://artdaily.com/news/120160/Painting-found-in-Italy-wall-is-stolen-Klimt ; AP via PBS https://www.pbs.org/newshour/arts/portrait-found-in-italian-gallerys-walls-verified-as-stolen-work-by-klimt ; Smithsonian (Bonfanti: wax seals and stamps on back)"
+    }
+   ],
+   "onscreen_labels": [
+    {
+     "scene": "hook",
+     "label_ko": "1997.2 도난 → 2019.12.10 발견"
+    },
+    {
+     "scene": "y1996",
+     "label_ko": "1996 · 당시 고교생 클라우디아 마가"
+    },
+    {
+     "scene": "y1996",
+     "label_ko": "사라진 클림트 〈Backfisch〉와 같은 얼굴"
+    },
+    {
+     "scene": "xray",
+     "label_ko": "X선: 모자·스카프 쓴 같은 여인"
+    },
+    {
+     "scene": "vanish",
+     "label_ko": "1997.2.22 도난 확인 · 보수공사로 휴관 중"
+    },
+    {
+     "scene": "vanish",
+     "label_ko": "특별전 〈Da Hayez a Klimt〉 준비 중"
+    },
+    {
+     "scene": "roof",
+     "label_ko": "낚싯줄 가설"
+    },
+    {
+     "scene": "roof",
+     "label_ko": "액자 > 천창"
+    },
+    {
+     "scene": "staff",
+     "label_ko": "증거 불충분 → 혐의 종결"
+    },
+    {
+     "scene": "fake",
+     "label_ko": "1997.4 · 벤티밀리아(프랑스 국경) · 위작"
+    },
+    {
+     "scene": "dna",
+     "label_ko": "2014 재수사 · 2016 액자 DNA 흔적"
+    },
+    {
+     "scene": "found",
+     "label_ko": "2019.12.10 · 잠기지 않은 외벽 철문"
+    },
+    {
+     "scene": "bag",
+     "label_ko": "액자 없이 · 검은 비닐봉투"
+    },
+    {
+     "scene": "verdict",
+     "label_ko": "2020.1.17 검찰 발표 · 1996년 검사 영상과 대조"
+    },
+    {
+     "scene": "verdict",
+     "label_ko": "미술관 추정 6천만~1억 유로"
+    },
+    {
+     "scene": "condition",
+     "label_ko": "검찰: '처음부터 있었는지 현재로선 알 수 없다'"
+    },
+    {
+     "scene": "letter",
+     "label_ko": "2020.1 · 일간지 「Libertà」 기자 앞 · 진위 미확인"
+    },
+    {
+     "scene": "closed",
+     "label_ko": "절도죄 시효 만료 · 장물죄는 미만료"
+    },
+    {
+     "scene": "closed",
+     "label_ko": "2021.11 판사 결정 · 전원 불기소 종결"
+    }
+   ]
+  },
+  {
+   "issues": [
+    {
+     "scene": "closed",
+     "problem": "'공소시효는 이미 끝났고'는 모든 죄의 시효가 끝난 것처럼 들린다. 시효가 끝난 건 1997년 절도죄뿐이다. 장물죄(ricettazione)는 시효가 남아 있어서 2019년 발견 뒤 수사가 절도와 장물 혐의를 함께 다뤘다. 2021년 11월 사건이 종결된 이유도 시효가 아니라 3명 모두에게서 혐의를 뒷받침할 증거를 찾지 못했기 때문이다. 또 '2021년 수사'라고 하면 수사가 2021년에 시작된 것처럼 들리지만, 실제로는 2019년 12월에 시작해 2021년 11월 17~18일 판사(GIP Luca Milani)가 검찰 요청을 받아들여 종결했다. 수정안은 3음절 짧아지고, '재수사'라는 말은 2014년 DNA 장면에 이미 쓰였으므로 '발견 뒤 수사'로 구분했다.",
+     "severity": "wrong",
+     "fix_ko": "절도죄 시효는 이미 지났고, 발견 뒤 수사도 2021년 기소 없이 끝났다.",
+     "source": "ANSA 2021-11-18 'Klimt sparito e ritrovato, archiviata l'inchiesta a Piacenza' (furto e ricettazione, gip Milani su richiesta pm Chicca); Libertà 2021-11-17 'Klimt, verità impossibile. Archiviata l'inchiesta sul furto'; Sky TG24 2021-03-03 (pm: nessun elemento a carico dei tre indagati per concorso in furto e ricettazione); Blitz/Le Iene ('furto... prescritto essendo il reato risalente al 1997')"
+    },
+    {
+     "scene": "staff",
+     "problem": "'직원들까지 조사했지만 증거는 없었다'에서 '까지'는 의심이 직원에게까지 번졌다는 느낌을 주고, '증거는 없었다'는 '의심은 맞지만 증명만 못 했다'는 뉘앙스를 남긴다. 게다가 바로 앞 roof 장면이 '액자가 천창보다 컸다', 즉 외부 침입이 어렵다는 내용이라 이어 들으면 '내부자 소행'처럼 연결된다. 당시 관리인에 대한 수사는 증거 불충분으로 종결됐다. 인원도 출처마다 다르다(Sky는 custodi 복수, ANSA와 Libertà 2021은 un custode 단수). 그래서 수를 특정하지 않는 '관리인'으로 쓰고, '당시'를 붙여 1997년의 일로 한정했다. 음절 수는 그대로(16)다. 화면에서도 경비원 실루엣에 그림자나 붉은 조명을 쓰지 말고, 서류에 '종결' 도장이 찍히는 그림처럼 중립적인 연출을 권한다.",
+     "severity": "risk",
+     "fix_ko": "당시 관리인 조사도 증거 없이 종결됐다.",
+     "source": "Sky TG24 2021-03-03 ('gli allora custodi... archiviata dal gip per mancanza di prove'); ANSA 2021-11-18 / Libertà 2021-11-17 ('un custode... posizione archiviata'); Smithsonian ('gallery workers were investigated... dismissed for lack of evidence')"
+    },
+    {
+     "scene": "letter",
+     "problem": "편지 내용을 '우리가 훔쳤다가'처럼 1인칭으로 그대로 옮기면 사실을 전하는 것처럼 들린다. 편지를 쓴 사람 가운데 한 명은 이후 피의자로 조사받았다가 2021년에 불기소 종결됐다. 따라서 이 내용은 '주장'으로 표시하고, 지금 시점에서는 '미확인'보다 '끝내 확인되지 않았다'가 더 정확하다. '신문사에'는 빼고 화면 라벨로 넘긴다. 1음절 늘어난다. 편지 쓴 사람의 이름, 나이, 전과는 내레이션과 라벨 어디에도 넣지 말고, 화면도 사람 대신 봉투와 편지만 그리기를 권한다.",
+     "severity": "risk",
+     "fix_ko": "곧 자신들이 훔쳐 선물로 돌려줬다고 주장하는 편지가 왔지만, 끝내 확인되지 않았다.",
+     "source": "Finestre sull'Arte 2020-01 ('how reliable the account... is' 검증 중); Open 2020-01-21; ANSA 2021-11-18 (편지 쓴 사람이 Libertà에는 자백했지만 검사 앞에서는 진술 거부, 이후 종결)"
+    },
+    {
+     "scene": "ending",
+     "problem": "내레이션 자체는 중립적이라 바꿀 필요 없다. 다만 내레이션 밖 요소에서 위험이 생길 수 있다. 캡션, 해시태그, 썸네일, 고정 댓글에 '관장 일기', '자작극', '미망인', '내부자 소행' 같은 표현이나 그런 단서를 넣으면, 이미 고인이 된 전 관장과 그 유족을 특정하고 범인처럼 암시하게 된다. 두 사람 모두 2021년에 불기소 종결됐다. '처음부터 벽 속에 있었을까, 누군가 몰래 돌려놓았을까'라는 두 가설만 유지하고, 세 번째 가설인 자작극이나 내부 소행은 넣지 말 것을 권한다.",
+     "severity": "risk",
+     "fix_ko": "처음부터 벽 속에 있었을까, 누군가 몰래 돌려놓았을까.",
+     "source": "Open 2020-02-11 (전 관장 미망인 피의자 등록 보도); ANSA 2021-11-18 / Libertà 2021-11-17 (전 관장, 배우자, 전과 있는 남성 3명 모두 종결)"
+    },
+    {
+     "scene": "verdict",
+     "problem": "'6천만 유로 이상'이라는 단정은 출처마다 금액이 달라서(6천만 유로, 약 6,600만 달러, 6천만~1억 유로) 과장으로 비칠 수 있다. 내레이션은 그대로 두고 범위를 라벨로 보완하면 된다. 진품 판정의 주체와 날짜(2020년 1월 17일 검찰 발표)도 라벨에 넣어 근거를 분명히 한다.",
+     "severity": "style",
+     "fix_ko": "엑스레이와 뒷면 봉인을 대조한 결과 진품, 추정가 6천만 유로 이상.",
+     "source": "AP/PBS 2020-01-17 (Chicca: 'the work is authentic', 적외선과 엑스레이로 대조); Smithsonian (BBC 인용 약 6,600만 달러)"
+    }
+   ],
+   "onscreen_labels": [
+    {
+     "scene": "hook",
+     "label_ko": "1997.2 도난 → 2019.12 발견"
+    },
+    {
+     "scene": "y1996",
+     "label_ko": "1996 · 18세 미술고 학생의 발견"
+    },
+    {
+     "scene": "xray",
+     "label_ko": "엑스레이·적외선 촬영 · 모자 쓴 여인"
+    },
+    {
+     "scene": "vanish",
+     "label_ko": "1997.2.22 오전 분실 확인 · 특별전 준비 중"
+    },
+    {
+     "scene": "roof",
+     "label_ko": "낚싯줄 가설 → 액자가 천창보다 큼"
+    },
+    {
+     "scene": "staff",
+     "label_ko": "1997 관리인 조사 → 증거 불충분 종결"
+    },
+    {
+     "scene": "fake",
+     "label_ko": "1997.4 · Ventimiglia 소포 · 위작"
+    },
+    {
+     "scene": "dna",
+     "label_ko": "2014 재수사 · 액자 지문·DNA"
+    },
+    {
+     "scene": "found",
+     "label_ko": "2019.12.10 · 외벽 철제 덮개(잠기지 않음)"
+    },
+    {
+     "scene": "bag",
+     "label_ko": "액자 없이 나무틀에 고정된 캔버스"
+    },
+    {
+     "scene": "verdict",
+     "label_ko": "2020.1.17 검찰 발표 · 추정가 6천만~1억 유로"
+    },
+    {
+     "scene": "condition",
+     "label_ko": "검찰: 언제부터 있었는지 알 수 없음"
+    },
+    {
+     "scene": "letter",
+     "label_ko": "2020.1 지역 일간지 앞 편지 · 진위 미확인"
+    },
+    {
+     "scene": "closed",
+     "label_ko": "절도죄 시효 만료 · 장물 혐의 포함 수사도 2021.11 종결"
+    },
+    {
+     "scene": "ending",
+     "label_ko": "누가, 언제 넣었나 · 미해결"
+    }
+   ],
+   "verdict": "조건부 통과다. 사실과 법적으로 반드시 고쳐야 할 곳은 두 군데다. (1) closed: '공소시효는 이미 끝났고'는 시효가 끝난 범죄를 잘못 말하고 있다. 시효가 끝난 건 절도죄뿐이고, 장물죄는 시효가 남아 2019~2021년 수사 대상이었다. 2021년 11월 판사의 종결 결정도 시효 때문이 아니라 증거가 없었기 때문이다. 확인 결과 ANSA 2021년 11월 18일 기사와 Libertà 2021년 11월 17일 기사가 이 종결을 보도했다. (2) staff: '직원들까지 조사했지만 증거는 없었다'가 천창 장면 바로 뒤에 오면 내부자 소행처럼 읽히므로, '당시 관리인 조사도 증거 없이 종결됐다'로 중립화해야 한다. 그 밖에 letter 장면은 '주장'이라는 표시를 넣고 '끝내 확인되지 않았다'로 바꾸는 것을 권한다. 지시된 수정을 반영하면 음절 수는 staff 0, letter +1, closed -3으로 전체 -2음절이 되어 허용 범위(±8) 안이다. 문장 중간에 마침표를 새로 넣지 않았으므로 73초 이내 유지에 문제없다. 이 밖에 특정 개인을 범인으로 지목하거나 암시하는 표현은 없다. '처음부터 계속 벽 속에 있었다'고 단정하는 표현도 없으며, '6천만 유로'와 '22년' 같은 숫자도 출처와 맞는다. 캡션, 해시태그, 썸네일, 그림에서 고인이 된 전 관장과 유족, 편지 쓴 사람(이름, 나이, 전과), 관리인을 특정하거나 범인처럼 그리지 않는 것이 남은 주요 위험 관리 포인트다."
+  },
+  {
+   "verdict": "The facts mostly hold up, but a first-time listener will trip over 6 lines at full speed. The worst is the letter line: '곧 우리가 훔쳤다가' with no quote marks sounds like the narrator saying 'we stole it'. Next, '이중 클림트' means nothing to a Korean viewer, '압수된 그림' refers to nothing said before it, '천창' sounds like '천장' and '끌어올렸다' has no object, and '한 학생' / '사라진 옛 작품' never say the lost work was also a Klimt. One line is also misleading on accuracy: '공소시효는 이미 끝났고' with no qualifier. Only the theft charge expired; receiving stolen goods did not, which is why the case ran until 2021. And '기소하지 못한' suggests someone was guilty. I measured every rewrite below with edge-tts ko-KR-InJoonNeural at +19% / -2Hz and transcribed each with faster-whisper small to check what is heard. Whisper misheard the current clips in 5 places: 지붕엔→지공엔, 액자뿐→액자 분, 그해→그의, 쓰레기봉투 속→봉투서, 진위→진의. In my test transcriptions the rewrites came back as written, apart from small artefacts: 캔버스에→캔버스의 (same sound), 담쟁이→담증이 in one run, and the hook's first word 도둑맞은→보동맞은 in one run (it was heard correctly in the current clip). With all fixes except the optional verdict change, total speech time changes by about +0.01 s (about 72.4 s total) and the script gains about +7 syllables, inside the +/-8 limit. If you also apply the optional verdict wording, it reaches about 72.8 s and +9 syllables; in that case put that detail in a label instead, or drop '바로' from the hook. These facts check out: 1996, the 18-year-old student, X-ray, special exhibition, Feb 1997, frame too big for the skylight, April 1997 fake, ivy and hatch, €60M or more, the prosecutor not knowing how long it was there, the Jan 2020 letter, and 2021 closure. 22 years is correct (Feb 1997 to Dec 2019 is 22 years 10 months) even though many outlets say 23. Two things are unconfirmed. The judge's November 2021 archiving decision: I found only the prosecutors' March 2021 request to archive, and '2021년' is safe either way. The DNA reopening year: sources say 2014 or 2016; use 2014 on screen.",
+   "issues": [
+    {
+     "scene": "letter",
+     "severity": "misleading",
+     "problem": "With no quote marks, '곧 우리가 훔쳤다가 ...' sounds like the narrator saying 'we stole it, then gave it back.' Who wrote the letter is never said. Also '진위는' is heard as '진의는' (Whisper heard it that way on the current clip), and '미확인' is a dense Sino-Korean ending. '자기들이' makes it clearly someone else's claim without naming or describing anyone, and '확인된 건 없다' states plainly that it is unverified. Measured 4.91 s vs 5.19 s.",
+     "fix_ko": "곧 자기들이 훔쳤다가 선물로 돌려줬다는 편지가 신문사에 왔지만 확인된 건 없다.",
+     "source": "https://www.finestresullarte.info/attualita/klimt-piacenza-66enni-confessano-furto (21/01/2020: letter to Libertà journalist claiming they returned it 'per fare un regalo alla città'; investigators still assessing credibility); Whisper ASR on current clip"
+    },
+    {
+     "scene": "closed",
+     "severity": "misleading",
+     "problem": "'공소시효는 이미 끝났고' with no qualifier suggests every crime had expired, but only the theft charge had. Receiving stolen goods (ricettazione) had not, which is why the case ran until 2021, so the line contradicts itself as heard. '기소하지 못한 채' (failed to charge) suggests a guilty person existed who escaped; '기소되지 않은 채' is neutral. '2021년 수사는' can be heard as 'the 2021 investigation'. Measured 5.05 s vs 5.34 s.",
+     "fix_ko": "절도 공소시효는 끝났고, 수사도 2021년 아무도 기소되지 않은 채 종결됐다.",
+     "source": "Prosecutor Ornella Chicca: 'il furto è prescritto, non la ricettazione' (AGI/Libertà, Jan 2020); https://tg24.sky.it/cronaca/2021/03/03/quadro-klimt-rubato-piacenza (prosecutors found nothing against the 3 people investigated and asked to archive the case); ANSA 3 Mar 2021"
+    },
+    {
+     "scene": "xray",
+     "severity": "unclear",
+     "problem": "'이중 클림트' (double Klimt) is a translated label that means nothing to a Korean listener. '그 아래' heard right after '엑스레이를 찍자' has no clear referent: under the X-ray? The fix says what it is: under the paint, the hat-wearing woman, two Klimts on one canvas. Measured 5.24 s vs 5.27 s, same syllable count. Keep the 'only known' claim as an on-screen label.",
+     "fix_ko": "엑스레이를 찍자 물감 밑에 모자 쓴 그 여인이 있었다, 한 캔버스에 두 점의 클림트.",
+     "source": "https://www.smithsonianmag.com/smart-news/painting-found-inside-walls-italian-gallery-may-be-stolen-klimt-180973757/ (X-rays showed it was painted over Portrait of a Young Lady; 'only known double Klimt')"
+    },
+    {
+     "scene": "y1996",
+     "severity": "unclear",
+     "problem": "'한 학생' is generic, and '이 클림트 그림에서 사라진 옛 작품의 얼굴을 알아봤다' never says the lost work was ALSO a Klimt, so the listener cannot follow the X-ray reveal. '옛 작품' was heard as '예작품'. She was an 18-year-old high-school (liceo) student, so '여고생' is accurate and vivid. The fix is shorter: measured 4.93 s vs 5.04 s, -2 syllables. Whisper heard it exactly as written.",
+     "fix_ko": "1996년, 한 여고생이 이 그림에서 사라진 클림트 초상화를 알아봤다.",
+     "source": "Smithsonian (Claudia Maga, 18, art student; Portrait of a Young Lady unseen since 1912; same glance, smile, beauty spot); https://www.open.online/2020/01/18/come-sparito-e-come-stato-ritrovato-il-ritratto-di-signora-di-klimt ('studentessa liceale', maturità research)"
+    },
+    {
+     "scene": "fake",
+     "severity": "unclear",
+     "problem": "'압수된 그림' refers to nothing said earlier, so the listener does not know what was seized or why it matters. '그해' was heard as '그의'. Saying it was a parcel the police seized makes the fake understandable. '4월에' after the 1997 scenes already implies the same year. Measured 2.90 s vs 2.63 s. Move '정교한' (high-quality) to a label.",
+     "fix_ko": "4월에 경찰이 압수한 소포 속 그림은 가짜.",
+     "source": "Smithsonian ('In April 1997, police seized a package they believed held the painting, but the work inside was a fake'); https://en.wikipedia.org/wiki/Portrait_of_a_Lady_(Klimt) (Ventimiglia); Whisper ASR on current clip"
+    },
+    {
+     "scene": "roof",
+     "severity": "unclear",
+     "problem": "(1) '천창' sounds almost the same as '천장' (ceiling) at speed and is a rare word. (2) '끌어올렸다' has no object. (3) Why the frame's size matters is never said: the frame was on the roof, so it must have come through the skylight, yet it was too big. (4) Starting the sentence with '지붕엔' was misheard (지공엔/지봉엔), and '액자뿐' was heard as '액자 분'. Moving '지붕' into the middle of the sentence and saying '천장 창' fixed these in testing. Measured 5.68 s vs 5.30 s. Put the fishing-line theory in a label.",
+     "fix_ko": "빈 액자는 지붕 위에, 경찰은 그림을 천장 창으로 빼냈다고 봤지만 액자가 그 창보다 컸다.",
+     "source": "Smithsonian (frame found on roof; skylight theory; frame reportedly would not fit); Guardian 2019 via search summary (fishing line, haul up through skylight to roof, frame too large for the opening); Wikipedia; Whisper ASR"
+    },
+    {
+     "scene": "culprit",
+     "severity": "unclear",
+     "problem": "'범인은 지금도 아무도 모른다' stacks two subjects (범인은 / 아무도) and can be heard as 'the culprit still knows nobody'. Read literally it is also false, since the culprit knows. '밝혀지지 않았다' is unambiguous and matches the facts: no one was identified or charged. Measured 2.02 s vs 2.11 s.",
+     "fix_ko": "범인은 끝내 밝혀지지 않았다.",
+     "source": "Wikipedia ('closed as unsolved'); Sky TG24 3 Mar 2021"
+    },
+    {
+     "scene": "found",
+     "severity": "unclear",
+     "problem": "'담쟁이 속 작은 철문' never says whose wall it is. The core twist (the museum's OWN wall) is only implied. Swapping '작은' for '미술관' fixes it for +1 syllable. Measured 4.96 s vs 4.79 s. Put the size of the hatch and the date in labels.",
+     "fix_ko": "그리고 2019년 12월, 정원사들이 미술관 담쟁이 속 철문을 열었다.",
+     "source": "https://www.finestresullarte.info/attualita/piacenza-ritrovato-forse-dipinto-di-gustav-klimt-rubato-nel-1997 (gardeners clearing ivy on an exterior wall; niche closed by a 'sportello'; black sack)"
+    },
+    {
+     "scene": "dna",
+     "severity": "unclear",
+     "problem": "'액자의 DNA' sounds as if the frame itself has DNA. Say '액자에 남은 DNA' (DNA left on the frame). Keep '훗날' so the listener knows time has jumped (2014). Keep the tts override '디엔에이'; Whisper heard it correctly. Measured 3.47 s vs 3.25 s.",
+     "fix_ko": "훗날 액자에 남은 DNA로 재수사했지만 소득은 없었다.",
+     "source": "Guardian 16 Mar 2014 / https://news.artnet.com/art-world/italys-gustav-klimt-theft-investigation-reopened-after-17-years-5895 (reopened 2014 for a partial fingerprint and DNA on the frame); Smithsonian says 2016 DNA traces, a conflict, so put 2014 on screen"
+    },
+    {
+     "scene": "condition",
+     "severity": "style",
+     "problem": "'검찰도' ('also') suggests someone else had already said they didn't know. The prosecutor's actual point is whether it was there THE WHOLE TIME ('se è rimasto lì per tutto questo tempo'), which '내내' says directly. '줄곧' was tested and misheard ('줄곱벽'); '내내' was heard correctly. Measured 4.74 s vs 4.96 s.",
+     "fix_ko": "상태는 비교적 양호했고, 검찰은 내내 벽 속에 있었는지 모른다고 했다.",
+     "source": "https://www.open.online/2020/01/18/come-sparito-e-come-stato-ritrovato-il-ritratto-di-signora-di-klimt ('al momento non possiamo sapere se è rimasto lì per tutto questo tempo')"
+    },
+    {
+     "scene": "hook",
+     "severity": "style",
+     "problem": "In the very first line, '그 미술관' has nothing to refer back to. The twist (the SAME museum it was stolen from) is the whole hook, but here it sounds like filler. '바로 그' makes it unmistakable, with no extra comma pause. Measured 4.03 s vs 3.76 s. '22년' is correct (Feb 1997 to Dec 2019 is 22 years 10 months), even though many outlets say 23.",
+     "fix_ko": "도둑맞은 명화가 22년 만에 바로 그 미술관 벽 속에서 나왔다.",
+     "source": "Art Newspaper / Finestre sull'Arte (stolen 22 Feb 1997, found 10 Dec 2019 in the same gallery)"
+    },
+    {
+     "scene": "staff",
+     "severity": "risk",
+     "problem": "'직원들까지' ('even the staff') hints that suspicion landed on insiders. The custodians were cleared for lack of evidence, so the neutral '도' is safer. Measured 2.60 s vs 2.74 s.",
+     "fix_ko": "직원들도 조사했지만 증거는 없었다.",
+     "source": "Smithsonian ('gallery workers were investigated, but a judge dismissed the case for lack of evidence'); Sky TG24 ('custodi... archiviata per mancanza di prove')"
+    },
+    {
+     "scene": "bag",
+     "severity": "risk",
+     "problem": "TTS: '쓰레기봉투 속,' was heard as '쓰레기 봉투서'. Using '안에,' was heard correctly. Measured 3.36 s vs 3.50 s.",
+     "fix_ko": "검은 쓰레기봉투 안에, 액자 없는 그 그림.",
+     "source": "Whisper ASR on current and candidate clips; Finestre sull'Arte ('sacco nero')"
+    },
+    {
+     "scene": "verdict",
+     "severity": "style",
+     "problem": "OPTIONAL. '엑스레이와 뒷면 봉인을 대조' does not say what they were compared with; it can be heard as comparing the X-ray against the seals. The reference was the 1996 X-ray and IR images. '옛 엑스레이' was misheard as 'Yet X-ray', so if you change it use '예전'. This costs about +0.37 s, bringing the total to about 72.8 s, still under 73 s. The cheaper option is to keep the line as is and put '1996년 엑스레이와 대조' in a label.",
+     "fix_ko": "예전 엑스레이와 뒷면 봉인을 대조한 결과 진품, 추정가 6천만 유로 이상.",
+     "source": "open.online 18 Jan 2020 ('comparazione con le analisi svolte già nel 1996'; canvas, stretcher, stamps, seals, labels); AGI 17 Jan 2020"
+    }
+   ],
+   "onscreen_labels": [
+    {
+     "scene": "hook",
+     "label_ko": "1997년 도난 → 2019년 발견"
+    },
+    {
+     "scene": "culprit",
+     "label_ko": "미제 사건"
+    },
+    {
+     "scene": "y1996",
+     "label_ko": "클라우디아 마가(18세)"
+    },
+    {
+     "scene": "y1996",
+     "label_ko": "사라진 초상화 · 1912년 이후 행방불명"
+    },
+    {
+     "scene": "xray",
+     "label_ko": "알려진 유일한 '이중 클림트'"
+    },
+    {
+     "scene": "vanish",
+     "label_ko": "1997.2.22 아침 도난 확인 (19~21일 추정)"
+    },
+    {
+     "scene": "vanish",
+     "label_ko": "특별전 준비로 그림 이동 중"
+    },
+    {
+     "scene": "roof",
+     "label_ko": "가설: 낚싯줄로 끌어올림"
+    },
+    {
+     "scene": "roof",
+     "label_ko": "액자 > 천창"
+    },
+    {
+     "scene": "staff",
+     "label_ko": "관리인들 · 증거 없음"
+    },
+    {
+     "scene": "fake",
+     "label_ko": "1997년 4월 · 정교한 위작"
+    },
+    {
+     "scene": "fake",
+     "label_ko": "벤티미글리아"
+    },
+    {
+     "scene": "dna",
+     "label_ko": "2014년 재수사 · 액자 지문·DNA"
+    },
+    {
+     "scene": "found",
+     "label_ko": "2019.12.10 · 담쟁이 제거 중"
+    },
+    {
+     "scene": "found",
+     "label_ko": "작은 철제 덮개 · 잠금 없음"
+    },
+    {
+     "scene": "bag",
+     "label_ko": "10년 넘게 담쟁이에 가려져 있던 벽감"
+    },
+    {
+     "scene": "verdict",
+     "label_ko": "2020.1.17 진품 발표"
+    },
+    {
+     "scene": "verdict",
+     "label_ko": "1996년 엑스레이·봉인·도장 대조"
+    },
+    {
+     "scene": "verdict",
+     "label_ko": "6천만~1억 유로 (미술관 추정)"
+    },
+    {
+     "scene": "condition",
+     "label_ko": "검찰: '내내 거기 있었는지 알 수 없다'"
+    },
+    {
+     "scene": "letter",
+     "label_ko": "2020년 1월 · 지역지 리베르타 기자 앞"
+    },
+    {
+     "scene": "letter",
+     "label_ko": "진위 미확인"
+    },
+    {
+     "scene": "closed",
+     "label_ko": "절도죄 시효 만료 · 기소 0명"
+    },
+    {
+     "scene": "closed",
+     "label_ko": "2021년 수사 종결"
+    }
+   ]
+  }
+ ]
+}

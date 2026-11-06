@@ -519,7 +519,7 @@ function newspaper(ctx, x, y, s, rot) {
   ctx.save(); ctx.translate(x, y); ctx.rotate(rot); ctx.scale(s, s);
   ctx.shadowColor = 'rgba(0,0,0,.6)'; ctx.shadowBlur = 40; ctx.shadowOffsetY = 18; ctx.fillStyle = '#e4dfd2'; ctx.fillRect(-360, -480, 720, 960); ctx.shadowColor = 'transparent';
   const pg = ctx.createPattern(L.TEX.paper, 'repeat'); ctx.globalAlpha = .3; ctx.fillStyle = pg; ctx.fillRect(-360, -480, 720, 960); ctx.globalAlpha = 1;
-  text(ctx, 'QUOTIDIANO · PIACENZA', 0, -420, { size: 52, family: FONT.serif, weight: 900, color: '#1d1d1d' });
+  text(ctx, '지역 일간지 · 피아첸차', 0, -420, { size: 52, family: FONT.serif, weight: 900, color: '#1d1d1d' });
   L.hline(ctx, -330, -380, 660, '#222', 4); text(ctx, '2020 · 01', 0, -356, { size: 24, family: FONT.type, weight: 400, color: '#333' }); L.hline(ctx, -330, -334, 660, '#222', 2);
   ctx.fillStyle = '#2a2a2a'; ctx.fillRect(-330, -300, 660, 34); ctx.fillRect(-330, -252, 480, 34);
   ctx.fillStyle = '#b9b3a6'; ctx.fillRect(-330, -190, 300, 240);
@@ -573,7 +573,7 @@ const scenes = {
     const swing = .13 * Math.sin(t * 2.4 + .6);
     const bx = 540 + Math.sin(swing) * 330, by = 120 + Math.cos(swing) * 330;
     ctx.drawImage(T.board, 0, 0); lamp(ctx, bx, by + 520, 900, .3);
-    const tSnap = at(info, '모른다', .8);
+    const tSnap = at(info, '않았다', .8);
     ctx.save(); ctx.translate(250, 600); ctx.rotate(-.08);
     ctx.shadowColor = 'rgba(0,0,0,.6)'; ctx.shadowBlur = 25; ctx.shadowOffsetY = 10; ctx.fillStyle = '#ece6d8'; ctx.fillRect(-120, -140, 240, 270); ctx.shadowColor = 'transparent';
     ctx.fillStyle = '#16231d'; ctx.fillRect(-100, -120, 200, 190); ctx.drawImage(T.frame, -70, -96, 140, 158);
@@ -605,7 +605,7 @@ const scenes = {
   },
 
   y1996(ctx, t, d, info) {
-    const tS = at(info, '학생이', .2), tO = at(info, '사라진', .5), tF = at(info, '얼굴을', .75);
+    const tS = at(info, '여고생이', .2), tO = at(info, '사라진', .5), tF = at(info, '초상화를', .75);
     const tDive = tS - .3;
     if (t < tDive + .25) { mapView(ctx, t, { year: '1996', tIt: .55, tDive, label: '피아첸차 · 리치오디 미술관' }); L.scanlines(ctx, .05); return; }
     const k = P(t, tDive + .25, tDive + .55, E.outQ);
@@ -624,24 +624,24 @@ const scenes = {
       ctx.save(); ctx.strokeStyle = K.goldHi; ctx.lineWidth = 5; ctx.globalAlpha = mt; ctx.beginPath(); ctx.arc(fx, fy - 10, 48, 0, 7); ctx.stroke(); ctx.beginPath(); ctx.arc(gx, gy, 34, 0, 7); ctx.stroke(); ctx.restore();
       label(ctx, '같은 얼굴', 700, 1010, { size: 40, color: '#111', bg: K.goldHi, a: P(t, tF + .2, tF + .45) });
     }
-    chip(ctx, '18세 미술학도의 발견', 300, 1150, P(t, tS, tS + .3));
+    chip(ctx, '1996 · 고교생 클라우디아 마가', 330, 1150, P(t, tS, tS + .3));
     flash(ctx, (1 - k) * .5, '#cfe0ff');
   },
 
   xray(ctx, t, d, info) {
-    const tM = at(info, '모자', .3), tD = at(info, '이중', .82);
+    const tM = at(info, '모자', .3), tD = at(info, '캔버스에', .75);
     lightbox(ctx);
     canvasPiece(ctx, 540, 850, .9, 0);
     scanGhost(ctx, P(t, .1, tM + .1, E.inOutQ));
     const hl = P(t, tM, tM + .3) * (1 - P(t, tD - .1, tD + .2));
-    if (hl > 0) { glow(ctx, 540, 590, 320, K.cyan, .35 * hl * (0.7 + .3 * Math.sin(t * 9))); chip(ctx, '모자와 스카프를 두른 여인', 540, 1180, hl, { color: K.cyan, border: K.cyan }); }
+    if (hl > 0) { glow(ctx, 540, 590, 320, K.cyan, .35 * hl * (0.7 + .3 * Math.sin(t * 9))); chip(ctx, 'X선·적외선 · 모자와 스카프를 두른 같은 여인', 540, 1180, hl, { color: K.cyan, border: K.cyan }); }
     label(ctx, 'X-RAY · 1996', 330, 520, { size: 30, family: FONT.type, weight: 400, color: K.cyan, bg: 'rgba(0,20,30,.8)', border: K.cyan, a: P(t, 0, .2) });
     const dp = P(t, tD - .05, tD + .3, E.outBack);
     if (dp > 0) {
       ctx.save(); ctx.translate(540, 1150); ctx.scale(dp, dp);
       ctx.fillStyle = 'rgba(8,10,14,.9)'; roundRect(ctx, -370, -70, 740, 140, 20); ctx.fill(); ctx.strokeStyle = K.goldHi; ctx.lineWidth = 4; ctx.stroke();
       ctx.strokeStyle = K.cyan; ctx.lineWidth = 5; ctx.strokeRect(-335, -40, 52, 66); ctx.strokeStyle = K.goldHi; ctx.strokeRect(-315, -26, 52, 66);
-      text(ctx, '알려진 유일한 이중 클림트', 45, 2, { size: 46, family: FONT.disp, weight: 400, color: K.goldHi });
+      text(ctx, '한 캔버스에 두 점의 클림트', 45, 2, { size: 46, family: FONT.disp, weight: 400, color: K.goldHi });
       ctx.restore();
     }
   },
@@ -656,7 +656,7 @@ const scenes = {
   },
 
   roof(ctx, t, d, info) {
-    const tE = at(info, '액자뿐', .12), tS = at(info, '천창으로', .38), tF = at(info, '액자는', .72), tX = at(info, '컸다', .9);
+    const tE = at(info, '지붕', .12), tS = at(info, '창으로', .4), tF = at(info, '액자가', .75), tX = at(info, '컸다', .92);
     ctx.save(); camera(ctx, { x: 540, y: 960, zoom: 1.02, rot: -E.inOutQ(P(t, 0, d)) * .085, t });
     gradBG(ctx, [[0, '#59626c'], [.45, '#3a424b'], [1, '#1d2228']]);
     fogLayer(ctx, t, 520, 400, '#b9c3cf', .14, 2, 25);
@@ -677,13 +677,13 @@ const scenes = {
     const dl = P(t, tS - .05, tS + .55, E.inOutQ);
     const route = L.bezierPts([sx, 1480], [sx - 10, 900], [sx + 120, 820], [fx - 90, 1085], 60);
     pathReveal(ctx, route, dl, { color: 'rgba(255,255,255,.9)', w: 5, dash: [14, 12], head: true });
-    label(ctx, '경찰 초기 가설 · 낚싯줄', sx + 250, 770, { size: 34, a: P(t, tS + .2, tS + .5), border: 'rgba(255,255,255,.5)' });
+    label(ctx, '경찰 초기 가설 · 낚싯줄로 빼냈다?', sx + 260, 770, { size: 34, a: P(t, tS + .2, tS + .5), border: 'rgba(255,255,255,.5)' });
     const mb = (x0, x1, y, p, lab, col) => {
       if (p <= 0) return; const s = E.outBack(clamp(p), 2.2); const cx = (x0 + x1) / 2, hw = (x1 - x0) / 2 * s;
       ctx.save(); ctx.strokeStyle = col; ctx.lineWidth = 5; ctx.shadowColor = col; ctx.shadowBlur = 10; ctx.beginPath(); ctx.moveTo(cx - hw, y + 26); ctx.lineTo(cx - hw, y); ctx.lineTo(cx + hw, y); ctx.lineTo(cx + hw, y + 26); ctx.stroke(); ctx.restore();
       label(ctx, lab, cx, y - 46, { size: 40, color: '#111', bg: col, a: clamp(p * 3) });
     };
-    mb(sx - sw / 2 + 18, sx + sw / 2 - 18, 945, P(t, tF - .25, tF + .05), '천창', '#e8edf3');
+    mb(sx - sw / 2 + 18, sx + sw / 2 - 18, 945, P(t, tF - .25, tF + .05), '천장 창', '#e8edf3');
     mb(fx - 240, fx + 250, 1010, P(t, tF + .1, tF + .4), '액자', K.gold);
     const xp = P(t, tX, tX + .25);
     if (xp > 0) {
@@ -700,7 +700,7 @@ const scenes = {
   },
 
   staff(ctx, t, d, info) {
-    const tE = at(info, '증거는', .55), tN = at(info, '없었다', .85);
+    const tE = at(info, '증거', .6), tN = at(info, '끝났다', .88);
     desk(ctx); lamp(ctx, 540, 700, 1000, .28);
     const k = P(t, 0, .4, E.outC);
     ctx.save(); ctx.translate(540, lerp(1140, 900, k)); ctx.rotate(lerp(.08, -.02, k)); ctx.scale(.86, .86);
@@ -713,11 +713,11 @@ const scenes = {
     if (t > tE - .2 && t < tN + .3) { const mx = lerp(420, 660, P(t, tE - .2, tN, E.inOutQ)); magnifier(ctx, mx, 780, 120, (c) => idCard(c, 540, 800, 1.15, '')); }
     const sp = P(t, tN, tN + .25);
     stamp(ctx, '증거 없음', 540, 1080, sp, { size: 130, color: '#d4202c', rot: -.14 });
-    chip(ctx, '증거 없이 종결 · 혐의 없음', 540, 1230, P(t, tN + .2, tN + .45));
+    chip(ctx, '증거 불충분 → 종결', 540, 1230, P(t, tN + .2, tN + .45));
   },
 
   fake(ctx, t, d, info) {
-    const tP = at(info, '압수된', .3), tJ = at(info, '정교한', .65), tF = at(info, '가짜', .9);
+    const tP = at(info, '찾았다', .3), tJ = at(info, '정교한', .65), tF = at(info, '가짜', .9);
     gradBG(ctx, [[0, '#121722'], [1, '#07090d']]); lamp(ctx, 540, 600, 1000, .22);
     // parcel
     ctx.save(); ctx.translate(540, 980);
@@ -729,12 +729,12 @@ const scenes = {
     ctx.save(); ctx.beginPath(); ctx.rect(0, 0, W, 980 - 120 + 6); ctx.clip();
     ctx.save(); ctx.filter = 'hue-rotate(-14deg) saturate(.8) contrast(.92)'; canvasPiece(ctx, 540, lerp(1150, 720, rise), .78, lerp(.06, -.03, rise)); ctx.restore();
     ctx.restore();
-    chip(ctx, '1997.04 · 진품 행세한 가짜 그림 발견', 540, 1240, P(t, tP - .1, tP + .2));
+    chip(ctx, '1997.04 · 이탈리아-프랑스 국경 근처', 540, 1240, P(t, tP - .1, tP + .2));
     if (t > tJ - .1) {
       const mx = lerp(420, 560, P(t, tJ - .1, tF, E.inOutQ)), my = lerp(650, 610, P(t, tJ - .1, tF));
       magnifier(ctx, mx, my, 120, (c) => { c.save(); c.filter = 'hue-rotate(-14deg) saturate(.8) contrast(.92)'; canvasPiece(c, 540, 720, .78, -.03); c.restore(); });
     }
-    stamp(ctx, '가짜', 560, 1020, P(t, tF, tF + .25), { size: 190, color: '#d4202c', rot: -.2 });
+    stamp(ctx, '가짜', 560, 950, P(t, tF, tF + .25), { size: 190, color: '#d4202c', rot: -.2 });
   },
 
   dna(ctx, t, d, info) {
@@ -746,7 +746,7 @@ const scenes = {
     const sw = (t * .9) % 1.4; if (sw < 1) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; const yy = 585 + sw * 430; const g = ctx.createLinearGradient(0, yy - 30, 0, yy + 30); g.addColorStop(0, 'rgba(160,120,255,0)'); g.addColorStop(.5, 'rgba(190,160,255,.7)'); g.addColorStop(1, 'rgba(160,120,255,0)'); ctx.fillStyle = g; ctx.fillRect(170, yy - 30, 420, 60); ctx.restore(); }
     for (let i = 0; i < 6; i++) { const fx = 240 + hash(i * 5) * 280, fy = 620 + hash(i * 7) * 360; glow(ctx, fx, fy, 30, '#d9c8ff', .5 + .3 * Math.sin(t * 5 + i)); }
     dnaHelix(ctx, 820, 800, 620, t, P(t, .1, .5));
-    chip(ctx, '재수사 · 액자의 지문·DNA 분석', 540, 470 + 50, P(t, tR - .3, tR));
+    chip(ctx, '2014 재수사 · 2016 액자 DNA 흔적', 540, 470 + 50, P(t, tR - .3, tR));
     const rp = P(t, tN - .1, tN + .2, E.outBack);
     if (rp > 0) {
       ctx.save(); ctx.translate(540, 1170); ctx.scale(rp, rp);
@@ -861,7 +861,7 @@ const scenes = {
   },
 
   condition(ctx, t, d, info) {
-    const tQ = at(info, '검찰도', .45), tW = at(info, '언제부터', .6), tK = at(info, '모른다고', .85);
+    const tQ = at(info, '검찰은', .45), tW = at(info, '내내', .6), tK = at(info, '모른다고', .85);
     gradBG(ctx, [[0, '#101820'], [1, '#06090c']]); lamp(ctx, 540, 600, 900, .18);
     canvasPiece(ctx, 540, 760, .62, 0);
     // condition checklist
@@ -884,7 +884,7 @@ const scenes = {
       const q = (Math.sin(t * 2.2) * .5 + .5); const qx = lerp(x0 + 80, x1 - 80, q);
       text(ctx, '?', qx, y - 60, { size: 96, family: FONT.disp, weight: 400, color: K.red, stroke: '#000', strokeW: 8 });
       ctx.restore();
-      chip(ctx, '언제부터 벽 속에?', 540, 1035, P(t, tW - .1, tW + .2), { color: '#fff', border: K.red });
+      chip(ctx, '22년 내내 벽 속에?', 540, 1035, P(t, tW - .1, tW + .2), { color: '#fff', border: K.red });
     }
     const qp = P(t, tK - .1, tK + .25, E.outBack);
     if (qp > 0) {
@@ -896,7 +896,7 @@ const scenes = {
   },
 
   letter(ctx, t, d, info) {
-    const tL = at(info, '우리가', .15), tG = at(info, '선물로', .45), tV = at(info, '진위는', .8), tU = at(info, '미확인', .92);
+    const tL = at(info, '자기들이', .12), tG = at(info, '선물로', .4), tV = at(info, '확인된', .82), tU = at(info, '없다', .94);
     desk(ctx); lamp(ctx, 500, 700, 1000, .3);
     newspaper(ctx, 400, 860, .78, -.1);
     const lp = P(t, tL - .3, tL + .1, E.outC);
@@ -910,13 +910,13 @@ const scenes = {
     for (const [s, y] of [[s1, -160], [s2, -60], [s3, 40]]) if (s) text(ctx, s, -215, y, { size: 46, family: FONT.serif, weight: 900, color: '#1d2a44', align: 'left' });
     text(ctx, '— 자칭 범인들의 주장 (요지)', 0, 150, { size: 28, weight: 700, color: '#666', alpha: P(t, tG, tG + .3) });
     ctx.restore();
-    chip(ctx, '2020.01 · 지역 신문사에 도착', 540, 1240, P(t, tL - .2, tL + .1));
-    stamp(ctx, '진위 미확인', 640, 1150, P(t, tU - .1, tU + .15), { size: 110, color: '#d4202c', rot: -.12 });
+    chip(ctx, '2020.01 · 지역 일간지 앞 편지', 540, 1240, P(t, tL - .2, tL + .1));
+    stamp(ctx, '진위 미확인', 650, 1075, P(t, tU - .1, tU + .15), { size: 110, color: '#d4202c', rot: -.12 });
     if (t > tV - .1) vignette(ctx, .25 * P(t, tV - .1, tV + .2));
   },
 
   closed(ctx, t, d, info) {
-    const tC = at(info, '공소시효는', .1), tY = at(info, '2021년', .45), tE = at(info, '종결됐다', .9);
+    const tC = at(info, '공소시효는', .1), tY = at(info, '2021년', .55), tE = at(info, '종결됐다', .92);
     desk(ctx);
     const k = P(t, 0, .3, E.outC);
     const shakeY = (t > .25 && t < .5) ? Math.sin(t * 80) * 10 * (1 - (t - .25) / .25) : 0;
@@ -928,7 +928,7 @@ const scenes = {
     text(ctx, 'RITRATTO DI SIGNORA', 0, -330, { size: 42, family: FONT.type, color: '#3a2a12', weight: 400 });
     text(ctx, '여인의 초상 · 도난 사건', 0, -260, { size: 50, weight: 800, color: '#3a2a12' });
     L.hline(ctx, -300, -210, 600, 'rgba(60,40,10,.6)', 3);
-    const rows = [['절도죄 공소시효', '만료', tC + .2], ['장물죄 수사', '2021 종결', tY + .1], ['기소된 사람', '0명', tY + .5]];
+    const rows = [['절도죄 공소시효', '만료', tC + .2], ['발견 후 수사', '2021 종결', tY + .1], ['기소된 사람', '0명', tY + .5]];
     rows.forEach(([a, b, tt], i) => { const p = P(t, tt, tt + .25); text(ctx, a, -300, -130 + i * 80, { size: 40, weight: 800, color: '#3a2a12', align: 'left', alpha: p }); text(ctx, b, 300, -130 + i * 80, { size: 44, weight: 900, color: '#a3121a', align: 'right', alpha: p }); });
     ctx.restore();
     const sp = P(t, tE + .05, tE + .3);
