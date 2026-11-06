@@ -15,6 +15,6 @@ sed -i 's/torch.autocast(device_type=self.device.type, dtype=torch.float16)/torc
 if [ ! -x .vendor/vcenv/bin/python ]; then
   uv venv -q -p python3.11 .vendor/vcenv
   uv pip install -q -p .vendor/vcenv/bin/python torch==2.5.1 torchaudio==2.5.1 --index-url https://download.pytorch.org/whl/cpu
-  uv pip install -q -p .vendor/vcenv/bin/python "numpy==1.26.4" "scipy==1.13.1" "librosa==0.10.2" munch einops pydub "transformers==4.46.3" soundfile pyyaml huggingface_hub hydra-core omegaconf python-dotenv
+  uv pip install -q -p .vendor/vcenv/bin/python "numpy==1.26.4" "scipy==1.13.1" "librosa==0.10.2" munch einops pydub "transformers==4.46.3" soundfile pyyaml huggingface_hub hydra-core omegaconf python-dotenv matplotlib descript-audiotools
 fi
 echo "voice clone env ready: .vendor/vcenv/bin/python"

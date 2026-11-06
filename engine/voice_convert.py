@@ -14,6 +14,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 VC = ROOT / '.vendor' / 'seedvc'
+CWD0 = Path.cwd()
 sys.path[:0] = [str(VC), str(VC / 'spaces_stub')]
 os.chdir(VC)  # seed-vc loads configs with relative paths
 os.environ.setdefault('SSL_CERT_FILE', '/root/.ccr/ca-bundle.crt')
@@ -50,12 +51,13 @@ def main():
     t0 = time.time()
     w = SeedVCWrapper(device=torch.device('cpu'))
     print(f'model loaded in {time.time() - t0:.1f}s', flush=True)
-    ref = str(Path(a.ref).resolve())
+    absp = lambda q: str(q if os.path.isabs(q) else (CWD0 / q).resolve())
+    ref = absp(a.ref)
     ref_audio, rsr = librosa.load(ref, sr=16000)
     e_ref = embed(w, ref_audio, 16000) if a.report else None
     for pair in a.pairs:
         src, dst = pair.split(':', 1)
-        src, dst = str((ROOT / src).resolve() if not os.path.isabs(src) else src), str((ROOT / dst).resolve() if not os.path.isabs(dst) else dst)
+        src, dst = absp(src), absp(dst)
         t1 = time.time()
         out = w.convert_voice(source=src, target=ref, diffusion_steps=a.steps, length_adjust=1.0,
                               inference_cfg_rate=a.cfg, f0_condition=False, stream_output=False)

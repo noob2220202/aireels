@@ -3,7 +3,9 @@
   "voice": {
     "name": "ko-KR-InJoonNeural",
     "rate": "+18%",
-    "pitch": "-2Hz"
+    "pitch": "-2Hz",
+    "clone_ref": "assets/voices/my_voice_ref.wav",
+    "clone_steps": 25
   },
   "start_pad": 0.08,
   "end_pad": 0.9,

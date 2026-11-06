@@ -198,6 +198,22 @@ def step_tts(P):
         scenes.append({'id': sc['id'], 't0': round(t0, 3), 't1': round(t0 + dur, 3), 'trans': sc.get('trans'),
                        'voice_t': round(vt, 3), 'voice_end': round(vend, 3), 'words': words, 'data': sc.get('data', {})})
         cursor = t0 + dur
+    # optional: convert every narration clip into a reference voice (your own voice only)
+    if V.get('clone_ref'):
+        ref = (ROOT / V['clone_ref']).resolve()
+        steps = int(V.get('clone_steps', 25))
+        tag = hashlib.sha1(ref.read_bytes()).hexdigest()[:8] + f'_{steps}'
+        todo = []
+        for v in voice:
+            src = B / v['file']
+            dst = src.with_name(src.stem + f'_vc_{tag}.wav')
+            if not dst.exists():
+                todo.append(f'{src}:{dst}')
+            v['file'] = str(dst.relative_to(B))
+        if todo:
+            print(f'voice clone: converting {len(todo)} clip(s) to {ref.name} (CPU, takes a while)')
+            subprocess.run([str(ROOT / '.vendor' / 'vcenv' / 'bin' / 'python'), str(ROOT / 'engine' / 'voice_convert.py'),
+                            '--ref', str(ref), '--steps', str(steps), *todo], check=True)
     TL = {'duration': round(cursor, 3), 'fps': S.get('fps', 30), 'scenes': scenes, 'subs': subs, 'voice': voice,
           'sfx': sfx + [dict(c) for c in S.get('global_sfx', [])], 'music': S.get('music', {}), 'title': S.get('title', {}),
           'voice_db': S.get('voice_db', 0), 'sfx_rel_db': S.get('sfx_rel_db', 12), 'meta': S.get('meta', {})}

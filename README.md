@@ -47,3 +47,19 @@ python3 engine/asr_check.py projects/klimt medium             # 발음 검수
 |---|---|---|
 | `projects/klimt` | 30초 | 클림트 「여인의 초상」 도난 사건, 핵심 요약판 |
 | `projects/klimt_long` | 약 70초 | 같은 사건의 전체 경위판 (1996년 발견부터 2021년 종결까지) |
+
+## 내 목소리로 내레이션 (선택)
+
+TTS가 대본을 정확한 발음과 타이밍으로 읽은 뒤, 음색만 내 목소리로 바꿉니다(Seed-VC 제로샷 음성 변환, CPU).
+길이가 그대로 유지되므로 자막, 효과음, 애니메이션 싱크는 바뀌지 않습니다.
+
+```bash
+scripts/setup_voice_clone.sh                       # .vendor/ 에 Seed-VC와 전용 venv 설치 (git 제외)
+# assets/voices/my_voice_ref.wav 에 내 목소리 10~25초 (잡음 없는 낭독) — git에 올라가지 않음
+```
+
+`script.json`의 `voice`에 `"clone_ref": "assets/voices/my_voice_ref.wav"`를 넣으면 `build.py ... tts` 단계에서 자동 변환됩니다.
+장면별 결과는 캐시되어 대본이 바뀐 장면만 다시 변환합니다. 속도는 CPU 4코어 기준 음성 1초당 약 15초입니다.
+
+- 본인 목소리이거나 녹음한 사람이 명시적으로 동의한 목소리에만 사용하세요.
+- 음성 파일(`assets/voices/`)은 `.gitignore`에 들어 있어 저장소에 올라가지 않습니다.
