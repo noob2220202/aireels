@@ -70,9 +70,9 @@ function initRoof() {
   }
   { // roof membrane / gravel tile (used as a pattern mapped onto the roof plane)
     const S = 512, [c, x] = mk(S, S); const R = rng(23); const id = x.createImageData(S, S);
-    for (let i = 0; i < S * S; i++) { const v = 120 + (R() + R() - 1) * 46 + (R() < .03 ? -50 : 0); id.data[i * 4] = v; id.data[i * 4 + 1] = v + 2; id.data[i * 4 + 2] = v + 6; id.data[i * 4 + 3] = 255; }
+    for (let i = 0; i < S * S; i++) { const n = R() + R() - 1 + (R() < .03 ? -.8 : 0), v = n > 0 ? 235 : 0; id.data[i * 4] = v; id.data[i * 4 + 1] = v; id.data[i * 4 + 2] = v + (n > 0 ? 10 : 0); id.data[i * 4 + 3] = Math.min(255, Math.abs(n) * (n > 0 ? 22 : 42)); }
     x.putImageData(id, 0, 0);
-    for (let i = 0; i < 40; i++) { const X = R() * S, Y = R() * S, r = 20 + R() * 70; const g = x.createRadialGradient(X, Y, 0, X, Y, r); g.addColorStop(0, `rgba(0,0,0,${.12 + R() * .14})`); g.addColorStop(1, 'rgba(0,0,0,0)'); x.fillStyle = g; x.fillRect(X - r, Y - r, r * 2, r * 2); }
+    for (let i = 0; i < 40; i++) { const X = R() * S, Y = R() * S, r = 20 + R() * 70; const g = x.createRadialGradient(X, Y, 0, X, Y, r); g.addColorStop(0, `rgba(0,0,0,${.03 + R() * .06})`); g.addColorStop(1, 'rgba(0,0,0,0)'); x.fillStyle = g; x.fillRect(X - r, Y - r, r * 2, r * 2); }
     RS.tile = c;
   }
   { // drifting cloud shadows on the roof
@@ -80,9 +80,21 @@ function initRoof() {
     for (let i = 0; i < 16; i++) { const X = R() * S, Y = R() * S, r = 40 + R() * 90; x.fillStyle = `rgba(0,0,0,${.25 + R() * .25})`; x.beginPath(); x.ellipse(X, Y, r * 1.8, r, R() * 3, 0, 7); x.fill(); }
     RS.shadow = c;
   }
+  { // drifting mist band
+    const [c, x] = mk(1600, 360); const R = rng(37); x.filter = 'blur(20px)';
+    for (let i = 0; i < 26; i++) { const X = R() * 1600, Y = 120 + R() * 120, r = 50 + R() * 110; x.fillStyle = `rgba(190,200,214,${.18 + R() * .2})`; x.beginPath(); x.ellipse(X, Y, r * 2.6, r * .55, 0, 0, 7); x.fill(); }
+    RS.fog = c;
+  }
   { // soft round blob used for contact shadows
     const [c, x] = mk(128, 128); const g = x.createRadialGradient(64, 64, 0, 64, 64, 64); g.addColorStop(0, 'rgba(0,0,0,.75)'); g.addColorStop(.55, 'rgba(0,0,0,.35)'); g.addColorStop(1, 'rgba(0,0,0,0)'); x.fillStyle = g; x.fillRect(0, 0, 128, 128); RS.blob = c;
   }
+  // rasterise the filtered sprites now rather than on first use
+  for (const k in RS) RS[k].getContext('2d').getImageData(0, 0, 1, 1);
+}
+
+function mist(ctx, t, y, a, speed) { // one pre-blurred sprite, wrapped horizontally
+  const off = ((t * speed) % 1600 + 1600) % 1600; ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = a * .35;
+  ctx.drawImage(RS.fog, off - 1600, y - 180); ctx.drawImage(RS.fog, off, y - 180); ctx.restore();
 }
 
 // ---------- camera ----------
@@ -347,6 +359,20 @@ function tape(ctx, Cm, a, b, y, p, col, side) {
   return [Cm.p(a[0], y, a[1]), hp];
 }
 
+// glowing dimension line with extension ticks and arrowheads, offset from a measured edge
+function dimLine(ctx, Cm, a, b, y, o, p, col) {
+  if (p <= .002) return;
+  const A = [a[0] + o[0], y, a[1] + o[1]], B = [b[0] + o[0], y, b[1] + o[1]], q = clamp(p), Ee = [lerp(A[0], B[0], q), y, lerp(A[2], B[2], q)];
+  const sa = Cm.p(A[0], A[1], A[2]), se = Cm.p(Ee[0], Ee[1], Ee[2]); if (sa[2] < NEAR || se[2] < NEAR) return;
+  ctx.save(); ctx.strokeStyle = col; ctx.fillStyle = col; ctx.lineWidth = 3.5; ctx.lineCap = 'round'; ctx.shadowColor = col; ctx.shadowBlur = 14;
+  ctx.beginPath(); ctx.moveTo(sa[0], sa[1]); ctx.lineTo(se[0], se[1]); ctx.stroke();
+  const ext = (P3) => { const s0 = Cm.p(P3[0] - o[0] * .75, y, P3[2] - o[1] * .75), s1 = Cm.p(P3[0] + o[0] * .35, y, P3[2] + o[1] * .35); ctx.beginPath(); ctx.moveTo(s0[0], s0[1]); ctx.lineTo(s1[0], s1[1]); ctx.stroke(); };
+  const head = (s, d) => { const ang = Math.atan2(d[1], d[0]); ctx.save(); ctx.translate(s[0], s[1]); ctx.rotate(ang); ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(-16, -8); ctx.lineTo(-16, 8); ctx.closePath(); ctx.fill(); ctx.restore(); };
+  ext(A); head(sa, [sa[0] - se[0], sa[1] - se[1]]);
+  if (q >= 1) { ext(B); head(se, [se[0] - sa[0], se[1] - sa[1]]); }
+  ctx.restore();
+}
+
 // ---------- the scene ----------
 window.KL.scenes.roof = function (ctx, t, d, info) {
   if (!RS) initRoof();
@@ -354,7 +380,7 @@ window.KL.scenes.roof = function (ctx, t, d, info) {
     tCeil = at(info, '천장', .46), tWin = at(info, '창으로', .52), tOut = at(info, '빼냈다고', .58), tBut = at(info, '봤지만', .66), tF = at(info, '액자가', .75),
     tCmp = at(info, '창보다', .86), tX = at(info, '컸다', .93);
   const tMeasF = tF - .2, tMeasS = tF + .15;              // the two "tick" sounds
-  const tWhip0 = tF - .05, tWhip1 = tF + .3;
+  const tWhip0 = tF + .0, tWhip1 = tF + .32;
 
   // ---- camera path ----
   const keys = [
@@ -363,11 +389,11 @@ window.KL.scenes.roof = function (ctx, t, d, info) {
     [tRoof + .62, .25, 2.6, 4.7, .1, .05, .12, 1000],
     [tPic, .4, 2.5, 4.5, .12, .1, .15, 1000],
     [tOut + .05, .0, 2.45, 4.45, .05, .5, -.05, 1060],
-    [tBut + .22, .95, 2.65, 3.95, FR.x + .1, .1, FR.z + .3, 1300],
-    [tWhip0, .9, 2.55, 3.75, FR.x + .1, .1, FR.z + .35, 1300],
-    [tWhip1, SK.x + .2, 2.85, 2.05, SK.x, .3, SK.z + .25, 1300],
-    [tX, SK.x + .15, 2.8, 1.85, SK.x, .3, SK.z + .28, 1300],
-    [d + .5, SK.x + .1, 2.6, 1.6, SK.x, .3, SK.z + .3, 1300],
+    [tBut + .22, FR.x - .45, 2.75, FR.z + 3.25, FR.x + .25, .3, FR.z + .02, 1300],
+    [tWhip0, FR.x - .5, 2.65, FR.z + 3.05, FR.x + .25, .28, FR.z + .05, 1300],
+    [tWhip1, SK.x + .2, 3.1, 2.05, SK.x - .1, .35, SK.z + .02, 1300],
+    [tX, SK.x + .15, 3.05, 1.85, SK.x - .1, .32, SK.z + .05, 1300],
+    [d + .5, SK.x + .08, 2.7, 1.4, SK.x - .1, .32, SK.z + .1, 1300],
   ];
   const cv = camAt(keys, t);
   const dr = drift(t, .55, 21);
@@ -378,41 +404,46 @@ window.KL.scenes.roof = function (ctx, t, d, info) {
   const whip = Math.sin(clamp((t - tWhip0) / (tWhip1 - tWhip0)) * Math.PI);
   const cloudT = t * .9;
 
-  // ---- sky + far town ----
-  const hz = Cm.horizon();
-  { const g = ctx.createLinearGradient(0, hz[1] - 1100, 0, hz[1] + 40); g.addColorStop(0, '#171b21'); g.addColorStop(.6, '#353d47'); g.addColorStop(1, '#646e7a'); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H); }
-  if (hz[1] > -200) {
-    ctx.save(); ctx.globalAlpha = .9; const cx = ((hz[0] * .25 - cloudT * 22) % 1400 + 1400) % 1400;
-    for (let k = -1; k < 2; k++) ctx.drawImage(RS.clouds, cx + k * 1400 - 700, hz[1] - 760, 1400, 560); ctx.restore();
-    const fa = Cm.p(-60, -8, -70), fb = Cm.p(60, 18, -70); if (fa[2] > 1) ctx.drawImage(RS.far, fa[0], fb[1], fb[0] - fa[0], fa[1] - fb[1]);
-    const na = Cm.p(-26, -12, -22), nb = Cm.p(26, 4.6, -22); if (na[2] > 1) ctx.drawImage(RS.near, na[0], nb[1], nb[0] - na[0], na[1] - nb[1]);
-    fogLayer(ctx, t, hz[1] + 160, 260, '#aab4c0', .09, 2, 30);
-  }
+  // ---- soft background pass at half resolution (sky, far town, mist, roof surface), upscaled once ----
+  const [BG, bctx] = buf('roofBG', 540, 960); bctx.setTransform(.5, 0, 0, .5, 0, 0);
+  { const ctx = bctx;
+    // ---- sky + far town ----
+    const hz = Cm.horizon();
+    { const g = ctx.createLinearGradient(0, hz[1] - 1100, 0, hz[1] + 40); g.addColorStop(0, '#171b21'); g.addColorStop(.6, '#353d47'); g.addColorStop(1, '#646e7a'); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H); }
+    if (hz[1] > -200) {
+      ctx.save(); ctx.globalAlpha = .9; const cx = ((hz[0] * .25 - cloudT * 22) % 1400 + 1400) % 1400;
+      for (let k = -1; k < 2; k++) ctx.drawImage(RS.clouds, cx + k * 1400 - 700, hz[1] - 760, 1400, 560); ctx.restore();
+      const fa = Cm.p(-60, -8, -70), fb = Cm.p(60, 18, -70); if (fa[2] > 1) ctx.drawImage(RS.far, fa[0], fb[1], fb[0] - fa[0], fa[1] - fb[1]);
+      const na = Cm.p(-26, -12, -22), nb = Cm.p(26, 4.6, -22); if (na[2] > 1) ctx.drawImage(RS.near, na[0], nb[1], nb[0] - na[0], na[1] - nb[1]);
+      mist(ctx, t, hz[1] + 40, .5, 26);
+    }
 
-  // ---- roof surface ----
-  const roofPts = [[ROOF.x0, 0, ROOF.z0], [ROOF.x1, 0, ROOF.z0], [ROOF.x1, 0, ROOF.z1], [ROOF.x0, 0, ROOF.z1]];
-  const rs = clipPts(Cm, roofPts);
-  if (rs.length > 2) {
-    let ymin = 1e9, ymax = -1e9; rs.forEach(p => { ymin = Math.min(ymin, p[1]); ymax = Math.max(ymax, p[1]); });
-    ctx.save(); pathS(ctx, rs); ctx.clip();
-    const g = ctx.createLinearGradient(0, ymin, 0, ymax); g.addColorStop(0, '#6b737c'); g.addColorStop(.35, '#4a5058'); g.addColorStop(1, '#262a30'); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
-    // gravel texture mapped onto the plane around the look-at point
-    const m = planeXf(Cm, cv[3], 0, cv[5]); const pat = ctx.createPattern(RS.tile, 'repeat'); const sc = 1.6 / 512;
-    pat.setTransform(new DOMMatrix([m[0] * sc, m[1] * sc, m[2] * sc, m[3] * sc, m[4], m[5]]));
-    ctx.globalAlpha = .28; ctx.globalCompositeOperation = 'overlay'; ctx.fillStyle = pat; ctx.fillRect(0, 0, W, H); ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
-    // membrane seams converge in perspective
-    ctx.lineWidth = 2;
-    for (let xx = -8.5; xx <= 8.5; xx += 1.1) { const sg = seg(Cm, [xx, 0, ROOF.z0], [xx, 0, ROOF.z1]); if (!sg) continue; ctx.strokeStyle = 'rgba(0,0,0,.28)'; ctx.beginPath(); ctx.moveTo(sg[0][0], sg[0][1]); ctx.lineTo(sg[1][0], sg[1][1]); ctx.stroke(); ctx.strokeStyle = 'rgba(210,220,232,.07)'; ctx.beginPath(); ctx.moveTo(sg[0][0] + 2, sg[0][1]); ctx.lineTo(sg[1][0] + 2, sg[1][1]); ctx.stroke(); }
-    for (let zz = ROOF.z0 + 1.4; zz < ROOF.z1; zz += 1.6) { const sg = seg(Cm, [ROOF.x0, 0, zz], [ROOF.x1, 0, zz]); if (!sg) continue; ctx.strokeStyle = 'rgba(0,0,0,.18)'; ctx.beginPath(); ctx.moveTo(sg[0][0], sg[0][1]); ctx.lineTo(sg[1][0], sg[1][1]); ctx.stroke(); }
-    // cloud shadows drifting across the roof (overcast daylight)
-    { const m2 = planeXf(Cm, 0, 0, -1); ctx.save(); ctx.transform(m2[0], m2[1], m2[2], m2[3], m2[4], m2[5]); ctx.globalCompositeOperation = 'multiply'; ctx.globalAlpha = .55;
-      const off = (t * .45) % 16; for (let k = -1; k < 2; k++) ctx.drawImage(RS.shadow, -8 + off + k * 16 - 8, -8, 16, 16); ctx.restore(); }
-    // a soft break in the clouds keeps the focal point lit; it follows the camera's look-at point
-    { const m3 = planeXf(Cm, cv[3], 0, cv[5] - .1); ctx.save(); ctx.transform(m3[0], m3[1], m3[2], m3[3], m3[4], m3[5]); ctx.globalCompositeOperation = 'screen';
-      const br = .8 + .2 * fbm(t * .7, 13); const lg = ctx.createRadialGradient(0, 0, 0, 0, 0, 2.6); lg.addColorStop(0, `rgba(226,232,240,${.26 * br})`); lg.addColorStop(.5, `rgba(200,210,224,${.1 * br})`); lg.addColorStop(1, 'rgba(200,210,224,0)');
-      ctx.fillStyle = lg; ctx.fillRect(-2.6, -2.6, 5.2, 5.2); ctx.restore(); }
-    ctx.restore();
+    // ---- roof surface ----
+    const roofPts = [[ROOF.x0, 0, ROOF.z0], [ROOF.x1, 0, ROOF.z0], [ROOF.x1, 0, ROOF.z1], [ROOF.x0, 0, ROOF.z1]];
+    const rs = clipPts(Cm, roofPts);
+    if (rs.length > 2) {
+      let ymin = 1e9, ymax = -1e9; rs.forEach(p => { ymin = Math.min(ymin, p[1]); ymax = Math.max(ymax, p[1]); });
+      ctx.save(); pathS(ctx, rs); ctx.clip();
+      const g = ctx.createLinearGradient(0, ymin, 0, ymax); g.addColorStop(0, '#6b737c'); g.addColorStop(.35, '#4a5058'); g.addColorStop(1, '#262a30'); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+      // gravel texture mapped onto the plane around the look-at point
+      const m = planeXf(Cm, cv[3], 0, cv[5]); const pat = ctx.createPattern(RS.tile, 'repeat'); const sc = 1.6 / 512;
+      pat.setTransform(new DOMMatrix([m[0] * sc, m[1] * sc, m[2] * sc, m[3] * sc, m[4], m[5]]));
+      ctx.fillStyle = pat; ctx.fillRect(0, 0, W, H);
+      // membrane seams converge in perspective
+      ctx.lineWidth = 2;
+      for (let xx = -8.5; xx <= 8.5; xx += 1.1) { const sg = seg(Cm, [xx, 0, ROOF.z0], [xx, 0, ROOF.z1]); if (!sg) continue; ctx.strokeStyle = 'rgba(0,0,0,.28)'; ctx.beginPath(); ctx.moveTo(sg[0][0], sg[0][1]); ctx.lineTo(sg[1][0], sg[1][1]); ctx.stroke(); ctx.strokeStyle = 'rgba(210,220,232,.07)'; ctx.beginPath(); ctx.moveTo(sg[0][0] + 2, sg[0][1]); ctx.lineTo(sg[1][0] + 2, sg[1][1]); ctx.stroke(); }
+      for (let zz = ROOF.z0 + 1.4; zz < ROOF.z1; zz += 1.6) { const sg = seg(Cm, [ROOF.x0, 0, zz], [ROOF.x1, 0, zz]); if (!sg) continue; ctx.strokeStyle = 'rgba(0,0,0,.18)'; ctx.beginPath(); ctx.moveTo(sg[0][0], sg[0][1]); ctx.lineTo(sg[1][0], sg[1][1]); ctx.stroke(); }
+      // cloud shadows drifting across the roof (overcast daylight)
+      { const m2 = planeXf(Cm, 0, 0, -1); ctx.save(); ctx.transform(m2[0], m2[1], m2[2], m2[3], m2[4], m2[5]); ctx.globalAlpha = .5;
+        const off = (t * .45) % 16; for (let k = -1; k < 2; k++) ctx.drawImage(RS.shadow, -8 + off + k * 16 - 8, -8, 16, 16); ctx.restore(); }
+      // a soft break in the clouds keeps the focal point lit; it follows the camera's look-at point
+      { const m3 = planeXf(Cm, cv[3], 0, cv[5] - .1); ctx.save(); ctx.transform(m3[0], m3[1], m3[2], m3[3], m3[4], m3[5]); ctx.globalCompositeOperation = 'lighter';
+        const br = .8 + .2 * fbm(t * .7, 13); const lg = ctx.createRadialGradient(0, 0, 0, 0, 0, 2.6); lg.addColorStop(0, `rgba(226,232,240,${.17 * br})`); lg.addColorStop(.5, `rgba(200,210,224,${.06 * br})`); lg.addColorStop(1, 'rgba(200,210,224,0)');
+        ctx.fillStyle = lg; ctx.fillRect(-2.6, -2.6, 5.2, 5.2); ctx.restore(); }
+      ctx.restore();
+    }
   }
+  ctx.drawImage(BG, 0, 0, W, H);
   // back parapet + far roof clutter
   { const z0 = ROOF.z0; quad(ctx, Cm, [[ROOF.x0, 0, z0], [ROOF.x1, 0, z0], [ROOF.x1, .62, z0], [ROOF.x0, .62, z0]], '#2a3038');
     quad(ctx, Cm, [[ROOF.x0, .62, z0], [ROOF.x1, .62, z0], [ROOF.x1, .66, z0 - .25], [ROOF.x0, .66, z0 - .25]], '#6a737d');
@@ -432,7 +463,7 @@ window.KL.scenes.roof = function (ctx, t, d, info) {
     return { x: lerp(X0, X1, e), z: lerp(Z0, Z1, e), moving: p > 0 && p < 1, walk: e * dist / .6 * Math.PI, stride: .42 * clamp((1 - p) * 3.5), p };
   };
   const copA = (() => { // enters from the right, stops by the frame, points at it, kneels and tapes it
-    const w = walker(tRoof + .2, 3.35, 1.45, 1.98, .82, 1.6);
+    const w = walker(tRoof + .2, 3.35, .05, 1.98, -.42, 1.6);
     const pt = P(t, tPic - .1, tPic + .15, E.outBack) * (1 - P(t, tOut - .1, tOut + .15, E.inOutQ));
     const kn = P(t, tBut - .12, tBut + .22, E.inOutQ);
     const reach = P(t, tMeasF - .12, tMeasF + .06, E.outQ);
@@ -443,7 +474,8 @@ window.KL.scenes.roof = function (ctx, t, d, info) {
     return { x: w.x, z: w.z, face: -1, walk: stand ? null : w.walk, stride: w.stride, kneel: kn, lean: kn * lerp(.3, .45, reach) - look * .15, armR, armL, nod: kn * .45 * (1 - look), headTurn: -look * 1.4 };
   })();
   const copB = (() => { // enters from the left, stops by the skylight, points at it, kneels and tapes the opening
-    const w = walker(tRoof + .3, -3.15, -.75, -1.78, -.2, 1.55);
+    const w0 = walker(tRoof + .3, -3.2, -1.55, -1.92, -.98, 1.55), w1 = walker(tBut + .08, -1.92, -.98, -2.05, -.38, 2.2);
+    const w = t < tBut + .08 ? w0 : Object.assign(w1, { walk: w0.walk + w1.walk });
     const pt = P(t, tCeil - .12, tCeil + .14, E.outBack) * (1 - P(t, tBut - .1, tBut + .2, E.inOutQ));
     const kn = P(t, tF - .02, tF + .3, E.inOutQ);
     const reach = P(t, tMeasS - .1, tMeasS + .08, E.outQ);
@@ -475,7 +507,7 @@ window.KL.scenes.roof = function (ctx, t, d, info) {
   { const q = P(t, tRoof, tRoof + .9, E.outC); if (q > 0 && q < 1) { const m = planeXf(Cm, FR.x, .01, FR.z); ctx.save(); ctx.transform(m[0], m[1], m[2], m[3], m[4], m[5]); ctx.strokeStyle = rgba(K.goldHi, (1 - q) * .9); ctx.lineWidth = .02 + .03 * (1 - q); ctx.beginPath(); ctx.arc(0, 0, .7 + 1.6 * q, 0, 7); ctx.stroke(); ctx.restore(); } }
 
   // ---- hypothesis: ghost of the painting hoisted up through the skylight along a dotted route ----
-  const rP = P(t, tCeil + .02, tOut + .35, E.inOutQ), grey = P(t, tBut - .05, tBut + .2), routeA = 1 - P(t, tBut + .35, tF + .1);
+  const rP = P(t, tCeil + .02, tOut + .35, E.inOutQ), grey = P(t, tBut - .05, tBut + .2), routeA = 1 - P(t, tBut + .08, tBut + .38);
   const route = (() => { const pts = []; const A = [SK.x, SK.h + SK.rh + .05, SK.z], B = [SK.x, 1.35, SK.z], Cc = [SK.x + .85, 1.85, SK.z + .2], D = [FR.x - .05, .42, FR.z];
     for (let i = 0; i <= 50; i++) { const k = i / 50, uu = 1 - k; pts.push([uu * uu * uu * A[0] + 3 * uu * uu * k * B[0] + 3 * uu * k * k * Cc[0] + k * k * k * D[0], uu * uu * uu * A[1] + 3 * uu * uu * k * B[1] + 3 * uu * k * k * Cc[1] + k * k * k * D[1], uu * uu * uu * A[2] + 3 * uu * uu * k * B[2] + 3 * uu * k * k * Cc[2] + k * k * k * D[2]]); }
     return pts; })();
@@ -519,8 +551,9 @@ window.KL.scenes.roof = function (ctx, t, d, info) {
       if (gp[1] < SK.h + SK.rh + .02) { // below the glass: visible only through the opening (and above the skylight's far edge)
         const yBack = Math.min(...open.map(q => q[1])); ctx.beginPath(); ctx.rect(-50, -2000, W + 100, yBack + 2000); open.forEach(([px, py], i) => i ? ctx.lineTo(px, py) : ctx.moveTo(px, py)); ctx.closePath(); ctx.clip(); }
       ctx.translate(pc[0], pc[1]); ctx.rotate(Math.atan2(pu[0] - pc[0], pc[1] - pu[1]) + .06 * Math.sin(t * 5));
-      ctx.globalAlpha *= ga; ctx.save(); ctx.globalAlpha *= .55; ctx.drawImage(T.portrait, -wpx / 2, -hpx / 2, wpx, hpx); ctx.restore();
-      ctx.setLineDash([8, 6]); ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2.5; ctx.shadowColor = '#cfe3ff'; ctx.shadowBlur = 14; ctx.strokeRect(-wpx / 2, -hpx / 2, wpx, hpx);
+      // the framed painting as the theory imagines it (a translucent, symbolic ghost)
+      ctx.globalAlpha *= ga; ctx.save(); ctx.globalAlpha *= .55; ctx.drawImage(T.portrait, -wpx * .39, -hpx * .4, wpx * .78, hpx * .8); ctx.globalAlpha /= .55; ctx.globalAlpha *= .6; ctx.drawImage(T.frame, -wpx / 2, -hpx / 2, wpx, hpx); ctx.restore();
+      ctx.setLineDash([8, 6]); ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2.5; ctx.shadowColor = '#cfe3ff'; ctx.shadowBlur = 14; ctx.strokeRect(-wpx / 2 - 4, -hpx / 2 - 4, wpx + 8, hpx + 8);
       ctx.restore();
     }
   }
@@ -541,19 +574,22 @@ window.KL.scenes.roof = function (ctx, t, d, info) {
   const mA = P(t, tMeasF, tMeasF + .18, E.outBack), mFade = 1 - P(t, tWhip1 + .4, tWhip1 + .7);
   if (mA > 0 && mFade > 0) {
     ctx.save(); ctx.globalAlpha *= mFade;
-    const a3 = frameAt(FR, FR.w, FR.d + .04, 0), b3 = frameAt(FR, -FR.w, FR.d + .04, 0);
+    const a3 = frameAt(FR, FR.w + .045, -FR.d, 0), b3 = frameAt(FR, FR.w + .045, FR.d, 0);
     const ends = tape(ctx, Cm, [a3[0], a3[2]], [b3[0], b3[2]], .012, mA, '#f2cf3a', 1);
+    const ou = [Math.cos(FR.yaw) * .17, Math.sin(FR.yaw) * .17], a4 = frameAt(FR, FR.w, -FR.d, 0), b4 = frameAt(FR, FR.w, FR.d, 0);
+    dimLine(ctx, Cm, [a4[0], a4[2]], [b4[0], b4[2]], .015, ou, P(t, tMeasF + .02, tMeasF + .2, E.outC), K.goldHi);
     if (ends) { const mx = (ends[0][0] + ends[1][0]) / 2, my = (ends[0][1] + ends[1][1]) / 2; const la = P(t, tMeasF + .05, tMeasF + .25, E.outBack);
-      ctx.save(); ctx.translate(mx, my + 62); ctx.scale(la, la); label(ctx, '액자', 0, 0, { size: 40, color: '#1a1408', bg: K.goldHi, a: clamp(la * 2) }); ctx.restore(); }
+      ctx.save(); ctx.translate(mx + 128, my + 6); ctx.scale(la, la); label(ctx, '액자', 0, 0, { size: 40, color: '#1a1408', bg: K.goldHi, a: clamp(la * 2) }); ctx.restore(); }
     ctx.restore();
   }
   const mB = P(t, tMeasS, tMeasS + .18, E.outBack);
   if (mB > 0) {
-    const fadeB = 1 - P(t, tCmp - .2, tCmp + .1) * .6;
+    const fadeB = 1 - P(t, tCmp - .25, tCmp + .05);
     ctx.save(); ctx.globalAlpha *= fadeB;
-    const ends = tape(ctx, Cm, [SK.x - SK.iw, SK.z + SK.id + .02], [SK.x + SK.iw, SK.z + SK.id + .02], SK.h + .012, mB, '#f2cf3a', 1);
+    const ends = tape(ctx, Cm, [SK.x - SK.iw, SK.z + SK.id + .025], [SK.x + SK.iw, SK.z + SK.id + .025], SK.h + .012, mB, '#f2cf3a', -1);
+    dimLine(ctx, Cm, [SK.x - SK.iw, SK.z + SK.od], [SK.x + SK.iw, SK.z + SK.od], .01, [0, .14], P(t, tMeasS + .02, tMeasS + .2, E.outC), '#eef4fb');
     if (ends) { const mx = (ends[0][0] + ends[1][0]) / 2, my = (ends[0][1] + ends[1][1]) / 2; const la = P(t, tMeasS + .05, tMeasS + .25, E.outBack);
-      ctx.save(); ctx.translate(mx, my + 64); ctx.scale(la, la); label(ctx, '천장 창', 0, 0, { size: 40, color: '#10141a', bg: '#e8edf3', a: clamp(la * 2) }); ctx.restore(); }
+      ctx.save(); ctx.translate(mx, my + 56); ctx.scale(la, la); label(ctx, '천장 창', 0, 0, { size: 40, color: '#10141a', bg: '#e8edf3', a: clamp(la * 2) }); ctx.restore(); }
     ctx.restore();
   }
 
@@ -596,9 +632,9 @@ window.KL.scenes.roof = function (ctx, t, d, info) {
   }
 
   // ---- atmosphere: soft daylight shafts, wind-blown motes, fog wisps ----
-  godrays(ctx, 120, -260, 1.05, .55, 2100, '#dfe7f1', .045, t, 6);
+  godrays(ctx, 120, -260, 1.05, .5, 1900, '#dfe7f1', .05, t, 4);
   motes(ctx, t, { n: 46, color: '#dfe7f2', a: .32, seed: 61, area: [-60, 380, 1200, 1000], size: 2.4, speed: 34 });
-  fogLayer(ctx, t * 1.4, 1150, 300, '#9aa6b5', .07, 7, 50);
+  mist(ctx, t * 1.5 + 3, 1000, .28, 60);
   // whip-pan streaks
   if (whip > 0.02) {
     ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.lineCap = 'round';
@@ -611,7 +647,7 @@ window.KL.scenes.roof = function (ctx, t, d, info) {
   const fc = Cm.p(FR.x, FR.th, FR.z), fn3 = frameAt(FR, 0, FR.d, FR.th), fn = Cm.p(fn3[0], fn3[1], fn3[2]);
   const tagE = P(t, tAc - .02, tAc + .25) * (1 - P(t, tRoof - .05, tRoof + .1));
   if (tagE > 0) tag(ctx, '빈 액자', fn[0], fn[1] + 6, tagE, { size: 44, dx: 0, dy: 110, border: K.goldHi });
-  const tagR = P(t, tUp - .05, tUp + .25) * (1 - P(t, tPol + .15, tPol + .45));
+  const tagR = P(t, tUp - .05, tUp + .25) * (1 - P(t, tPol - .15, tPol + .1));
   if (tagR > 0) { marker(ctx, fc[0], fc[1], t, tagR, K.goldHi); tag(ctx, '지붕 위', fc[0], fc[1], tagR, { size: 42, dx: -40, dy: -170, border: K.goldHi }); }
   const tagP = P(t, tPol - .05, tPol + .2) * (1 - P(t, tPic + .2, tPic + .45));
   if (tagP > 0) { const hp = Cm.p(copA.x, 1.9, copA.z), hb = Cm.p(copB.x, 1.9, copB.z); tag(ctx, '경찰', clamp(hp[0], 0, 1000), hp[1], tagP, { size: 36, dx: -110, dy: -60, border: 'rgba(220,230,245,.7)' }); }
@@ -632,7 +668,6 @@ window.KL.scenes.roof = function (ctx, t, d, info) {
     label(ctx, '액자 > 천장 창', 0, 0, { size: 46, color: '#fff', bg: K.red, a: clamp(ch * 2), padX: 28, padY: 14 }); ctx.restore(); }
 
   // ---- grade: cool overcast tint, breathing falloff ----
-  tint(ctx, '#6f8aa6', .14);
   darkness(ctx, 540, 860, 1050 + 60 * Math.sin(t * 1.1), .5, .35);
   if (thunkK > 0) flash(ctx, thunkK * .08, '#dfe8f5');
 };

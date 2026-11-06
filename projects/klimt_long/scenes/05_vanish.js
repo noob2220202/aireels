@@ -278,8 +278,11 @@ window.KL.scenes.vanish = function (ctx, t, d, info) {
     const pg = ctx.createLinearGradient(sx - 30, 0, sx + 70, 0); pg.addColorStop(0, 'rgba(200,215,230,.04)'); pg.addColorStop(.6, 'rgba(210,225,240,.14)'); pg.addColorStop(1, 'rgba(230,240,250,.22)');
     ctx.fillStyle = pg; ctx.fill(); ctx.strokeStyle = 'rgba(230,240,250,.18)'; ctx.lineWidth = 2; ctx.stroke(); ctx.restore(); }
 
-  // plasterer on the scaffold plank (only while the room is busy)
-  if (!after) {
+  // workers belong to the busy days only: they fade into the dimming room on "그림이" (nobody near the frame at the loss)
+  const crew = 1 - P(t, tP - .1, tP + .3, E.inOutQ);
+  // plasterer on the scaffold plank
+  if (crew > 0) {
+    ctx.save(); ctx.globalAlpha *= crew;
     const u = W1.h / 8, s1 = Math.sin(t * 4.6), s2 = Math.sin(t * 4.6 + 1.1);
     const armR = [2.4 + .3 * s1, .35 + .25 * s2], armL = [.35 + .08 * s2, .55];
     const o = { face: 1, flip: true, hat: 'cap', armR, armL, lean: .03 + .02 * s1, shadow: false, fill: '#05070a' };
@@ -288,6 +291,7 @@ window.KL.scenes.vanish = function (ctx, t, d, info) {
     const [hx, hy] = fi.hands[1]; ctx.save(); ctx.translate(W1.x - hx, W1.y + hy); ctx.rotate(-.6 + .3 * s1); ctx.fillStyle = '#0a0c10'; ctx.fillRect(-4, -18, 8, 18); ctx.fillStyle = '#5f6b78'; ctx.fillRect(-18, -30, 36, 12); ctx.restore();
     // plaster dust from the strokes
     motes(ctx, t, { n: 14, color: '#e8e4da', a: .45, area: [W1.x - 160, W1.y - u * 9, 140, 220], size: 2, speed: 40, seed: 31 });
+    ctx.restore();
   }
 
   // banner + ladder + worker who drops it
@@ -295,15 +299,17 @@ window.KL.scenes.vanish = function (ctx, t, d, info) {
   const flut = Math.exp(-Math.max(0, t - tE - .3) * 1.8) * Math.sin((t - tE) * 9) * (t > tE ? 1 : 0) + .25 * Math.sin(t * 1.4);
   drawBanner(ctx, t, Math.min(1, un), flut);
   drawLadder(ctx);
-  if (!after) {
+  if (crew > 0) {
+    ctx.save(); ctx.globalAlpha *= crew;
     const rel = E.inOutQ(P(t, tE - .1, tE + .2)), down = E.inOutQ(P(t, tE + .5, tJ + .6)), look = P(t, tJ + .3, tY, E.inOutQ);
     const armHold = [2.75, .05], armRel = [1.25, .55], armRest = [.25, .35];
     const armR = poseLerp(poseLerp(armHold, armRel, rel), armRest, down), armL = poseLerp(poseLerp([2.6, .12], [1.0, .7], rel), [-.15, .4], down);
     armR[0] += .04 * Math.sin(t * 2.1); armL[0] += .04 * Math.sin(t * 2.4 + 1);
     const o = { face: 1, flip: true, hat: 'cap', armR, armL, lean: -.04 * rel + .02 * Math.sin(t * 1.2), shadow: false, fill: '#05070a', headTurn: -.4 + .8 * look };
     rimFigure(ctx, W2.x, W2.y, W2.h, o, '#d8e6f6', .55 * cloud, -4, -3);
-    // tag on the worker's light: warm bounce from the banner
+    // warm bounce from the red banner on the worker
     glow(ctx, W2.x - 40, W2.y - W2.h * .7, 120, '#ff6a6a', .08 * un);
+    ctx.restore();
   }
   ctx.restore();
 
