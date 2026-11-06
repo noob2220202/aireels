@@ -1,0 +1,21 @@
+{
+ "scripts": [
+  "common.js",
+  "scenes/01_hook.js",
+  "scenes/02_culprit.js",
+  "scenes/03_y1996.js",
+  "scenes/04_xray.js",
+  "scenes/05_vanish.js",
+  "scenes/06_roof.js",
+  "scenes/07_staff.js",
+  "scenes/08_fake.js",
+  "scenes/09_dna.js",
+  "scenes/10_found.js",
+  "scenes/11_bag.js",
+  "scenes/12_verdict.js",
+  "scenes/13_condition.js",
+  "scenes/14_letter.js",
+  "scenes/15_closed.js",
+  "scenes/16_ending.js"
+ ]
+}

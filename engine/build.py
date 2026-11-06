@@ -11,6 +11,7 @@
 import asyncio
 import hashlib
 import json
+import os
 import re
 import ssl
 import subprocess
@@ -128,6 +129,124 @@ def clean_sub(s):
     return s
 
 
+def word_spans(tts_text, bounds):
+    """start/end time for each space-separated word, from WordBoundary events."""
+    words = tts_text.split()
+    cstart, pos = [], 0
+    for w in words:
+        i = tts_text.index(w, pos)
+        cstart.append(i)
+        pos = i + len(w)
+    spans, cur = [], 0
+    for b in bounds:
+        j = tts_text.find(b['w'], cur)
+        j = cur if j < 0 else j
+        spans.append((j, j + max(1, len(b['w'])), b['t'], b['t'] + b['d']))
+        cur = j + len(b['w'])
+    owner = []
+    for s in cstart:
+        k = next((i for i, (a, e, _, _) in enumerate(spans) if a <= s < e), None)
+        if k is None:
+            k = next((i for i, (a, _, _, _) in enumerate(spans) if a > s), len(spans) - 1)
+        owner.append(k)
+    starts, ends = [], []
+    for wi, s in enumerate(cstart):
+        a, e, t, te = spans[owner[wi]]
+        starts.append(t + (te - t) * (s - a) / max(1, e - a))
+    for wi in range(len(words)):
+        if wi + 1 < len(words) and owner[wi + 1] == owner[wi]:
+            ends.append(starts[wi + 1])
+        else:
+            ends.append(spans[owner[wi]][3])
+    for i in range(1, len(starts)):
+        starts[i] = max(starts[i], starts[i - 1] + .01)
+    return words, starts, ends
+
+
+def continuous_tracks(S, V, B, cache):
+    """One TTS pass for the whole script (natural flow between sentences), split into scenes by word timing."""
+    sl = S['scenes']
+    texts = [sc.get('tts', sc['say']) for sc in sl]
+    full = ' '.join(t.strip() for t in texts)
+    key, mp3, bounds = tts(full, V, cache)
+    _, st, en = word_spans(full, bounds)
+    counts = [len(t.split()) for t in texts]
+    assert sum(counts) == len(st), (sum(counts), len(st))
+    first = max(0, st[0] - .05)
+    last = min(ffprobe_dur(mp3), en[-1] + .3)
+    wav = cache / f'{key}_trim.wav'
+    subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-i', str(mp3), '-ss', f'{first:.3f}', '-to', f'{last:.3f}',
+                    '-ac', '1', '-ar', '48000', str(wav)], check=True)
+    # tighten long pauses between words (keeps sentence intonation, removes dead air)
+    mp = S.get('max_pause')
+    if mp:
+        import numpy as np
+        import soundfile as sf
+        x, sr = sf.read(str(wav), dtype='float32')
+        cuts = []  # (start, end) in trimmed-audio seconds
+        for i in range(len(st) - 1):
+            g0, g1 = en[i] - first, st[i + 1] - first
+            if g1 - g0 > mp:
+                rem = (g1 - g0) - mp
+                mid = (g0 + g1) / 2
+                cuts.append((mid - rem / 2, mid + rem / 2))
+        if cuts:
+            keep, prev, fade = [], 0, int(.008 * sr)
+            for a, b in cuts:
+                keep.append(x[int(prev * sr):int(a * sr)])
+                prev = b
+            keep.append(x[int(prev * sr):])
+            for k in range(1, len(keep)):
+                if len(keep[k]) > fade and len(keep[k - 1]) > fade:
+                    keep[k - 1][-fade:] *= np.linspace(1, 0, fade)
+                    keep[k][:fade] *= np.linspace(0, 1, fade)
+            sf.write(str(wav), np.concatenate(keep), sr)
+
+            def remap(t):
+                tt = t - first
+                return first + tt - sum(min(max(0, tt - a), b - a) for a, b in cuts)
+            st, en = [remap(t) for t in st], [remap(t) for t in en]
+            last = first + len(np.concatenate(keep)) / sr
+            print(f'pauses tightened: {len(cuts)} gaps, {sum(b - a for a, b in cuts):.2f}s removed')
+    off = S.get('start_pad', .1) - first
+    rows, idx = [], 0
+    for k, sc in enumerate(sl):
+        n = counts[k]
+        dwords = sc['say'].split()
+        assert len(dwords) == n, f"say/tts word count mismatch in {sc['id']}"
+        ws = [x + off for x in st[idx:idx + n]]
+        we = [x + off for x in en[idx:idx + n]]
+        rows.append((sc, dwords, ws, we))
+        idx += n
+    scenes, subs, sfx = [], [], []
+    t0s = [0.0] + [r[2][0] - r[0].get('lead', .12) for r in rows[1:]]
+    for k, (sc, dwords, ws, we) in enumerate(rows):
+        t0 = t0s[k]
+        vt, vend = ws[0], we[-1]
+        t1 = t0s[k + 1] if k + 1 < len(rows) else vend + S.get('end_pad', 1.0)
+        words = [{'w': w, 't': round(t, 3)} for w, t in zip(dwords, ws)]
+        chs = chunk_words(dwords, sc.get('maxu', S.get('maxu', 10.5)))
+        for j, ch in enumerate(chs):
+            a = ws[ch[0][0]]
+            b = ws[chs[j + 1][0][0]] if j + 1 < len(chs) else min(vend + .12, t1 + .1)
+            subs.append({'t0': round(a, 3), 't1': round(b, 3), 'lines': [clean_sub(' '.join(w for _, w in ch))], 'hl': sc.get('hl', [])})
+        for c in sc.get('sfx', []):
+            c = dict(c)
+            if 'word' in c:
+                m = next((x for x in words if c['word'] in x['w']), None)
+                base = m['t'] if m else vt
+            elif c.get('from') == 'voice_end':
+                base = vend
+            else:
+                base = t0
+            c['t'] = round(base + c.get('at', 0) + c.get('off', 0), 3)
+            sfx.append(c)
+        scenes.append({'id': sc['id'], 't0': round(t0, 3), 't1': round(t1, 3), 'trans': sc.get('trans'),
+                       'voice_t': round(vt, 3), 'voice_end': round(vend, 3), 'words': words, 'data': sc.get('data', {})})
+    voice = [{'file': str(wav.relative_to(B)), 't': round(S.get('start_pad', .1), 3), 'dur': round(last - first, 3)}]
+    return scenes, voice, subs, sfx, scenes[-1]['t1']
+
+
 # ---------------- build steps ----------------
 def step_tts(P):
     S = json.loads((P / 'script.json').read_text())
@@ -137,7 +256,10 @@ def step_tts(P):
     V = S['voice']
     cursor = S.get('start_pad', .1)
     scenes, voice, subs, sfx = [], [], [], []
-    for k, sc in enumerate(S['scenes']):
+    continuous = S.get('narration') == 'continuous'
+    if continuous:
+        scenes, voice, subs, sfx, cursor = continuous_tracks(S, V, B, cache)
+    for k, sc in enumerate([] if continuous else S['scenes']):
         say = sc['say']
         tts_text = sc.get('tts', say)
         key, mp3, bounds = tts(tts_text, dict(V, **sc.get('voice', {})), cache)
@@ -199,14 +321,14 @@ def step_tts(P):
                        'voice_t': round(vt, 3), 'voice_end': round(vend, 3), 'words': words, 'data': sc.get('data', {})})
         cursor = t0 + dur
     # optional: convert every narration clip into a reference voice (your own voice only)
-    if V.get('clone_ref'):
+    if V.get('clone_ref') and not os.environ.get('AIREELS_NO_CLONE'):
         ref = (ROOT / V['clone_ref']).resolve()
         steps = int(V.get('clone_steps', 25))
         tag = hashlib.sha1(ref.read_bytes()).hexdigest()[:8] + f'_{steps}'
         todo = []
         for v in voice:
             src = B / v['file']
-            dst = src.with_name(src.stem + f'_vc_{tag}.wav')
+            dst = src.with_name(src.stem + f'_vc_{tag}_{hashlib.sha1(src.read_bytes()).hexdigest()[:8]}.wav')
             if not dst.exists():
                 todo.append(f'{src}:{dst}')
             v['file'] = str(dst.relative_to(B))

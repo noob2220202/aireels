@@ -41,7 +41,9 @@ async function openPage(browser, port, TL) {
   page.on('console', m => { if (m.type() === 'error' || m.type() === 'warning') console.error('[console]', m.text()); });
   await page.goto(`http://127.0.0.1:${port}/engine/player.html`);
   const rel = path.relative(ROOT, projectDir);
-  await page.addScriptTag({ url: `/${rel}/scenes.js?${Date.now()}` });
+  const man = path.join(projectDir, 'manifest.json');
+  const scripts = fs.existsSync(man) ? JSON.parse(fs.readFileSync(man, 'utf8')).scripts : ['scenes.js'];
+  for (const sc of scripts) await page.addScriptTag({ url: `/${rel}/${sc}?${Date.now()}` });
   await page.addScriptTag({ url: `/engine/player.js?${Date.now()}` });
   const info = await page.evaluate(tl => window.setup(tl), TL);
   if (info.fonts.some(f => !f)) console.error('WARNING font check failed', info.fonts);
