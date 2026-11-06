@@ -28,9 +28,11 @@ window.PK.scenes.nico = function (ctx, t, d, info) {
 
   // ---- camera: close on the grip, very slow push; a soft thump on the lock ----
   const pushK = P(t, 0, d, E.inOutQ);
+  const bt = beat(t, lerp(92, 116, hold));
   const cx = lerp(505, 515, pushK), cy = lerp(968, 950, pushK);
-  let z = lerp(1.5, 1.84, pushK) * (1 + .03 * Math.exp(-Math.max(0, t - tLock) * 5) * lockA);
-  const dr = { x: fb(t * .22, 81) * 12, y: fb(t * .2, 82) * 12, r: fb(t * .18, 83) * .005 };
+  // slow push + a heartbeat micro-push through the hold (his pulse in the frame) and a slow ~1.4 deg roll while 'terrifying' lands
+  let z = lerp(1.5, 1.84, pushK) * (1 + .03 * Math.exp(-Math.max(0, t - tLock) * 5) * lockA) * (1 + .014 * bt * hold);
+  const dr = { x: fb(t * .22, 81) * 12, y: fb(t * .2, 82) * 12, r: fb(t * .18, 83) * .005 + .025 * P(t, tWas, d, E.inOutQ) };
   const tremble = .05 * hold + .1 * P(t, tTer - .2, tTer + .3) * (1 - P(t, tTer + 1.2, d));
   const [sx, sy, sr] = HG.shake(t, tremble, 11);
   const rew = 1 - P(t, .02, .3, E.inQ);                                  // the rewind at the head of the clip
@@ -43,7 +45,6 @@ window.PK.scenes.nico = function (ctx, t, d, info) {
 
   const b = { x: LAMP.x + fb(t * .25, 84) * 6, y: LAMP.y + fb(t * .3, 85) * 7, ang: .58 + fb(tm * .5, 86) * .02 + tremble * nz(t * 3, 87) * .05, spread: .29, len: 1150, a: .82 - .06 * (.5 + .5 * nz(t * 9, 88)) };
   HG.wall(ctx, b, { amb: .035, gain: .95 });
-  const bt = beat(t, lerp(92, 116, hold));
   // ---- poses ----
   const creep = P(t, .3, tLock, E.inOutQ);
   const yank = P(t, tLock - .05, tLock + .45, E.outQ) * (1 - .5 * P(t, tLock + .6, tLock + 2.4, E.inOutQ));
@@ -75,7 +76,7 @@ window.PK.scenes.nico = function (ctx, t, d, info) {
   const vx = g.x - Math.cos(g.ang) * 13 * S, vy = g.y - Math.sin(g.ang) * 13 * S - 5.6 * S;
   HG.bubbles(ctx, t * .6, -2, { x: vx + 40, y: vy + 20, n: 9, seed: 31, b, spread: 22, rise: 130, drift: 30, life: 2.4, a: .5, size: .7 });
   HG.bubbles(ctx, t * .6, (tWas + .05) * .6, { x: vx + 60, y: vy + 20, n: 30, seed: 33, b, spread: 80, rise: 170, drift: 60, life: 1.9, size: 1.0 });
-  HG.bubbles(ctx, t * .6, (tTer + .05) * .6, { x: vx + 80, y: vy + 26, n: 40, seed: 35, b, spread: 100, rise: 190, drift: 70, life: 2.0, size: 1.1 });
+  HG.bubbles(ctx, t * .6, (tTer + .05) * .6, { x: vx + 160, y: vy + 30, n: 60, seed: 35, b, spread: 110, rise: 210, drift: 70, life: 2.0, size: 1.4 });
   ctx.restore();
 
   HG.bokeh(ctx, tm, b, M, { n: 7, seed: 25, a: .26 });
@@ -88,14 +89,14 @@ window.PK.scenes.nico = function (ctx, t, d, info) {
     ctx.restore();
   }
   // attribution card (+ a ring on its red dot that answers the voice)
-  const ca = P(t, .15, .55, E.outQ) * (1 - P(t, d - .35, d, E.inQ));
+  const ca = P(t, .03, .28, E.outQ) * (1 - P(t, d - .3, d - .02, E.inQ));     // fully up from the first voice frame (like RV.card)
   sourceCard(ctx, D.who || '', D.where || '', ca, 1185);
   const lv = loud(t - v0);
   if (ca > 0 && lv > .05) { ctx.save(); ctx.strokeStyle = rgba('#ff6a6f', ca * .55 * lv); ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(540 - 380 + 34, 1185, 13 + 10 * lv, 0, 7); ctx.stroke(); ctx.restore(); }
   // the lock: a faint cold pulse, nothing like the hook's flash
   flash(ctx, .08 * Math.exp(-Math.max(0, t - tLock) * 6) * lockA, '#cfeaff');
   // settle toward the dip into 'setup'
-  const tail = P(t, d - .5, d + .1, E.inOutQ);
+  const tail = P(t, Math.max(d - .5, info.sc.voice_end - info.sc.t0), d + .1, E.inOutQ);   // only after the voice ends
   if (tail > 0) { ctx.fillStyle = `rgba(1,2,3,${(.5 * tail).toFixed(3)})`; ctx.fillRect(0, 0, W, H); }
 };
 })();

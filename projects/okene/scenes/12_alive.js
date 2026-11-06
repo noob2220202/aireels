@@ -34,10 +34,14 @@ RV.tears = function (ctx, t, amt, x0 = 0, y0 = 0, w = W, h = H) {
   if (amt <= .01) return;
   const f = Math.floor(t * 30), cv = ctx.canvas;
   ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.beginPath(); ctx.rect(x0, y0, w, h); ctx.clip();
+  // ONE snapshot of the band, then the strips are copied from it (a canvas drawn onto itself is re-snapshotted on every
+  // call, which made these frames the slowest of the video). The strips sample the untorn frame.
+  const [sb, sx] = L.buf('rvTearSnap', w, h); sx.clearRect(0, 0, w, h); sx.drawImage(cv, x0, y0, w, h, 0, 0, w, h);
   const n = Math.round(3 + 9 * amt);
   for (let i = 0; i < n; i++) {
     const y = y0 + hi(f * 31 + i) * h, hh = 4 + hi(f * 17 + i) * 46 * amt, off = (hi(f * 7 + i) - .5) * 120 * amt;
-    ctx.drawImage(cv, x0, y, w, hh, x0 + off, y, w, hh);
+    const sy = y - y0, h2 = Math.min(hh, h - sy);
+    if (h2 > 0) ctx.drawImage(sb, 0, sy, w, h2, x0 + off, y, w, h2);
   }
   ctx.globalCompositeOperation = 'lighter';
   for (let i = 0; i < 6; i++) { const y = y0 + hi(f * 13 + i + 400) * h; ctx.fillStyle = rgba('#cfeaff', .18 * amt * hi(f + i * 3)); ctx.fillRect(x0, y, w, 1 + 2 * hi(i + f * 5)); }

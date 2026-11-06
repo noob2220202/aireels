@@ -1,12 +1,15 @@
 // cold (≈35.09-40.36): "춥고 목이 타는 사이, 물은 차오르고 공기는 점점 줄어들었습니다."
-// Same inverted toilet and framing as pocket's last frame (his light at the basin, the backlit hand on the rim).
-// '춥고': the image goes cold (teal grade), the frame shivers, the hand trembles; salt crust starts growing on the steel
-// edges and at the frame edges. '목이 타는': his light pales and flickers; salt creeps along the old waterline and the rim.
-// An hours counter climbs 24시간 -> 36시간 ('사이') -> 48시간 ('공기는'), used loosely as time passing.
-// '물은': the camera pulls back to the whole room; '차오르고': the water heaves up a step (gurgle), a dashed line keeps
-// the old level, chevrons push up from the surface, his light rises with it. '공기는': the '공기층' bracket lights up;
-// '점점': a second rise, the bracket squeezes; '줄어들었습니다': it turns red, stale haze thickens in the gap,
-// the heartbeat quickens and tunnel vision closes in. Ends darker for the hard cut into his own voice (oxygen clip).
+// Opens on pocket's last frame (his light pressed against the basin rim in the small inverted toilet; no hand).
+// '춥고': the image goes cold (teal grade), the frame shivers, the light trembles; salt crust starts growing on the steel
+// and at the frame edges. '목이 타는': his light pales and flickers. An hours counter climbs 24시간 -> 36시간 ('사이') ->
+// 48시간 ('공기는'). Facts (Reuters): he held the basin for about a day, then swam into the officer's cabin next door and
+// got out of the water on a platform of wall panels and mattresses. So at the 24 -> 36 roll his light lets go of the rim,
+// drops into the water and swims under the wall into the cabin next door (the camera pans with him, same world, the cabin
+// to the right of the toilet as in swept's passage), where it climbs onto the mattress rack: the cabin of oxygen / divers
+// (PK.KN geometry, inside the upside-down hull). '물은' / '차오르고': the water there climbs up the rack toward him (gurgle,
+// chevrons, a dashed line keeps the old level) while the old floor stays pressed just under the counter; '공기는': the
+// '공기층' bracket lights up; '점점': a second rise, the bracket squeezes; '줄어들었습니다': it turns red, stale haze thickens
+// in the gap, the heartbeat quickens and tunnel vision closes in. The water ends at the cabin's level .6, as divers shows it.
 (function () {
 'use strict';
 const { W, H, E, P, clamp, lerp, rgba, glow, text, measure, roundRect, FONT } = L;
@@ -36,7 +39,8 @@ function drawCrust(ctx, k) {
   g = ctx.createLinearGradient(W, 0, W - 90, 0); g.addColorStop(0, `rgba(190,215,225,${(.1 * k).toFixed(3)})`); g.addColorStop(1, 'rgba(190,215,225,0)'); ctx.fillStyle = g; ctx.fillRect(W - 90, 460, 90, 800);
   ctx.restore();
 }
-// hours counter with an odometer roll between values (fixed box)
+// hours counter with an odometer roll between values (fixed box); top slot, raised clear of the rooms' steel
+const HOURS_Y = 492;
 function hours(ctx, t, x, y, a, vals, times) {
   if (a <= 0) return; const size = 48, bw = measure(ctx, '48시간', size, FONT.sub, 900) + 56, bh = size + 30;
   const sc = lerp(.86, 1, E.outBack(clamp(a)));
@@ -52,92 +56,211 @@ function hours(ctx, t, x, y, a, vals, times) {
   ctx.restore(); ctx.restore();
 }
 
+
+// ---------------- the officer's cabin next door (PK.KN cabin design + geometry, drawn in its own coordinates) ----------------
+// placed in the toilet's world at (COX, COY): its old floor level with the toilet's, its left steel 150 px right of the
+// toilet's. Same drawing as KN.cabin but with a variable water level wy (cabin coords) and the rack under the mattresses.
+const COX = 1042, COY = -20;
+const cabWY = lv => 1140 - 620 * lv;                       // KN.RM: y 520, h 620 -> water top for a level (fraction from the bottom)
+function cabinAt(ctx, T, KN, o) {
+  const { x, y, w, h, wall } = KN.RM, DR = KN.DR, WTOP = KN.WTOP;
+  const { wy, warm = .6, lx = 812, ly = 746, hl = 1 } = o;
+  const sy = xx => wy + Math.sin(xx * .021 + T * 1.3) * 4 + Math.sin(xx * .057 - T * .9) * 2;
+  ctx.save();
+  const gs = ctx.createLinearGradient(0, y - wall, 0, y + h + wall); gs.addColorStop(0, '#4a565e'); gs.addColorStop(.5, '#1b2328'); gs.addColorStop(1, '#3a454c');
+  ctx.fillStyle = gs; ctx.fillRect(x - wall, y - wall, w + wall * 2, h + wall * 2);
+  ctx.fillStyle = 'rgba(0,0,0,.35)'; for (let i = 0; i < 26; i++) ctx.fillRect(x - wall + i * (w + 2 * wall) / 26, y - wall, 2, wall);
+  ctx.fillStyle = '#030607'; ctx.fillRect(x, y, w, h);
+  if (warm > 0) { const g = ctx.createRadialGradient(lx, ly, 0, lx, ly, w * .7); g.addColorStop(0, rgba('#ffb36b', .22 * warm)); g.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = g; ctx.fillRect(x, y, w, h); }
+  ctx.fillStyle = 'rgba(160,190,205,.12)'; for (let i = 1; i < 6; i++) ctx.fillRect(x + w * i / 6, y, 2, h);
+  // wall panels pulled off (right): exposed frames and the dark gap behind them
+  ctx.fillStyle = '#010203'; ctx.fillRect(x + w * .7, y + 40, w * .27, WTOP - y - 40);
+  ctx.fillStyle = rgba('#9fb3bd', .14 + .2 * warm); for (let k = 0; k < 3; k++) ctx.fillRect(x + w * (.72 + k * .09), y + 40, 7, WTOP - y - 40);
+  ctx.strokeStyle = rgba('#9fb3bd', .1 + .15 * warm); ctx.lineWidth = 2; ctx.strokeRect(x + w * .7, y + 40, w * .27, WTOP - y - 40);
+  // old floor tiles on the ceiling
+  ctx.fillStyle = '#0e1418'; ctx.strokeStyle = rgba('#9fb3bd', .22 + .25 * warm); ctx.lineWidth = 3;
+  for (let i = 0; i < 9; i++) ctx.strokeRect(x + i * w / 9, y, w / 9, 18);
+  // the bunk, upside down: frame bolted to the ceiling, legs pointing down
+  { const bx = x + 24, bw = w * .3, by = y + 18; ctx.fillStyle = '#0c1216'; ctx.fillRect(bx, by + 46, bw, 26); ctx.fillRect(bx + 8, by, 14, 50); ctx.fillRect(bx + bw - 22, by, 14, 50);
+    ctx.strokeStyle = rgba('#9fb3bd', .2 + .25 * warm); ctx.lineWidth = 2.5; ctx.strokeRect(bx, by + 46, bw, 26); ctx.beginPath(); ctx.moveTo(bx + 8, by + 72); ctx.lineTo(bx + 8, by + 140); ctx.moveTo(bx + bw - 8, by + 72); ctx.lineTo(bx + bw - 8, by + 140); ctx.stroke(); }
+  // door: frame, dark opening, the old sill (coaming) now at the top, the leaf swung open against the wall
+  ctx.fillStyle = '#010203'; ctx.fillRect(DR.x0, DR.y0, DR.x1 - DR.x0, DR.y1 - DR.y0);
+  ctx.strokeStyle = rgba('#9fb3bd', .3 + .25 * warm); ctx.lineWidth = 4; ctx.strokeRect(DR.x0, DR.y0, DR.x1 - DR.x0, DR.y1 - DR.y0);
+  ctx.fillStyle = '#28323a'; ctx.fillRect(DR.x0 - 14, DR.y0 - 12, DR.x1 - DR.x0 + 28, 16);
+  ctx.fillStyle = '#0b1115'; ctx.fillRect(DR.x0 - 96, DR.y0 + 8, 84, DR.y1 - DR.y0 - 16); ctx.strokeStyle = rgba('#9fb3bd', .18 + .2 * warm); ctx.lineWidth = 2; ctx.strokeRect(DR.x0 - 96, DR.y0 + 8, 84, DR.y1 - DR.y0 - 16);
+  ctx.beginPath(); ctx.arc(DR.x0 - 80, DR.y0 + 8 + (DR.y1 - DR.y0) * .38, 7, 0, 7); ctx.stroke();
+  // the rack he built from the wall panels (standing on the old ceiling, under water at level .6) + the stacked mattresses
+  const mx = x + w * .66, mw = w * .3;
+  ctx.fillStyle = '#0d1418'; [14, mw * .5 - 5, mw - 24].forEach(px => ctx.fillRect(mx + px, WTOP + 30, 10, y + h - WTOP - 30));
+  ctx.fillStyle = '#141c21'; ctx.fillRect(mx - 6, WTOP + 26, mw + 12, 9);
+  ctx.fillStyle = rgba('#ffcf9a', .08 + .2 * warm); ctx.fillRect(mx - 6, WTOP + 26, mw + 12, 2);
+  ctx.strokeStyle = rgba('#9fb3bd', .08 + .12 * warm); ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(mx + 19, WTOP + 40); ctx.lineTo(mx + mw * .5, WTOP + 120); ctx.lineTo(mx + mw - 19, WTOP + 40); ctx.stroke();
+  for (let k = 0; k < 3; k++) { const my = WTOP + 26 - k * 22 + Math.sin(T * 1.1 + k) * 1.5, ww = mw - k * 18;
+    ctx.fillStyle = k === 2 ? '#1a1712' : '#12100d'; ctx.beginPath(); ctx.roundRect(mx + k * 9, my - 18, ww, 22, 8); ctx.fill();
+    ctx.strokeStyle = rgba('#ffcf9a', .1 + .25 * warm); ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(mx + k * 9 + 8, my - 18); ctx.lineTo(mx + k * 9 + ww - 8, my - 18); ctx.stroke(); }
+  // water from the bottom
+  ctx.beginPath(); ctx.moveTo(x, y + h);
+  for (let xx = x; xx <= x + w + 8; xx += 8) ctx.lineTo(Math.min(xx, x + w), sy(xx));
+  ctx.lineTo(x + w, y + h); ctx.closePath();
+  const gw = ctx.createLinearGradient(0, wy, 0, y + h); gw.addColorStop(0, '#0f2c35'); gw.addColorStop(.25, '#06161b'); gw.addColorStop(1, '#010304');
+  ctx.save(); ctx.globalAlpha = .93; ctx.fillStyle = gw; ctx.fill(); ctx.restore();
+  ctx.strokeStyle = rgba('#9fd8ea', .45); ctx.lineWidth = 2 * hl; ctx.beginPath();
+  for (let xx = x; xx <= x + w + 8; xx += 8) { const yy = sy(Math.min(xx, x + w)); xx === x ? ctx.moveTo(xx, yy) : ctx.lineTo(Math.min(xx, x + w), yy); }
+  ctx.stroke();
+  if (warm > 0) { const g = ctx.createLinearGradient(lx - 170, 0, lx + 170, 0); g.addColorStop(0, 'rgba(255,179,107,0)'); g.addColorStop(.5, rgba('#ffb36b', .35 * warm)); g.addColorStop(1, 'rgba(255,179,107,0)'); ctx.fillStyle = g; ctx.fillRect(lx - 170, sy(lx) - 3, 340, 6); }
+  ctx.restore();
+  return sy;
+}
+
 window.PK.scenes.cold = function (ctx, t, d, info) {
-  const OK = PK.okRoom; const T = info.sc.t0 + t;
-  const { RM, LV0, CAM_END, GRIP } = OK;
+  const OK = PK.okRoom, KN = PK.KN; const T = info.sc.t0 + t;
+  const { RM, LV0, CAM_END, RIM } = OK;
   const tCold = at(info, '춥고', .02), tThroat = at(info, '목이', .1), tDry = at(info, '타는', .15), tSai = at(info, '사이', .2), tW = at(info, '물은', .32),
     tRise = at(info, '차오르고', .38), tAir = at(info, '공기는', .49), tMore = at(info, '점점', .6), tLess = at(info, '줄어들었', .69);
   const vEnd = info.sc.voice_end - info.sc.t0;
+  const tGo = tSai - .2, tSplash = tGo + .22, tArr = tW - .12;             // lets go of the rim / hits the water / surfaces in the cabin
 
   // ---------------- state ----------------
-  const r1 = E.inOutQ(P(t, tRise - .12, tRise + .6)), r2 = E.inOutQ(P(t, tMore - .08, tMore + .65));
-  const lv = LV0 + .06 * r1 + .045 * r2 + .006 * P(t, tLess, d);
-  const top = OK.lvY(lv);
-  const surge = Math.exp(-Math.pow((t - tRise - .25) / .3, 2)) + .7 * Math.exp(-Math.pow((t - tMore - .25) / .3, 2));
   const coldK = P(t, tCold - .1, tCold + .5, E.outQ);
   const thirst = P(t, tThroat - .05, tDry + .5, E.inOutQ);
+  const r1 = E.inOutQ(P(t, tRise - .12, tRise + .6)), r2 = E.inOutQ(P(t, tMore - .08, tMore + .65));
+  const LVC0 = .42, lvc = LVC0 + .08 * r1 + .1 * r2 + .004 * P(t, tLess, d);   // the cabin's water: up the rack to level .6 (divers)
+  const cwy = cabWY(lvc), cwyW = cwy + COY;                                 // cabin water top (cabin / toilet-world coords)
+  const surge = Math.exp(-Math.pow((t - tRise - .25) / .3, 2)) + .7 * Math.exp(-Math.pow((t - tMore - .25) / .3, 2));
   const danger = P(t, tLess - .1, tLess + .6, E.inOutQ);
-  const bpm = lerp(72, 96, P(t, tRise, d));
-  const Lp = OK.restLight(T, lv);
-  Lp.y -= 6 * surge;
+  const bpm = lerp(72, 96, P(t, tRise, d)), bt = PK.beat(T, bpm);
+  const tTop = OK.lvY(LV0);                                                 // the toilet's water stays where pocket left it
+  const cabSurf = xw => cwyW + Math.sin((xw - COX) * .021 + T * 1.3) * 4 + Math.sin((xw - COX) * .057 - T * .9) * 2;
 
-  // ---------------- camera: pocket's last framing -> pull back on '물은' -> slow push / tunnel ----------------
-  const back = P(t, tW - .25, tRise + .35, E.inOutQ), push = P(t, tLess - .3, d + .3, E.inOutQ);
-  const z = lerp(lerp(CAM_END.z, 1.22, back), 1.42, push);
-  const cx = lerp(lerp(CAM_END.x, 614, back), 728, push), cy = lerp(lerp(CAM_END.y, 772, back), 752, push);
+  // ---------------- his light (toilet-world coords) ----------------
+  const drop = P(t, tGo, tSplash, E.inQ), swim = P(t, tSplash, tArr, E.inOutQ), climb = P(t, tArr - .06, tArr + .36, E.inOutQ);
+  const STACK = { x: 812 + COX, y: 746 + COY }, XS = 1690;                  // his place on the mattresses (as divers) / where he surfaces
+  const R = OK.rimLight(T, 1, .8 + 1.4 * coldK);
+  let lx = R.x, ly = R.y, under = 0;
+  if (drop > 0) { lx = R.x + 10 * drop; ly = lerp(R.y, OK.surf(lx, T, tTop) + 6, drop); under = .3 * P(t, tSplash - .06, tSplash); }
+  if (swim > 0) {
+    lx = lerp(R.x + 10, XS, swim);
+    const sw = lx < 1100 ? OK.surf(lx, T, tTop) : lerp(OK.surf(lx, T, tTop), cabSurf(lx), clamp((lx - 1100) / 120));
+    ly = sw + lerp(6, 30, P(swim, 0, .2)) * (1 - P(swim, .85, 1)) + 4 * Math.sin(T * 5);
+    under = lerp(.3, 1, P(swim, 0, .15)) * (1 - P(swim, .9, 1));
+  }
+  if (climb > 0) { lx = lerp(XS, STACK.x, climb); ly = lerp(cabSurf(XS) - 10, STACK.y + Math.sin(T * 1.1) * 1.5, climb) - 44 * Math.sin(Math.PI * climb); under = 0; }
+  const inWall = clamp(1 - Math.abs(lx - 1094) / 110);                    // passing under the wall between the two rooms
+  const flick = 1 - .12 * thirst * (.5 + .5 * OK.nz(T * 9, 41));
+  const warm = (1 - .35 * thirst) * lerp(1, .55, under);
+  const lightA = flick * lerp(1, .55, under) * (1 - .6 * inWall);
+  const contact = (.72 + .28 * PK.beat(T, 72)) * (1 - P(t, tGo - .04, tGo + .08));
+
+  // ---------------- camera: pocket's last framing -> pans with him into the cabin (the old floor kept just under the counter) ----------------
+  const pan = P(t, tGo + .06, tW + .12, E.inOutC);
+  const zc = lerp(1.5, 1.6, P(t, tW, d, E.inOutQ)), LID = 588 + 10 * r1 + 12 * r2;   // in the cabin: its old floor held just under the counter (and pressing down a little as the water rises)
+  const cabC = { x: 1772, y: 500 + (850 - LID) / zc };
+  const z = lerp(CAM_END.z, zc, pan) * (1 - .2 * Math.sin(Math.PI * pan));
+  const cx = lerp(CAM_END.x, cabC.x, pan) + .12 * Math.sin(Math.PI * pan) * (lx - lerp(CAM_END.x, cabC.x, pan)), cy = lerp(CAM_END.y, cabC.y, pan);
   const dr = OK.drift(T, 1);
-  const shiver = coldK * (1 - .4 * back) + 1.6 * P(t, tCold - .05, tCold + .08) * Math.exp(-Math.max(0, t - tCold - .08) * 3);
+  const shiver = coldK * (1 - .5 * pan) + 1.6 * P(t, tCold - .05, tCold + .08) * Math.exp(-Math.max(0, t - tCold - .08) * 3);
   const shx = shiver * (OK.nz(T * 11, 31) * 2.4) + surge * OK.nz(T * 6, 33) * 4, shy = shiver * (OK.nz(T * 11, 32) * 1.8) + surge * OK.nz(T * 6, 34) * 3.5;
   const M = OK.camMatrix(cx + dr.x, cy + dr.y, z, dr.r, shx, shy);
+  const inv = M.inverse(), vx0 = inv.transformPoint(new DOMPoint(-30, 850)).x, vx1 = inv.transformPoint(new DOMPoint(W + 30, 850)).x;
+  const showToilet = vx0 < RM.r + RM.wall + 40, showCabin = vx1 > COX + 114 - 40 && KN;
 
   OK.blackBG(ctx);
   ctx.save(); OK.applyCam(ctx, M);
-  const warm = 1 - .35 * thirst;
-  const flick = 1 - .12 * thirst * (.5 + .5 * OK.nz(T * 9, 41));
-  const light = (.9 + .1 * PK.beat(T, bpm)) * flick * lerp(1, .85, thirst);
-  const ghost = top < OK.lvY(LV0) - 4 ? OK.lvY(LV0) : null;
-  // forearm: toward his light at first (pocket), then down into the water as it rises
-  const armK = P(t, tRise - .2, tRise + .6, E.inOutQ);
-  const handOpts = { c: 1, a: 1, sx: lerp(Lp.x, Lp.x - 34, armK), sy: lerp(Lp.y + 2, top + 90, armK), tremble: .8 + 1.4 * coldK, T, rimA: (.7 + .25 * PK.beat(T, bpm)) * lerp(1, .8, thirst), rim: PK.lerp2('#cfe2ea', '#ffd9b0', warm) };
-  OK.drawRoom(ctx, T, {
-    lv, lx: Lp.x, ly: Lp.y, light, zoom: z, cold: coldK, salt: lerp(.05, 1, P(t, tCold, d - .3)), ghost, haze: .9 * P(t, tAir - .3, d),
-    airGlow: .25 * P(t, tAir - .2, tAir + .3) * (1 - .5 * danger),
-    onWall: c => { c.save(); c.translate(Lp.x, Lp.y); c.scale(1.55, 1.55); c.translate(-Lp.x, -Lp.y); OK.gripHand(c, GRIP.x, GRIP.y, GRIP.s, Object.assign({}, handOpts, { mode: 'shadow', shadowA: .42 * light })); c.restore(); },
-  });
-  // cold grade over the room (his light and hand stay warm on top)
-  if (coldK > 0) { ctx.save(); ctx.globalCompositeOperation = 'multiply'; ctx.fillStyle = `rgba(${Math.round(lerp(255, 150, coldK))},${Math.round(lerp(255, 205, coldK))},${Math.round(lerp(255, 228, coldK))},1)`; ctx.fillRect(RM.x - RM.wall, RM.y - RM.wall, RM.w + 2 * RM.wall, RM.h + 2 * RM.wall); ctx.restore(); }
-  // the air layer: bracket from the ceiling to the water, squeezing (no number)
-  const BX = 318, by1 = OK.surf(BX, T, top) - 4;
-  const bA = P(t, tW - .1, tRise);
+  // the upside-down hull around the cabin (structure above the rooms, side plating and the sea to the right)
+  const hullA = P(t, tGo - .1, tGo + .3);
+  if (KN && hullA > 0) { ctx.save(); ctx.globalAlpha = hullA; ctx.translate(COX, COY); KN.hull(ctx, T, { amb: .8 }); ctx.restore(); }
+  const salt = .7 * P(t, tCold - .1, tGo + .2);
+  if (showToilet) {
+    const tl = (.9 + .1 * PK.beat(T, 72)) * flick * lerp(1, .85, thirst) * lerp(1, .5, under) * clamp(1 - (lx - RM.r) / 260);
+    OK.drawRoom(ctx, T, { lv: LV0, lx, ly, light: tl, zoom: z, cold: coldK, salt });
+    if (contact > 0) OK.rimContact(ctx, T, lx, ly, contact * flick, 1 - .35 * thirst);
+  }
+  if (showCabin) {
+    ctx.save(); ctx.translate(COX, COY);
+    const cw = .62 * flick * lerp(.25, 1, climb) * clamp((lx - 1050) / 500) * (1 - .25 * thirst);
+    cabinAt(ctx, T, KN, { wy: cwy, warm: cw, lx: lx - COX, ly: ly - COY, hl: 1 / z });
+    ctx.restore();
+  }
+  // cold grade over the rooms (his light stays warm on top)
+  if (coldK > 0) {
+    ctx.save(); ctx.globalCompositeOperation = 'multiply'; ctx.fillStyle = `rgba(${Math.round(lerp(255, 150, coldK))},${Math.round(lerp(255, 205, coldK))},${Math.round(lerp(255, 228, coldK))},1)`;
+    if (showToilet) ctx.fillRect(RM.x - RM.wall, RM.y - RM.wall, RM.w + 2 * RM.wall, RM.h + 2 * RM.wall);
+    if (showCabin) ctx.fillRect(COX + 114, COY + 494, 852, 672);
+    ctx.restore();
+  }
+  // the cabin's air layer: cool glow, stale haze, red when it runs out; the old level dashed; a bracket from the old floor to the water
+  const CX0 = COX + 140, CX1 = COX + 940, CY0 = COY + 520;
+  if (showCabin) {
+    const airG = .25 * P(t, tAir - .2, tAir + .3) * (1 - .5 * danger), haze = .9 * P(t, tAir - .3, d);
+    ctx.save(); ctx.beginPath(); ctx.rect(CX0, CY0, CX1 - CX0, cwyW - CY0); ctx.clip();
+    if (airG > 0) { const g = ctx.createLinearGradient(0, CY0, 0, cwyW); g.addColorStop(0, rgba('#7fd6ff', .015 * airG)); g.addColorStop(1, rgba('#7fd6ff', .085 * airG)); ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = g; ctx.fillRect(CX0, CY0, CX1 - CX0, cwyW - CY0); }
+    if (haze > 0) {
+      ctx.globalCompositeOperation = 'screen';
+      for (let i = 0; i < 2; i++) { const hx = CX0 + ((L.hash(i * 7 + 3) * 800 + T * 14 * (i % 2 ? 1 : -1)) % 800 + 800) % 800, hy = lerp(CY0 + 40, cwyW - 30, .3 + .4 * L.hash(i * 5 + 1)), r = 200 + 50 * L.hash(i);
+        ctx.save(); ctx.translate(hx, hy); ctx.scale(2.2, .5); const g = ctx.createRadialGradient(0, 0, 0, 0, 0, r); g.addColorStop(0, rgba('#8fa59a', .12 * haze)); g.addColorStop(1, 'rgba(143,165,154,0)'); ctx.fillStyle = g; ctx.fillRect(-r, -r, r * 2, r * 2); ctx.restore(); }
+    }
+    if (danger > 0) { const g = ctx.createLinearGradient(0, CY0, 0, cwyW); g.addColorStop(0, rgba('#e3262f', 0)); g.addColorStop(1, rgba('#e3262f', .1 * danger * (.6 + .4 * Math.sin(T * 6)))); ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = g; ctx.fillRect(CX0, CY0, CX1 - CX0, cwyW - CY0); }
+    ctx.restore();
+    const gy = cabWY(LVC0) + COY;
+    if (cwyW < gy - 4) { ctx.save(); ctx.setLineDash([14 / z, 10 / z]); ctx.strokeStyle = rgba('#a9e2f2', .4); ctx.lineWidth = 1.8 / z; ctx.beginPath(); ctx.moveTo(CX0 + 6, gy); ctx.lineTo(CX1 - 6, gy); ctx.stroke(); ctx.restore(); }
+  }
+  const BX = COX + 520, by1 = cabSurf(BX) - 4;
+  const bA = P(t, tW - .1, tRise) * (showCabin ? 1 : 0);
   const bCol = PK.lerp2('#bfeaff', '#ff6a6a', danger);
-  OK.bracket(ctx, BX, RM.y + 4, by1, 1, bA, bCol, 1 / z);
-  if (danger > 0) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; const g = ctx.createLinearGradient(0, RM.y, 0, top); g.addColorStop(0, rgba('#e3262f', 0)); g.addColorStop(1, rgba('#e3262f', .1 * danger * (.6 + .4 * Math.sin(T * 6)))); ctx.fillStyle = g; ctx.fillRect(RM.x, RM.y, RM.w, top - RM.y); ctx.restore(); }
+  OK.bracket(ctx, BX, CY0 + 4, by1, 1, bA, bCol, 1 / z);
   // chevrons pushing up from the surface while it rises
   const chA = Math.max(P(t, tRise - .1, tRise + .1) * (1 - P(t, tRise + .5, tRise + .8)), P(t, tMore - .1, tMore + .1) * (1 - P(t, tMore + .5, tMore + .8)));
   if (chA > 0) {
     ctx.save(); ctx.strokeStyle = rgba('#bfeaff', .7 * chA); ctx.lineWidth = 4 / z; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
-    [430, 560, 690].forEach((x, i) => { const yy = OK.surf(x, T, top) - 18 - ((T * 60 + i * 14) % 30); for (let k = 0; k < 2; k++) { const y = yy - k * 16; ctx.globalAlpha = 1 - k * .4; ctx.beginPath(); ctx.moveTo(x - 18, y + 10); ctx.lineTo(x, y - 6); ctx.lineTo(x + 18, y + 10); ctx.stroke(); } });
+    [COX + 610, COX + 690].forEach((x, i) => { const yy = cabSurf(x) - 18 - ((T * 60 + i * 14) % 30); for (let k = 0; k < 2; k++) { const y = yy - k * 16; ctx.globalAlpha = 1 - k * .4; ctx.beginPath(); ctx.moveTo(x - 18, y + 10); ctx.lineTo(x, y - 6); ctx.lineTo(x + 18, y + 10); ctx.stroke(); } });
     ctx.restore();
   }
-  // the hand on the rim (shivering), its submerged part covered by the water again
-  OK.gripHand(ctx, GRIP.x, GRIP.y, GRIP.s, Object.assign({ cutTop: top }, handOpts));
-  // surge rings
+  // surge rings around the rack
   ctx.save(); ctx.lineWidth = 2 / z;
-  [tRise + .1, tMore + .1].forEach(tr => { const f = P(t, tr, tr + 1.2); if (f <= 0 || f >= 1) return; ctx.strokeStyle = rgba('#cfeef8', .5 * (1 - f)); ctx.beginPath(); ctx.ellipse(Lp.x, OK.surf(Lp.x, T, top) + 3, 20 + f * 300, 3 + f * 26, 0, 0, 7); ctx.stroke(); });
+  [tRise + .1, tMore + .1].forEach(tr => { const f = P(t, tr, tr + 1.2); if (f <= 0 || f >= 1) return; ctx.strokeStyle = rgba('#cfeef8', .5 * (1 - f)); ctx.beginPath(); ctx.ellipse(STACK.x - 40, cabSurf(STACK.x - 40) + 3, 30 + f * 300, 3 + f * 26, 0, 0, 7); ctx.stroke(); });
+  // the splash where he lets go, and the rings where he surfaces
+  { const f = P(t, tSplash, tSplash + 1.1); if (f > 0 && f < 1) { ctx.strokeStyle = rgba('#cfeef8', .55 * (1 - f)); ctx.beginPath(); ctx.ellipse(R.x + 10, OK.surf(R.x + 10, T, tTop) + 3, 16 + f * 230, 3 + f * 22, 0, 0, 7); ctx.stroke(); } }
+  { const f = P(t, tArr - .1, tArr + 1.0); if (f > 0 && f < 1) { ctx.strokeStyle = rgba('#cfeef8', .5 * (1 - f)); ctx.beginPath(); ctx.ellipse(XS, cabSurf(XS) + 3, 14 + f * 200, 3 + f * 20, 0, 0, 7); ctx.stroke(); } }
   ctx.restore();
-  // him: paler with thirst, faster heart
-  OK.lifeLight(ctx, T, Lp.x, Lp.y, { a: flick, s: 1.45 * lerp(1, .88, thirst), bpm, breath: lerp(.45, .75, P(t, tRise, d)), warm, zoom: z });
+  // drops thrown up by the splash
+  { const age = t - tSplash; if (age > 0 && age < .5) { ctx.save(); ctx.fillStyle = rgba('#d8f2fa', .6 * (1 - age / .5));
+    for (let i = 0; i < 7; i++) { const vx = (OK.hi(i * 5 + 1) - .5) * 260, vy = -(160 + 220 * OK.hi(i * 9 + 2)); const x = R.x + 10 + vx * age, y = OK.surf(R.x, T, tTop) + vy * age + 900 * age * age; if (y > OK.surf(x, T, tTop)) continue; ctx.beginPath(); ctx.ellipse(x, y, 2, 3.5, 0, 0, 7); ctx.fill(); }
+    ctx.restore(); } }
+  // him: paler with thirst, faster heart; under the water: dim, cool, and re-covered by the water
+  OK.lifeLight(ctx, T, lx, ly, { a: lightA, s: 1.45 * lerp(1, .88, thirst) * lerp(1, .7, under), bpm, breath: lerp(.45, .75, P(t, tRise, d)), warm, zoom: z });
+  if (under > 0) {
+    // bubbles from him rising to the surface
+    ctx.save(); ctx.strokeStyle = rgba('#d8f6ff', .5 * under); ctx.lineWidth = 1.5 / z;
+    for (let i = 0; i < 10; i++) { const tb = tSplash + i * .06, age = t - tb; if (age <= 0 || age > .5) continue; const pb = P(tb, tSplash, tArr, E.inOutQ), bx = lerp(R.x + 10, XS, pb) + Math.sin(age * 9 + i) * 5, sfc = bx < 1100 ? OK.surf(bx, T, tTop) : cabSurf(bx), by = ly + 6 - age * 200; if (by < sfc + 3) continue; ctx.beginPath(); ctx.arc(bx, by, 2 + 3 * OK.hi(i * 3), 0, 7); ctx.stroke(); }
+    ctx.restore();
+    if (lx < RM.r) OK.waterOver(ctx, T, tTop, lx - 240, lx + 240, .5 * under);
+    else if (lx > COX + 140) {   // the cabin's water over him
+      const x0 = Math.max(CX0, lx - 240), x1 = Math.min(CX1, lx + 240);
+      if (x1 > x0) { ctx.save(); ctx.beginPath(); ctx.moveTo(x0, COY + 1140); for (let x = x0; x <= x1 + 6; x += 6) ctx.lineTo(Math.min(x, x1), cabSurf(Math.min(x, x1))); ctx.lineTo(x1, COY + 1140); ctx.closePath();
+        const g = ctx.createLinearGradient(0, cwyW, 0, cwyW + 120); g.addColorStop(0, rgba('#0f2a33', .5 * under)); g.addColorStop(1, rgba('#06161c', .62 * under)); ctx.fillStyle = g; ctx.fill(); ctx.restore(); }
+    }
+  }
   ctx.restore();
 
   // ---------------- screen space ----------------
-  const [sx, sy] = OK.toS(M, Lp.x, Lp.y);
+  const [sx, sy] = OK.toS(M, lx, ly);
   drawCrust(ctx, P(t, tCold, d) * .9);
-  const cw = P(t, tCold - .05, tCold + .15) * (1 - P(t, tCold + .2, tCold + 1.1));
-  if (cw > 0) { const g = ctx.createRadialGradient(540, 850, 260, 540, 850, 900); g.addColorStop(0, 'rgba(160,215,235,0)'); g.addColorStop(1, `rgba(160,215,235,${(.16 * cw).toFixed(3)})`); ctx.save(); ctx.globalCompositeOperation = 'screen'; ctx.fillStyle = g; ctx.fillRect(0, 0, W, H); ctx.restore(); }
-  const irisK = .32 + .08 * P(t, tCold, tW) + .3 * P(t, tMore, d) + .05 * PK.beat(T, bpm);
+  const cwv = P(t, tCold - .05, tCold + .15) * (1 - P(t, tCold + .2, tCold + 1.1));
+  if (cwv > 0) { const g = ctx.createRadialGradient(540, 850, 260, 540, 850, 900); g.addColorStop(0, 'rgba(160,215,235,0)'); g.addColorStop(1, `rgba(160,215,235,${(.16 * cwv).toFixed(3)})`); ctx.save(); ctx.globalCompositeOperation = 'screen'; ctx.fillStyle = g; ctx.fillRect(0, 0, W, H); ctx.restore(); }
+  // tunnel vision: pocket's (.55) -> opens a little while he swims -> closes to ~.8 as the air runs out
+  const irisK = lerp(.55, .5, pan) - .1 * Math.sin(Math.PI * pan) + .3 * P(t, tMore - .2, d, E.inOutQ) + .05 * bt;
   const endDark = .5 * P(t, vEnd - .2, d, E.inQ);
-  OK.iris(ctx, irisK, .5 + .5 * Math.sin(T * lerp(.45, .75, P(t, tRise, d)) * Math.PI * 2), lerp(540, sx, .5), lerp(850, sy, .5), 1 - (1 - .1 * (1 - PK.beat(T, bpm))) * (1 - endDark));
-  // darker for the cut into the clip
+  OK.iris(ctx, irisK, .5 + .5 * Math.sin(T * lerp(.45, .75, P(t, tRise, d)) * Math.PI * 2), lerp(540, sx, .5), lerp(850, sy, .5), 1 - (1 - .1 * (1 - bt)) * (1 - endDark));
   OK.quiet(ctx, 1);
-  // hours counter (top slot)
-  hours(ctx, t, 540, 530, P(t, tCold - .05, tCold + .25) * (1 - .5 * P(t, vEnd, d)), [24, 36, 48], [tCold, tSai, tAir]);
+  // hours counter (top slot, on the dark above the cabin's old floor)
+  hours(ctx, t, 540, HOURS_Y, P(t, tCold - .05, tCold + .25) * (1 - .5 * P(t, vEnd, d)), [24, 36, 48], [tCold, tSai, tAir]);
   // '공기층' label beside the bracket
-  const [bx, byM] = OK.toS(M, BX, (RM.y + by1) / 2);
-  const lA = P(t, tAir - .15, tAir + .15) * (1 - .5 * P(t, vEnd, d));
+  const [bx, byM] = OK.toS(M, BX, (CY0 + by1) / 2);
+  const lA = P(t, tAir - .15, tAir + .15) * (1 - .5 * P(t, vEnd, d)) * (showCabin ? 1 : 0);
   if (lA > 0) {
-    const s = lerp(.86, 1, E.outBack(clamp(lA))), lx = bx + 30 + 72;
-    ctx.save(); ctx.globalAlpha = clamp(lA); ctx.strokeStyle = rgba(bCol, .7); ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(bx + 4, byM); ctx.lineTo(lx - 66, byM); ctx.stroke(); ctx.restore();
-    ctx.save(); ctx.translate(lx, byM); ctx.scale(s, s); chip(ctx, '공기층', 0, 0, clamp(lA), { size: 40, color: danger > .5 ? '#ffd0d0' : '#fff', border: rgba(bCol, .7) }); ctx.restore();
+    const s = lerp(.86, 1, E.outBack(clamp(lA))), lx2 = bx + 30 + 72;
+    ctx.save(); ctx.globalAlpha = clamp(lA); ctx.strokeStyle = rgba(bCol, .7); ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(bx + 4, byM); ctx.lineTo(lx2 - 66, byM); ctx.stroke(); ctx.restore();
+    ctx.save(); ctx.translate(lx2, byM); ctx.scale(s, s); chip(ctx, '공기층', 0, 0, clamp(lA), { size: 40, color: danger > .5 ? '#ffd0d0' : '#fff', border: rgba(bCol, .7) }); ctx.restore();
   }
 };
 })();

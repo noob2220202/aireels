@@ -2,8 +2,11 @@
 // Cutaway side view at night: rough swell, rain, the tanker's stern looming at the left, the tug holding it on a taut line.
 // 12 small warm lights come on in the deckhouse (the 12 aboard; no figures). On "뒤집힌" the tug heels and rolls over
 // (faux-3D roll about its long axis: the bottom swings into view, the deckhouse goes under; no single giant wave = cause left
-// open). All lights cut out at the same instant, like a power failure. The camera follows the inverted hull down through the
-// water column (depth gauge 0 -> 30 m) until it settles upside down on the seabed in a cloud of silt; muffled darkness closes in.
+// open); the camera leans into the roll and pushes in, and the spray bursts only as the roll completes so the roll reads.
+// The lights NEVER go out: they turn with the deckhouse (sliding through the centreline while it is edge-on, then on the
+// side now facing us), go under with it and are only dimmed, all together and slowly, by the water and the murk. The camera
+// follows the inverted hull down through the water column (depth gauge 0 -> 30 m) until it settles upside down on the seabed
+// in a cloud of silt; muffled darkness closes in over the whole frame. Chip strings come from the scene data (info.sc.data).
 (function () {
 'use strict';
 const { W, H, E, P, clamp, lerp, hash, noise1, fbm, rgba, glow, text, measure, roundRect, drift, FONT } = L;
@@ -152,9 +155,12 @@ function drawShip(ctx, t, S, o) {
   ctx.restore();
 }
 function drawLights(ctx, t, S, lit, pops) {
-  if (lit <= 0 || S.cs <= .05) return;
-  const pts = LIGHTS.map(([x, z, hullSide], i) => { const [px, py] = shipPt(S, x, hullSide ? B2 : BS, z); return { x: px, y: py, a: lit * pops[i], s: .56 }; });
-  const [cx, cy] = shipPt(S, 180, BS, 230); glow(ctx, cx, cy, 230, K.amber, .16 * lit * (pops.reduce((a, b) => a + b, 0) / 12));
+  if (lit <= 0) return;
+  // the lights sit on whichever side faces the camera; while that side is edge-on they slide in to the centreline, so their
+  // screen positions stay continuous through the whole roll (never culled, never switched off)
+  const ys = (S.cs < 0 ? -1 : 1) * Math.min(1, Math.abs(S.cs) * 3);
+  const pts = LIGHTS.map(([x, z, hullSide], i) => { const [px, py] = shipPt(S, x, ys * (hullSide ? B2 : BS), z); return { x: px, y: py, a: lit * pops[i], s: .56 }; });
+  const [cx, cy] = shipPt(S, 180, ys * BS, 230); glow(ctx, cx, cy, 230, K.amber, .16 * lit * (pops.reduce((a, b) => a + b, 0) / 12));
   souls(ctx, t, pts, { bpm: 70 });
 }
 
@@ -224,7 +230,8 @@ function quiet(ctx, k) {
 }
 // slim depth gauge at the right edge (ticks + pointer only; the reading itself sits in the top slot)
 function gauge(ctx, t, a, m) {
-  if (a <= 0) return; const x = 1046, y0 = 560, y1 = 1130; const yy = lerp(y0, y1, clamp(m / 30));
+  // inset from the right edge (Reels action column)
+  if (a <= 0) return; const x = 990, y0 = 560, y1 = 1100; const yy = lerp(y0, y1, clamp(m / 30));
   ctx.save(); ctx.globalAlpha *= a;
   ctx.strokeStyle = rgba('#8fd3e8', .4); ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(x, y0); ctx.lineTo(x, y1); ctx.stroke();
   for (let k = 0; k <= 30; k += 2) { const ty = lerp(y0, y1, k / 30), mj = k % 10 === 0; ctx.lineWidth = mj ? 2.5 : 1.5; ctx.beginPath(); ctx.moveTo(x - (mj ? 14 : 7), ty); ctx.lineTo(x, ty); ctx.stroke(); }
@@ -235,9 +242,10 @@ function gauge(ctx, t, a, m) {
 }
 
 window.PK.scenes.capsize = function (ctx, t, d, info) {
+  const D = info.sc.data || {};
   const tDawn = at(info, '새벽', .02), t12 = at(info, '12명', .12), tTug = at(info, '예인선', .27), tJas = at(info, '재스콘', .36), t4 = at(info, '4호가', .43),
     tFlip = at(info, '뒤집힌', .5), tChae = at(info, '채', .58), t30 = at(info, '30미터', .63), tSea = at(info, '해저로', .73), tSank = at(info, '가라앉', .8);
-  const tCut = tFlip + .14, tLand = tSank + .36, Ybed = 2250;
+  const tLand = tSank + .36, Ybed = 2250;
   const dr = drift(t, 1, 61);
 
   // ---------------- ship state ----------------
@@ -260,23 +268,28 @@ window.PK.scenes.capsize = function (ctx, t, d, info) {
   // ---------------- camera ----------------
   const follow = P(t, tChae - .1, t30 + .5, E.inOutQ);
   const camYsink = Math.min(S.y - 30, Ybed - 196);
-  let camY = lerp(842 + dr.y, camYsink, follow), camX = lerp(568, S.x - 10, follow * .6) + dr.x;
+  // flip push-in: lean in on the deckhouse as it rolls, released while the camera starts following the hull down
+  const fIn = P(t, tFlip - .35, tFlip + .2, E.inOutQ), fOut = P(t, tChae, tSea, E.inOutQ), fK = fIn * (1 - fOut);
+  let camY = lerp(842 + dr.y, camYsink, follow), camX = lerp(lerp(568, S.x + 120, fK), S.x - 10, follow * .6) + dr.x;
   let zoom = lerp(1.03, 1.1, P(t, -.2, tFlip, E.inOutQ)) * lerp(1, .97, P(t, tFlip, tFlip + .5)) * lerp(1, 1.13, P(t, tChae, tLand, E.inOutQ)) * lerp(1, 1.07, P(t, tLand, d + .3, E.inOutQ));
+  zoom *= lerp(1, 1.15, fIn) * lerp(1, 1 / 1.15, fOut);
   const shake = .9 * P(t, tFlip - .15, tFlip + .05) * Math.exp(-Math.max(0, t - tFlip - .05) * 2.4) + .5 * P(t, tLand - .04, tLand) * Math.exp(-Math.max(0, t - tLand) * 4.5) + .12 * (1 - cap) * P(t, t4 - .3, tFlip);
-  const M = camM(camX, camY, zoom, dr.r * .6 + slope * .08 * (1 - follow), shake, t, 7);
+  const roll = -.075 * Math.sin(Math.PI * cap) * (1 - follow);            // the camera leans with the roll
+  const M = camM(camX, camY, zoom, dr.r * .6 + slope * .08 * (1 - follow) + roll, shake, t, 7);
   const toS = (wx, wy) => { const q = M.transformPoint(new DOMPoint(wx, wy)); return [q.x, q.y]; };
   const uw = clamp((camY - 1050) / 300);                       // how far "underwater" the view is
   const deep = clamp((camY - 900) / (Ybed - 196 - 900));
 
   ctx.save(); ctx.fillStyle = '#010203'; ctx.fillRect(0, 0, W, H); ctx.restore();
-  ctx.save(); ctx.setTransform(ctx.getTransform().multiply(M));
+  const T0 = ctx.getTransform();                              // the caller's base transform
+  ctx.save(); ctx.setTransform(T0.multiply(M));
   const X0 = camX - 900 / zoom, X1 = camX + 900 / zoom;
   // ---- background: sky, tanker, far sea (above the cut), deep water (below) ----
   if (camY < 1500) { sky(ctx, t, X0, X1, 400, 810); tanker(ctx, t, 1 - P(t, tFlip + .2, tFlip + .8)); farSea(ctx, t, X0, X1); }
   const wg = ctx.createLinearGradient(0, 880, 0, Ybed + 40); wg.addColorStop(0, '#0b2c36'); wg.addColorStop(.25, '#061a20'); wg.addColorStop(.7, '#03090c'); wg.addColorStop(1, '#010304');
   ctx.fillStyle = wg; ctx.beginPath(); ctx.moveTo(X0, 1000); for (let x = X0; x <= X1 + 12; x += 12) ctx.lineTo(x, surfY(x, t, amp)); ctx.lineTo(X1, Ybed + 600); ctx.lineTo(X0, Ybed + 600); ctx.closePath(); ctx.fill();
   // faint caustic-less cold light from above, fading with depth
-  if (deep < .95) glow(ctx, S.x, 1000, 900, '#2a7f93', .12 * (1 - deep), 'lighter');
+  if (deep < .8) glow(ctx, S.x, 1000, 900, '#2a7f93', .12 * (1 - deep) * clamp((.8 - deep) / .3), 'lighter');   // gone by deep .8 (saves a full-frame blend)
   // seabed (back layer)
   if (camY > 1500) {
     const bg = ctx.createLinearGradient(0, Ybed - 40, 0, Ybed + 300); bg.addColorStop(0, 'rgba(30,26,20,0)'); bg.addColorStop(.12, '#15120d'); bg.addColorStop(1, '#030302');
@@ -292,7 +305,8 @@ window.PK.scenes.capsize = function (ctx, t, d, info) {
     ctx.restore();
   }
   // ---- the tug ----
-  const lit = t < tCut ? (t > tCut - .1 ? (hash(Math.floor(t * 40)) > .5 ? 1 : .35) : 1) : 0;
+  // the 12 lights stay on: only the water and murk dim them, all together and slowly (nothing is synced to the impact)
+  const lit = 1 - .55 * P(t, tFlip + .3, tLand + .5, E.inOutQ);
   const pops = LIGHTS.map((_, i) => { const k = LORDER.indexOf(i); return P(t, t12 - .05 + k * .045, t12 + .1 + k * .045, E.outQ); });
   drawShip(ctx, t, S, { lit, uw });
   drawLights(ctx, t, S, lit, pops);
@@ -326,7 +340,7 @@ window.PK.scenes.capsize = function (ctx, t, d, info) {
   for (let i = 0; i < 40; i++) { const x = X0 + ((hash(i * 7) * (X1 - X0) + t * 40 * (hash(i) - .3)) % (X1 - X0) + (X1 - X0)) % (X1 - X0); const y = surfY(x, t, amp); ctx.beginPath(); ctx.ellipse(x, y + 2, 10 + hash(i * 3) * 30, 2.5, 0, 0, 7); ctx.fill(); }
   ctx.restore();
   // foam boil where the hull rolled over + spray burst
-  const tSp = tFlip + .2;
+  const tSp = tFlip + .42;                    // bursts as the roll completes (the roll itself stays readable)
   if (t > tSp - .05 && t < tSp + 2.2) {
     const age = Math.max(0, t - tSp);
     ctx.save();
@@ -338,7 +352,7 @@ window.PK.scenes.capsize = function (ctx, t, d, info) {
     // mist plume thrown up where the deckhouse hits the water
     for (let i = 0; i < 16; i++) {
       const x = S.x + 40 + (hash(i * 19) - .5) * 620, rise = (60 + hash(i * 23) * 160) * E.outC(clamp(age / 1.4)), r = (40 + hash(i * 29) * 60) * (.5 + E.outC(clamp(age / 1.2)));
-      const y = surfY(x, t, amp) - rise; ctx.globalAlpha = .2 * (1 - clamp(age / 1.9)) * clamp(age * 10);
+      const y = surfY(x, t, amp) - rise; ctx.globalAlpha = .2 * (1 - clamp(age / 1.9)) * clamp(age * 3);
       ctx.drawImage(bl, x - r, y - r * .8, r * 2, r * 1.6);
     }
     ctx.globalAlpha = 1; ctx.strokeStyle = '#e8f6ff'; ctx.lineCap = 'round';
@@ -360,16 +374,23 @@ window.PK.scenes.capsize = function (ctx, t, d, info) {
     ctx.strokeStyle = 'rgba(120,105,80,.12)'; ctx.lineWidth = 1.5; for (let k = 1; k < 5; k++) { ctx.beginPath(); for (let x = X0; x <= X1 + 30; x += 30) { const y = fy(x) + k * 22 + Math.sin(x * .02 + k) * 3; x === X0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y); } ctx.stroke(); }
     ctx.restore();
     if (t > tLand - .05) {
+      // silt cloud: soft blobs composed at half resolution (a quarter of the fill cost), then blitted over their bounding strip
       const age = Math.max(0, t - tLand), st = siltTinted();
-      ctx.save();
+      const [sb, sx] = L.buf('okCapSilt', W / 2, H / 2); sx.clearRect(0, 0, W / 2, H / 2); sx.setTransform(new DOMMatrix().scale(.5).multiply(M));
+      let x0b = 1e9, y0b = 1e9, x1b = -1e9, y1b = -1e9;
       for (let i = 0; i < 28; i++) {
         const side = hash(i * 3) > .5 ? 1 : -1, x0 = S.x + (hash(i * 7) - .5) * 700, sp2 = 60 + hash(i * 11) * 260;
         const hi = hash(i * 13), x = x0 + side * sp2 * E.outC(clamp(age / 2.6)) * (.4 + .6 * hash(i * 5)) + Math.sin(age * .8 + i) * 10, y = Ybed - 6 - (10 + hi * hi * 230) * E.outQ(clamp(age / 3.2));
         const r = (34 + hash(i * 17) * 72) * (.45 + 1.15 * E.outC(clamp(age / 2.2))) * (1 + hi * .45);
-        ctx.globalAlpha = (.34 + .2 * hash(i)) * clamp(age * 6) * (1 - .45 * clamp((age - 1) / 2));
-        ctx.drawImage(st, x - r, y - r * .7, r * 2, r * 1.4);
+        sx.globalAlpha = (.34 + .2 * hash(i)) * clamp(age * 6) * (1 - .45 * clamp((age - 1) / 2));
+        sx.drawImage(st, x - r, y - r * .7, r * 2, r * 1.4);
+        x0b = Math.min(x0b, x - r); x1b = Math.max(x1b, x + r); y0b = Math.min(y0b, y - r * .7); y1b = Math.max(y1b, y + r * .7);
       }
-      ctx.restore();
+      // screen-space bounding box of the cloud (all four corners: the camera may be rotated a little)
+      let qx0 = 1e9, qy0 = 1e9, qx1 = -1e9, qy1 = -1e9;
+      for (const [wx, wy] of [[x0b, y0b], [x1b, y0b], [x0b, y1b], [x1b, y1b]]) { const [qx, qy] = toS(wx, wy); qx0 = Math.min(qx0, qx); qx1 = Math.max(qx1, qx); qy0 = Math.min(qy0, qy); qy1 = Math.max(qy1, qy); }
+      const bx0 = Math.max(0, Math.floor(qx0 / 2) - 2), by0 = Math.max(0, Math.floor(qy0 / 2) - 2), bx1 = Math.min(W / 2, Math.ceil(qx1 / 2) + 2), by1 = Math.min(H / 2, Math.ceil(qy1 / 2) + 2);
+      if (bx1 > bx0 && by1 > by0) { ctx.save(); ctx.setTransform(T0); ctx.drawImage(sb, bx0, by0, bx1 - bx0, by1 - by0, bx0 * 2, by0 * 2, (bx1 - bx0) * 2, (by1 - by0) * 2); ctx.restore(); }
     }
   }
   // drifting particles in the water column
@@ -394,13 +415,13 @@ window.PK.scenes.capsize = function (ctx, t, d, info) {
   // ---------------- labels (screen space) ----------------
   // clock (top slot), typed on "새벽"
   const cA = P(t, tDawn - .12, tDawn + .1) * (1 - P(t, tFlip - .35, tFlip - .1));
-  typedChip(ctx, t, '04:50경 (본인 기억) · AP 04:30경', 540, 528, cA, P(t, tDawn - .05, tDawn + .7), { size: 34 });
+  typedChip(ctx, t, D.clock || '04:50경 (본인 기억) · AP 04:30경', 540, 528, cA, P(t, tDawn - .05, tDawn + .7), { size: 34 });
   // crew: on "12명이", above the deckhouse lights
   const [wx, wy] = toS(...shipPt(S, 200, BS, 302));
   const kA = P(t, t12 + .1, t12 + .42, E.outQ) * (1 - P(t, tFlip - .3, tFlip - .08));
   const ks = lerp(.86, 1, E.outBack(P(t, t12 + .1, t12 + .45)));
   lead(ctx, wx + 30, wy - 4, 905, 668, kA, 'rgba(255,200,130,.6)');
-  ctx.save(); ctx.translate(905, 638); ctx.scale(ks, ks); chip(ctx, '승선 12명', 0, 0, kA, { size: 40, color: '#fff', border: 'rgba(255,179,71,.7)' }); ctx.restore();
+  ctx.save(); ctx.translate(905, 638); ctx.scale(ks, ks); chip(ctx, D.crew || '승선 12명', 0, 0, kA, { size: 40, color: '#fff', border: 'rgba(255,179,71,.7)' }); ctx.restore();
   // name: on "예인선 재스콘 4호가", under the hull
   const [hx, hy] = toS(...shipPt(S, 40, B2, 60));
   const nA = P(t, tTug - .08, tTug + .15, E.outQ) * (1 - P(t, tFlip - .25, tFlip));
@@ -413,9 +434,10 @@ window.PK.scenes.capsize = function (ctx, t, d, info) {
   const dA = gA * (settled ? 1 - P(t, d - .3, d) : 1);
   const ds = settled ? lerp(.86, 1, E.outBack(P(t, tLand, tLand + .35))) : 1;
   ctx.save(); ctx.translate(540, 528); ctx.scale(ds, ds);
-  if (settled) chip(ctx, '수심 약 30m', 0, 0, dA, { size: 46, color: '#fff', border: 'rgba(160,220,255,.6)' });
+  const depthS = D.depth || '수심 약 30m';
+  if (settled) chip(ctx, depthS, 0, 0, dA, { size: 46, color: '#fff', border: 'rgba(160,220,255,.6)' });
   else if (dA > 0) {   // running ticker in a box of the final chip's size (no width jitter)
-    const bw = measure(ctx, '수심 약 30m', 46, FONT.sub, 800) + 40;
+    const bw = measure(ctx, depthS, 46, FONT.sub, 800) + 40;
     ctx.save(); ctx.globalAlpha *= dA; ctx.fillStyle = 'rgba(4,10,14,.84)'; roundRect(ctx, -bw / 2, -35, bw, 70, 10); ctx.fill(); ctx.strokeStyle = 'rgba(160,220,255,.3)'; ctx.lineWidth = 2.5; ctx.stroke(); ctx.restore();
     text(ctx, '수심 ' + Math.round(depthM) + 'm', 0, 2, { size: 46, weight: 800, color: '#e8f4ff', alpha: dA });
   }

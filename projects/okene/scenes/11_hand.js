@@ -20,7 +20,12 @@ function surfY(x, t) { return WTOP + Math.sin(x * .021 + t * 1.3) * 4 + Math.sin
 // ---- the cabin: PK.room's shell and fixtures, the door as an opening, light through the submerged doorway ----
 function cabin(ctx, t, o) {
   const { x, y, w, h, wall } = RM, HG = PK.HG;
-  const { warm = .6, lx = 800, ly = 740, beamI = 0, sweep = 0, under = 0 } = o;
+  const { warm = .6, lx = 800, ly = 740, beamI = 0, lp = 0, under = 0 } = o;
+  // lamp in the flooded passage beyond the doorway: lp = position in door widths from the door's centre (+-.5 = the jambs;
+  // beyond that it is behind the wall). vis: how much of it the opening lets through; aim: where its cone points (-1 left .. 1 right)
+  const DW = DR.x1 - DR.x0, DCX = (DR.x0 + DR.x1) / 2, alp = Math.abs(lp);
+  const vis = 1 - E.inOutQ(P(alp, .32, .78)), visR = 1 - E.inOutQ(P(alp, .45, .95)), aim = clamp(lp * 2.2, -1, 1);
+  const hotX = DCX + lp * DW, inX = clamp(hotX, DR.x0 + 14, DR.x1 - 14);
   ctx.save();
   const gs = ctx.createLinearGradient(0, y - wall, 0, y + h + wall); gs.addColorStop(0, '#4a565e'); gs.addColorStop(.5, '#1b2328'); gs.addColorStop(1, '#3a454c');
   ctx.fillStyle = gs; ctx.fillRect(x - wall, y - wall, w + wall * 2, h + wall * 2);
@@ -28,7 +33,7 @@ function cabin(ctx, t, o) {
   ctx.fillStyle = '#030607'; ctx.fillRect(x, y, w, h);
   // his warm light on the steel + the cold light from the doorway
   if (warm > 0) { const g = ctx.createRadialGradient(lx, ly, 0, lx, ly, w * .7); g.addColorStop(0, rgba('#ffb36b', .22 * warm)); g.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = g; ctx.fillRect(x, y, w, h); }
-  if (beamI > 0) { const cxx = (DR.x0 + DR.x1) / 2, g = ctx.createRadialGradient(cxx, WTOP + 80, 0, cxx, WTOP + 80, w * .75); g.addColorStop(0, rgba('#9fd8ff', .16 * beamI)); g.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = g; ctx.fillRect(x, y, w, h); }
+  if (beamI > 0 && visR > 0) { const g = ctx.createRadialGradient(inX, WTOP + 80, 0, inX, WTOP + 80, w * .75); g.addColorStop(0, rgba('#9fd8ff', .16 * beamI * visR)); g.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = g; ctx.fillRect(x, y, w, h); }
   // seams
   ctx.fillStyle = 'rgba(160,190,205,.12)'; for (let i = 1; i < 6; i++) ctx.fillRect(x + w * i / 6, y, 2, h);
   // wall panels pulled off (right): exposed frames and the dark gap behind them
@@ -43,7 +48,7 @@ function cabin(ctx, t, o) {
     ctx.strokeStyle = rgba('#9fb3bd', .2 + .25 * warm); ctx.lineWidth = 2.5; ctx.strokeRect(bx, by + 46, bw, 26); ctx.beginPath(); ctx.moveTo(bx + 8, by + 72); ctx.lineTo(bx + 8, by + 140); ctx.moveTo(bx + bw - 8, by + 72); ctx.lineTo(bx + bw - 8, by + 140); ctx.stroke(); }
   // door: the frame, and the opening behind it (dark above the water; lit from the passage when the lamp is there)
   ctx.fillStyle = '#010203'; ctx.fillRect(DR.x0, DR.y0, DR.x1 - DR.x0, DR.y1 - DR.y0);
-  ctx.strokeStyle = rgba('#9fb3bd', .3 + .25 * warm + .3 * beamI); ctx.lineWidth = 4; ctx.strokeRect(DR.x0, DR.y0, DR.x1 - DR.x0, DR.y1 - DR.y0);
+  ctx.strokeStyle = rgba('#9fb3bd', .3 + .25 * warm + .3 * beamI * visR); ctx.lineWidth = 4; ctx.strokeRect(DR.x0, DR.y0, DR.x1 - DR.x0, DR.y1 - DR.y0);
   // the coaming (old sill) now at the top of the door
   ctx.fillStyle = '#28323a'; ctx.fillRect(DR.x0 - 14, DR.y0 - 12, DR.x1 - DR.x0 + 28, 16);
   // door leaf swung open against the wall (left), handle near its top
@@ -59,43 +64,54 @@ function cabin(ctx, t, o) {
   ctx.lineTo(x + w, y + h); ctx.closePath();
   const gw = ctx.createLinearGradient(0, WTOP, 0, y + h); gw.addColorStop(0, '#0f2c35'); gw.addColorStop(.25, '#06161b'); gw.addColorStop(1, '#010304');
   ctx.save(); ctx.globalAlpha = .93; ctx.fillStyle = gw; ctx.fill(); ctx.restore();
-  // the submerged part of the doorway, lit from the passage (the lamp's hot spot slides with the sweep)
-  if (beamI > 0) {
-    const cxx = lerp(DR.x0, DR.x1, .5 + .4 * sweep), cyy = (WTOP + DR.y1) / 2 + 20;
+  // the submerged part of the doorway, lit from the passage: the lamp's hot spot slides across the opening and disappears
+  // behind a jamb when the diver moves on (the glow spills round the jamb it is behind)
+  if (beamI > 0 && visR > 0) {
+    const cyy = (WTOP + DR.y1) / 2 + 20, sx = clamp(hotX, DR.x0 - 40, DR.x1 + 40);
     ctx.save(); ctx.globalCompositeOperation = 'lighter';
     ctx.save(); ctx.beginPath(); ctx.rect(DR.x0, WTOP + 3, DR.x1 - DR.x0, DR.y1 - WTOP - 3); ctx.clip();
-    const g = ctx.createRadialGradient(cxx, cyy, 0, cxx, cyy, 230); g.addColorStop(0, rgba('#f2fbff', .75 * beamI)); g.addColorStop(.3, rgba('#a8dcff', .36 * beamI)); g.addColorStop(.75, rgba('#2a6a86', .1 * beamI)); g.addColorStop(1, rgba('#1a4a5e', .04 * beamI));
+    const g = ctx.createRadialGradient(sx, cyy, 0, sx, cyy, 230); g.addColorStop(0, rgba('#f2fbff', .75 * beamI * vis)); g.addColorStop(.3, rgba('#a8dcff', .36 * beamI * vis)); g.addColorStop(.75, rgba('#2a6a86', .1 * beamI * visR)); g.addColorStop(1, rgba('#1a4a5e', .04 * beamI * visR));
     ctx.fillStyle = g; ctx.fillRect(DR.x0, WTOP, DR.x1 - DR.x0, DR.y1 - WTOP); ctx.restore();
-    PK.HG.light(ctx, q => { glow(q, cxx, cyy, 300, '#8fd0f0', .22 * beamI); glow(q, cxx, cyy, 110, '#eaf8ff', .3 * beamI); glow(q, cxx, cyy + 40, 260, '#9fd8ff', .22 * beamI); });
-    ctx.fillStyle = rgba('#dff3ff', .35 * beamI); ctx.fillRect(DR.x0 - 2, WTOP + 4, 3, DR.y1 - WTOP - 4); ctx.fillRect(DR.x1 - 1, WTOP + 4, 3, DR.y1 - WTOP - 4);
+    PK.HG.light(ctx, q => { glow(q, inX, cyy, 300, '#8fd0f0', .22 * beamI * visR); glow(q, inX, cyy, 110, '#eaf8ff', .3 * beamI * vis); glow(q, inX, cyy + 40, 260, '#9fd8ff', .22 * beamI * visR); });
+    // the jambs catch the light on the side the lamp is on
+    ctx.fillStyle = rgba('#dff3ff', .35 * beamI * visR * clamp(.6 - lp * 1.2)); ctx.fillRect(DR.x0 - 2, WTOP + 4, 3, DR.y1 - WTOP - 4);
+    ctx.fillStyle = rgba('#dff3ff', .35 * beamI * visR * clamp(.6 + lp * 1.2)); ctx.fillRect(DR.x1 - 1, WTOP + 4, 3, DR.y1 - WTOP - 4);
     ctx.restore();
   }
   // light through the doorway into the water: a fan of cold rays that sweeps with the lamp, plus silt in it
-  if (beamI > 0) {
+  if (beamI > 0 && visR > 0) {
     ctx.save(); ctx.beginPath(); ctx.moveTo(x, y + h); for (let xx = x; xx <= x + w + 8; xx += 8) ctx.lineTo(xx, surfY(xx, t) + 2); ctx.lineTo(x + w, y + h); ctx.closePath(); ctx.clip();
     ctx.globalCompositeOperation = 'lighter';
-    const ox = lerp(DR.x0, DR.x1, .5 + .3 * sweep), oy = (WTOP + DR.y1) / 2 + 30, base = Math.PI / 2 - sweep * .75;
+    const ox = inX, oy = (WTOP + DR.y1) / 2 + 30, base = Math.PI / 2 - aim * .9;
     for (let i = 0; i < 11; i++) {
-      const k = (i / 10 - .5) * 2.1, a = base + k, wd = .05 + .05 * HG.hi(i * 5 + 3), L2 = 520 + 260 * HG.hi(i * 7), al = beamI * .06 * (.45 + .55 * (.5 + .5 * HG.nz(t * .6 + i * 2.3, 120 + i))) * (1 - Math.abs(k) * .3);
+      const k = (i / 10 - .5) * 2.1, a = base + k, wd = .05 + .05 * HG.hi(i * 5 + 3), L2 = 520 + 260 * HG.hi(i * 7), al = beamI * visR * .06 * (.45 + .55 * (.5 + .5 * HG.nz(t * .6 + i * 2.3, 120 + i))) * (1 - Math.abs(k) * .3);
       const g = ctx.createLinearGradient(ox, oy, ox + Math.cos(a) * L2, oy + Math.sin(a) * L2); g.addColorStop(0, rgba('#dff3ff', al)); g.addColorStop(1, 'rgba(223,243,255,0)');
       ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(ox, oy); ctx.lineTo(ox + Math.cos(a - wd) * L2, oy + Math.sin(a - wd) * L2); ctx.lineTo(ox + Math.cos(a + wd) * L2, oy + Math.sin(a + wd) * L2); ctx.closePath(); ctx.fill();
     }
     for (let i = 0; i < 70; i++) {
       const sx = x + ((HG.hi(i * 3 + 9) * w + t * 9 * (HG.hi(i) - .5) + HG.fb(t * .2 + i, 4) * 30) % w + w) % w, sy = WTOP + 10 + ((HG.hi(i * 5 + 2) * (h * LEVEL - 20) - t * 5 + HG.fb(t * .15 + i, 5) * 20) % (h * LEVEL - 20) + (h * LEVEL - 20)) % (h * LEVEL - 20);
       const dx = sx - ox, dy = sy - oy, dd = Math.hypot(dx, dy) + 1; let da = Math.atan2(dy, dx) - base; da = Math.atan2(Math.sin(da), Math.cos(da));
-      const I = beamI * Math.exp(-da * da / .9) / (1 + dd * dd / 160000); if (I < .03) continue;
+      const I = beamI * visR * Math.exp(-da * da / .9) / (1 + dd * dd / 160000); if (I < .03) continue;
       ctx.fillStyle = rgba('#e6f6ff', clamp(I * .9)); ctx.fillRect(sx, sy, 2.2, 2.2);
     }
     ctx.restore();
   }
   // surface line, cold sheen + his warm reflection
-  ctx.strokeStyle = rgba('#9fd8ea', .45 + .3 * beamI); ctx.lineWidth = 2; ctx.beginPath();
+  ctx.strokeStyle = rgba('#9fd8ea', .45 + .3 * beamI * visR); ctx.lineWidth = 2; ctx.beginPath();
   for (let xx = x; xx <= x + w + 8; xx += 8) { const yy = surfY(xx, t); xx === x ? ctx.moveTo(xx, yy) : ctx.lineTo(xx, yy); }
   ctx.stroke();
-  if (beamI > 0) {   // caustic shimmer under the surface
+  if (beamI > 0 && visR > 0) {   // caustic shimmer under the surface + the cone's light thrown up through the surface: a cold
+    // rippling patch that sweeps along the back wall and the ceiling tiles with the lamp (over his light while the lamp is right)
+    const pX = DCX + 400 * aim, pA = beamI * visR;
     ctx.save(); ctx.globalCompositeOperation = 'lighter';
-    for (let i = 0; i < 26; i++) { const cx2 = x + 20 + PK.HG.hi(i * 7 + 1) * (w - 40) + PK.HG.nz(t * .8 + i, 130) * 20, cy2 = surfY(cx2, t) + 6 + PK.HG.hi(i * 3) * 40, al = beamI * .16 * (.5 + .5 * Math.sin(t * 3.3 + i * 1.9)) * Math.exp(-Math.abs(cx2 - (DR.x0 + DR.x1) / 2) / 260);
+    for (let i = 0; i < 26; i++) { const cx2 = x + 20 + PK.HG.hi(i * 7 + 1) * (w - 40) + PK.HG.nz(t * .8 + i, 130) * 20, cy2 = surfY(cx2, t) + 6 + PK.HG.hi(i * 3) * 40, al = pA * .16 * (.5 + .5 * Math.sin(t * 3.3 + i * 1.9)) * Math.exp(-Math.abs(cx2 - lerp(inX, pX, .5)) / 260);
       ctx.fillStyle = rgba('#d8f2ff', Math.max(0, al)); ctx.fillRect(cx2, cy2, 18 + 30 * PK.HG.hi(i * 5), 2); }
+    ctx.save(); ctx.beginPath(); ctx.rect(x, y, w, WTOP - y - 4); ctx.clip();
+    const pg = ctx.createRadialGradient(pX, WTOP - 120, 0, pX, WTOP - 120, 260); pg.addColorStop(0, rgba('#bfe6ff', .16 * pA)); pg.addColorStop(.5, rgba('#8fd0f0', .06 * pA)); pg.addColorStop(1, 'rgba(143,208,240,0)');
+    ctx.fillStyle = pg; ctx.fillRect(pX - 260, y, 520, WTOP - y);
+    for (let i = 0; i < 9; i++) { const yy = y + 22 + i * (WTOP - y - 50) / 8, xx = pX + PK.HG.nz(t * .9 + i * 1.7, 160 + i) * 120, ww = 60 + 70 * PK.HG.hi(i * 11 + 4), al = pA * .2 * (.4 + .6 * (.5 + .5 * Math.sin(t * 2.6 + i * 2.1))) * Math.exp(-Math.pow((xx - pX) / 200, 2));
+      ctx.fillStyle = rgba('#dff3ff', al); ctx.fillRect(xx - ww / 2, yy, ww, 2); }
+    ctx.restore();
     ctx.restore();
   }
   if (warm > 0 && under < 1) { const g = ctx.createLinearGradient(lx - 170, 0, lx + 170, 0); g.addColorStop(0, 'rgba(255,179,107,0)'); g.addColorStop(.5, rgba('#ffb36b', .35 * warm * (1 - under))); g.addColorStop(1, 'rgba(255,179,107,0)'); ctx.fillStyle = g; ctx.fillRect(lx - 170, WTOP - 3, 340, 6); }
@@ -114,13 +130,17 @@ window.PK.scenes.hand = function (ctx, t, d, info) {
 
   if (t < tCut) {
     // ================= the cabin =================
-    // lamp in the passage: far glimmer -> passes -> gone -> back and stays
-    let L2 = lerp(-1.7, -.3, P(t, tBul - .5, tGn, E.inOutQ)); L2 = lerp(L2, 1.9, P(t, tGn, tDs - .1, E.inQ));
-    if (t > tDs) L2 = lerp(1.7, .05, P(t, tDs, tDa + .55, E.outC));
-    const I1 = P(t, .05, tBul + .2, E.inOutQ) * .35 + P(t, tBul, tGn - .15, E.inOutQ) * .75, I1off = 1 - P(t, tJi - .1, tJi + .36, E.inQ);
-    const I2 = P(t, tDs, tDs + .2) * .3 + P(t, tDa - .05, tDa + .5, E.outQ) * .85;
-    const beamI = (t < tDs ? I1 * I1off : I2) * (.92 + .08 * nz(t * 9, 140)) + .12 * P(t, tDe, tCut, E.inQ);
-    const sweep = clamp(L2 / 1.6, -1, 1);
+    // lamp in the passage (lp: door widths from the door's centre, +-.5 = the jambs): a glimmer behind the right jamb ->
+    // '불빛이' it comes into the opening from the right, its cone over his corner -> '그냥' drifts on -> '지나쳤다가' slides
+    // left and is gone behind the left jamb -> '다시' its glow spills round the left jamb -> '다가오자' it comes back in from
+    // the left and stops in the middle of the opening
+    let lp = lerp(.86, .3, P(t, tBul - .35, tGn, E.outQ));
+    lp = lerp(lp, .12, P(t, tGn, tJi, E.inOutQ));
+    lp = lerp(lp, -1.05, P(t, tJi - .05, tJi + .42, E.inQ));
+    if (t > tDs - .05) lp = lerp(-1.05, 0, P(t, tDs - .05, tDa + .55, E.outC));
+    const I1 = P(t, .05, tBul + .2, E.inOutQ) * .35 + P(t, tBul, tGn - .15, E.inOutQ) * .75, I1off = 1 - .35 * P(t, tJi + .1, tJi + .45, E.inQ);
+    const I2 = .7 + P(t, tDa - .05, tDa + .5, E.outQ) * .4;
+    const beamI = (t < tDs - .05 ? I1 * I1off : lerp(I1 * I1off, I2, P(t, tDs - .05, tDs + .2))) * (.92 + .08 * nz(t * 9, 140)) + .12 * P(t, tDe, tCut, E.inQ);
     // his light: on the mattresses -> to the edge -> under -> toward the doorway
     const m1 = P(t, tGe - .05, tMu + .05, E.inOutQ), m2 = P(t, tMu - .02, tMu + .45, E.inOutQ), m3 = P(t, tDe - .1, tCut, E.inOutQ);
     let lx = lerp(812, 690, m1), ly = lerp(WTOP - 22, WTOP - 8, m1);
@@ -129,10 +149,11 @@ window.PK.scenes.hand = function (ctx, t, d, info) {
     const under = m2;
     const bpm = lerp(78, 112, P(t, tJi, tDs, E.inOutQ)) + 12 * P(t, tDa, tMu);
     const bt = beat(t, bpm);
-    // camera: slow drift + push, follow him a little, then push into the lit doorway
-    const push = P(t, tDe - .05, tCut, E.inQ);
-    const cx = lerp(lerp(590, 640, P(t, 0, tGe, E.inOutQ)), 610, m1) * (1 - push) + 548 * push, cy = lerp(790, 812, m2) * (1 - push) + ((WTOP + DR.y1) / 2 + 40) * push;
-    const z = lerp(1.26, 1.36, P(t, -.3, tGe, E.inOutQ)) * lerp(1, 2.5, push * push);
+    // camera: slow drift + push, follow him a little, then push into the lit doorway. While the lamp passes him by
+    // ('지나쳤다가' .. '다시') it closes in on the doorway and his light (the tightest, darkest moment), then lets go.
+    const push = P(t, tDe - .05, tCut, E.inQ), miss = P(t, tJi - .1, tJi + .5, E.inOutQ) * (1 - P(t, tDa - .1, tDa + .4, E.inOutQ));
+    const cx = lerp(lerp(lerp(590, 640, P(t, 0, tGe, E.inOutQ)), 610, m1), 676, miss) * (1 - push) + 548 * push, cy = lerp(lerp(790, 812, m2), 800, miss) * (1 - push) + ((WTOP + DR.y1) / 2 + 40) * push;
+    const z = lerp(1.26, 1.36, P(t, -.3, tGe, E.inOutQ)) * lerp(1, 1.2, miss) * lerp(1, 2.5, push * push);
     const dr = { x: fb(t * .35, 141) * 12, y: fb(t * .3, 142) * 12, r: fb(t * .25, 143) * .005 };
     const shk = .1 * P(t, tMu - .05, tMu + .1) * (1 - P(t, tMu + .2, tMu + .7));
     const [sx, sy, sr] = HG.shake(t, shk, 7);
@@ -140,7 +161,7 @@ window.PK.scenes.hand = function (ctx, t, d, info) {
     ctx.save();
     ctx.translate(540 + sx + dr.x, 860 + sy + dr.y); ctx.rotate(dr.r + sr); ctx.scale(z, z); ctx.translate(-cx, -cy);
     const warm = (.5 + .25 * bt) * (1 - .3 * under);
-    cabin(ctx, t, { warm, lx, ly, beamI, sweep, under });
+    cabin(ctx, t, { warm, lx, ly, beamI, lp, under });
     // him: warm light (murky and cooler under water), rings where he goes in, bubbles rising from him
     if (under > 0) {
       const ex = lerp(690, 640, .3), u2 = t - tMu;
@@ -150,7 +171,7 @@ window.PK.scenes.hand = function (ctx, t, d, info) {
     HG.light(ctx, q => { glow(q, lx, ly, 420, '#ff9a3c', (.13 + .1 * bt) * (1 - .2 * under) + .05 * under); glow(q, lx, ly, 130, '#ffb347', (.22 + .14 * bt) * (1 - .3 * under)); });
     souls(ctx, t, [{ x: lx, y: ly, a: 1 - .15 * under, s: 2.1 - .35 * under }], { bpm });
     ctx.restore();
-    HG.iris(ctx, lerp(.32, .5, P(t, tJi, tDs, E.inOutQ)) - .1 * P(t, tDa, tDa + .5) + .1 * under, .5 * bt, 560, 860);
+    HG.iris(ctx, lerp(.32, .5, P(t, tJi, tDs, E.inOutQ)) + .12 * miss - .1 * P(t, tDa, tDa + .5) + .1 * under, .5 * bt, 560, 860);
     HG.subBand(ctx);
     chip(ctx, D.date || '', 540, 492, chipA, { size: 34 });
     // white-out into the close-up (centred on the cut)

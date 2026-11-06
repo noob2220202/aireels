@@ -1,7 +1,8 @@
 // swept (≈23.37-29.22): "요리사 해리슨 오케네는 캄캄한 통로에서 물살에 휩쓸려 작은 화장실로 밀려갔습니다."
-// Picks up capsize's last image: the tug upside down on the seabed, drawn here as a dark line-art cutaway (keel on top).
+// Picks up capsize's last image: the tug upside down on the seabed in the deep water, in capsize's darkened hull tones (red
+// bottom on top, dark steel, line art only as a faint rim) with its silt still hanging; the frame drifts up to centre it.
 // '요리사': one warm light comes on inside the hull (him; never a figure), tagged '요리사 · 당시 29세'. '해리슨 오케네는':
-// it breathes; the camera dives through the hull wall toward it. '캄캄한': pitch black, only his glow. '통로에서': the
+// it breathes; the camera is already diving through the hull wall toward it. '캄캄한': pitch black, only his glow. '통로에서': the
 // inverted passage is revealed as line art (old floor on top with the skirting, dead ceiling lamps and pipes at the bottom,
 // door louvres and handles high) and he leaves a door marked '화장실'. '물살에': a surge front comes down the passage
 // (chevrons, streaks, foam). '휩쓸려': it takes him; the camera lurches after him with a dutch sway. '작은 화장실로': the
@@ -160,11 +161,35 @@ function hullOverview(ctx, T, zoom, a) {
   const sg = ctx.createLinearGradient(0, SEABED - 60, 0, SEABED + 1800); sg.addColorStop(0, 'rgba(29,26,20,0)'); sg.addColorStop(.04, '#15120d'); sg.addColorStop(1, '#030302');
   ctx.fillStyle = sg; ctx.fillRect(-14000, SEABED - 60, 22000, 2000);
   ctx.strokeStyle = rgba('#8a7a5c', .3); ctx.lineWidth = 2 * hl; ctx.beginPath(); ctx.moveTo(-14000, SEABED); for (let x = -14000; x <= 8000; x += 400) ctx.lineTo(x, SEABED + Math.sin(x * .0011) * 40 + nz(x * .002, 3) * 50); ctx.stroke();
-  ctx.fillStyle = '#05080a'; ctx.fill(HP.all);
-  ctx.save(); ctx.clip(HP.all); ctx.strokeStyle = rgba('#7f9fad', .2); ctx.lineWidth = 1.4 * hl; ctx.stroke(HP.decks);
-  const [cx0, cy0] = hw(120, 95), [cx1, cy1] = hw(285, 125); ctx.fillStyle = rgba('#7f9fad', .05); ctx.fillRect(cx0, cy0, cx1 - cx0, cy1 - cy0);
+  // the hull as capsize leaves it, darkened: red-brown bottom (now on top), black boot-top, dark steel sides, deckhouse below
+  const yK = hw(0, 0)[1], yB = hw(0, 62)[1], yD = hw(0, 154)[1];
+  const g = ctx.createLinearGradient(0, yK, 0, yD); g.addColorStop(0, '#2c100c'); g.addColorStop((yB - yK) / (yD - yK) - .02, '#1c0a08'); g.addColorStop((yB - yK) / (yD - yK), '#08090a');
+  g.addColorStop((yB - yK) / (yD - yK) + .05, '#0e1215'); g.addColorStop(1, '#151b1f');
+  ctx.fillStyle = g; ctx.fill(HP.body);
+  const gh = ctx.createLinearGradient(0, yD, 0, SEABED); gh.addColorStop(0, '#12171a'); gh.addColorStop(1, '#0a0d0f'); ctx.fillStyle = gh; ctx.fill(HP.house);
+  ctx.save(); ctx.clip(HP.all); ctx.strokeStyle = rgba('#7f9fad', .09); ctx.lineWidth = 1.4 * hl; ctx.stroke(HP.decks);
+  // cold light from above catching the upturned bottom
+  const gt = ctx.createLinearGradient(0, yK, 0, yK + 900); gt.addColorStop(0, rgba('#5f9fb3', .16)); gt.addColorStop(1, 'rgba(95,159,179,0)'); ctx.fillStyle = gt; ctx.fillRect(hw(-400, 0)[0], yK, 16000, 900);
   ctx.restore();
-  ctx.strokeStyle = rgba('#a9c9d6', .45); ctx.lineWidth = 2 * hl; ctx.stroke(HP.body); ctx.stroke(HP.house);
+  ctx.strokeStyle = rgba('#a9c9d6', .3); ctx.lineWidth = 2 * hl; ctx.stroke(HP.body); ctx.stroke(HP.house);
+  ctx.restore();
+}
+// silt still hanging round the hull from the impact (continues capsize's cloud), settling and thinning out
+let SILTB = null;
+function siltBlob() {
+  if (SILTB) return SILTB; const c = document.createElement('canvas'); c.width = c.height = 128; const x = c.getContext('2d');
+  const g = x.createRadialGradient(64, 64, 0, 64, 64, 64); g.addColorStop(0, 'rgba(74,84,79,1)'); g.addColorStop(.5, 'rgba(74,84,79,.45)'); g.addColorStop(1, 'rgba(74,84,79,0)');
+  x.fillStyle = g; x.fillRect(0, 0, 128, 128); SILTB = c; return c;
+}
+function silt(ctx, t, a) {
+  if (a <= 0) return; const b = siltBlob();
+  ctx.save();
+  for (let i = 0; i < 9; i++) {
+    const x0 = hw(-380 + 780 * hi(i * 7 + 1), 0)[0], side = hi(i * 3 + 2) > .5 ? 1 : -1, age = 1.3 + t;
+    const x = x0 + side * (600 + 2400 * hi(i * 11)) * (1 - Math.exp(-age * .5)), y = SEABED - (400 + 2600 * Math.pow(hi(i * 13), 2)) * (1 - Math.exp(-age * .7)) + 60 * age;
+    const r = (1500 + 1700 * hi(i * 17)) * (1 + .12 * age);
+    ctx.globalAlpha = a * (.28 + .16 * hi(i * 5)); ctx.drawImage(b, x - r, y - r * .6, r * 2, r * 1.2);
+  }
   ctx.restore();
 }
 
@@ -173,7 +198,7 @@ window.PK.scenes.swept = function (ctx, t, d, info) {
   const tCook = at(info, '요리사', .02), tHar = at(info, '해리슨', .12), tOk = at(info, '오케네는', .19), tDark = at(info, '캄캄한', .29), tPass = at(info, '통로에서', .37),
     tCur = at(info, '물살에', .48), tSwp = at(info, '휩쓸려', .58), tSmall = at(info, '작은', .66), tWc = at(info, '화장실로', .71), tPush = at(info, '밀려갔습니다', .8);
   const tS = tCur - .3;                                     // surge front starts up the passage
-  const tZ0 = tOk - .2, tZ1 = tDark + .35;                   // dive into the hull
+  const tZ0 = tOk - .5, tZ1 = tDark + .35;                   // dive into the hull (already under way on '해리슨')
   const tIn = tWc + .28, tLand = tPush + .06;               // into the doorway / landing in the room
 
   // ---------------- his light (world) ----------------
@@ -194,12 +219,15 @@ window.PK.scenes.swept = function (ctx, t, d, info) {
   zoom *= lerp(1, .9, P(t, tSwp - .3, tSwp + .3, E.inOutQ)) * lerp(1, 1.06, P(t, tSmall - .2, tWc + .2, E.inOutQ));
   const pushIn = P(t, tIn, tLand, E.inC); zoom *= Math.exp(Math.log(6) * pushIn);
   // light's target screen offset from the centre: overview position -> slightly below centre -> leading ahead in the rush
-  const offA = { x: (L0.x - C0.x) * zA, y: (L0.y - C0.y) * zA };
+  // overview camera: capsize's framing, drifting a little toward him and up ~80 px (the hull nearer the band's centre)
+  const camO = tt => { const k = P(tt, -.2, tZ0) * .15, up = 80 / (Z0 * lerp(1, 1.1, P(tt, -.2, tZ0, E.inOutQ))) * E.inOutQ(P(tt, -.1, tZ0)); return { x: lerp(C0.x, L0.x, k), y: lerp(C0.y, L0.y, k) + up }; };
+  const cO = camO(Math.min(t, tZ0)), cZ = camO(tZ0);
+  const offA = { x: (L0.x - cZ.x) * zA, y: (L0.y - cZ.y) * zA };
   const rushK = P(t, tSwp - .25, tSwp + .25) * (1 - P(t, tWc - .2, tIn));
   let off = { x: lerp(offA.x, 0, pz) - 170 * rushK, y: lerp(offA.y, (ly - 850) * zoom, pz) };
   off = { x: lerp(off.x, 0, P(t, tWc - .3, tIn)), y: lerp(off.y, 0, P(t, tWc - .3, tIn)) };
   let cx = lx - off.x / zoom, cy = ly - off.y / zoom;
-  if (t < tZ0) { const k = P(t, -.2, tZ0) * .15; cx = lerp(C0.x, lx, k); cy = lerp(C0.y, ly, k); }
+  if (t < tZ0) { cx = cO.x; cy = cO.y; }
   const door2 = DOORS[3]; const ex = door2.x, ey = 872;
   cx = lerp(cx, ex, P(t, tIn - .1, tIn + .15, E.inOutQ)); cy = lerp(cy, ey, P(t, tIn - .1, tIn + .15, E.inOutQ));
   const dr = OK.drift(T, 1 - .6 * rushK);
@@ -229,8 +257,14 @@ window.PK.scenes.swept = function (ctx, t, d, info) {
   };
   // ---------------- draw: hull / passage ----------------
   const roomK = P(t, tLand - .03, tLand + .1);
-  OK.darkFast(ctx, T, { k: .55, seed: 7 });
-  if (roomK < 1) {
+  // background: the oily black of the passage; while the hull is seen from outside, the sea at 30 m (capsize's deep water)
+  // painted into the same quarter-res pass
+  const ovA0 = 1 - clamp((zoom - .5) / .4);
+  if (roomK <= 0) OK.darkFast(ctx, T, { k: .55 * (1 - .7 * ovA0), seed: 7, under: ovA0 > 0 ? x => {
+    const ya = OK.toS(M, 0, SEABED - 9000)[1], yb = OK.toS(M, 0, SEABED)[1], gw = x.createLinearGradient(0, ya, 0, yb);
+    gw.addColorStop(0, '#061a20'); gw.addColorStop(.6, '#03090c'); gw.addColorStop(1, '#010304'); x.globalAlpha = ovA0; x.fillStyle = gw; x.fillRect(0, 0, W, Math.min(H, yb + 4));
+  } : null });
+  if (roomK <= 0) {
     const base = ctx.getTransform();
     ctx.save(); OK.applyCam(ctx, M);
     const detail = clamp((zoom - .16) / .35);                         // passage detail fades in during the dive
@@ -240,6 +274,7 @@ window.PK.scenes.swept = function (ctx, t, d, info) {
     const lit = (x, y) => Math.exp(-((x - lx) * (x - lx) + (y - ly) * (y - ly)) / (2 * 560 * 560));
     const la = (x, y) => detail * (.24 * clamp((revR - Math.abs(x - lx)) / 300) + .9 * lit(x, y) * lightOn);
     hullOverview(ctx, T, zoom, ovA);
+  silt(ctx, t, ovA * (1 - P(t, 0, 2.2)) * clamp(1 - (zoom - .1) / .15));   // gone before the dive gets close (big sprites)
     if (detail > 0) {
       ctx.save(); ctx.globalAlpha = detail;
       const o = { X0, X1, lx, ly, light: lightOn * (.9 + .1 * PK.beat(T, 84)), la, zoom, tS, doorOpen: 1 };
@@ -269,7 +304,7 @@ window.PK.scenes.swept = function (ctx, t, d, info) {
   const [sx, sy] = OK.toS(M, lx, ly);
   // foreground frames (ribs at the cut plane, closer than the passage): parallax + speed during the rush
   const ribA = clamp((zoom - .55) / .3) * (1 - pushIn) * (1 - roomK);
-  if (ribA > 0) {
+  if (ribA > 0 && roomK <= 0) {
     const par = 1.55, sp = 820;
     ctx.save(); ctx.translate(540 + shx, 850 + shy); ctx.rotate(rot); ctx.globalAlpha = ribA;
     for (let k = Math.floor((cx - 1400) / sp); k <= Math.ceil((cx + 1400) / sp); k++) {
@@ -282,7 +317,8 @@ window.PK.scenes.swept = function (ctx, t, d, info) {
   }
 
   // ---------------- landing: the small inverted toilet (pocket's opening frame) ----------------
-  if (roomK > 0) { ctx.save(); ctx.globalAlpha = roomK; drawRoomView(1); ctx.restore(); }
+  // (the door window already fills the frame here: the overlay replaces the passage outright, so nothing is drawn twice)
+  if (roomK > 0) drawRoomView(1);
   // tunnel vision + darkness
   const rest0 = OK.restLight(T, OK.LV0), rsx = 540 + (rest0.x - 540), rsy = 850 + (rest0.y - 850);
   OK.iris(ctx, lerp(.3, .12, roomK) + .2 * P(t, tDark - .2, tDark + .3) * (1 - P(t, tPass, tCur)), .5 + .5 * Math.sin(T * 2.4), lerp(sx, lerp(540, rsx, .5), roomK), lerp(sy, lerp(850, rsy, .5), roomK));

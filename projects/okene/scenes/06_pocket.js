@@ -1,10 +1,13 @@
 // pocket (≈29.22-35.09): "물 위로 1미터 남짓 공기가 남아 있었고, 그는 뒤집힌 세면대를 붙잡고 버텼습니다."
-// Big cross-section of the small upside-down toilet (the old floor is the ceiling: floor tiles and skirting at the top,
+// Cross-section of the small upside-down toilet (the old floor is the ceiling: floor tiles and skirting at the top,
 // the WC and the washbasin hang upside down, the door handle and louvre sit near the top, the dome lamp is under water).
+// The camera starts on swept's landing frame and pushes in at once to frame the air gap, not the room; from '그는' it closes
+// in on the basin until the old floor sits just under the title and the subtitle band cuts the water (cold opens there).
 // '물 위로': a cold glint runs along the waterline; '1미터': a dimension bracket rises from the water to the ceiling;
-// '남짓': the approved air-gap chip; '공기가 남아': the air layer breathes. '그는': slow push-in to his light at the waterline;
-// '뒤집힌': a ghost basin flips upside down into place; '세면대를': the basin is traced and tagged; '붙잡고': a neutral
-// backlit hand rises out of the glow and hooks over the basin rim; '버텼습니다': heartbeat, ripples, tunnel vision.
+// '남짓': the approved air-gap chip; '공기가 남아': the air layer breathes. '뒤집힌': a ghost basin flips upside down into
+// place; '세면대를': the basin is traced and tagged; '붙잡고': his light (never a body: no hand here) rises out of the water,
+// drips running off, and presses against the end of the basin rim, which lights up warm where it holds on;
+// '버텼습니다': heartbeat, tremble on the light, ripples, tunnel vision.
 // This file also hosts the shared room kit (window.PK.okRoom) used by swept's last beat and by cold.
 (function () {
 'use strict';
@@ -20,8 +23,9 @@ const lvY = lv => RM.b - lv * RM.h;
 const SLAB = { x0: 845, x1: RM.r, y0: 718, y1: 732 }; // basin rim slab (its old top face now faces down at y1)
 const BOWL = { x0: 860, x1: 964, top: 672 };          // the bowl now sits above the slab
 const DOOR = { x0: 420, x1: 606, y0: RM.y + 16, y1: RM.y + 556 };
-const GRIP = { x: 878, y: SLAB.y0, s: 1.42 };             // hand hooked over the slab's top edge
-const CAM_END = { x: 790, y: 786, z: 1.45 };         // pocket's final framing == cold's first framing
+const GRIP = { x: 878, y: SLAB.y0, s: 1.42 };             // hand hooked over the slab's top edge (gripHand: kept in the kit, no longer used)
+const RIM = { x: 838, y: SLAB.y1 + 13 };                  // his light pressed up against the end of the basin rim (beside the bowl, not under it)
+const CAM_END = { x: 790, y: 760, z: 1.6 };          // pocket's final framing == cold's first framing (ceiling just under the title)
 
 const hi = n => { n = Math.floor(n) | 0; n = Math.imul(n ^ (n >>> 16), 0x45d9f3b); n = Math.imul(n ^ (n >>> 16), 0x45d9f3b); return ((n ^ (n >>> 16)) >>> 0) / 4294967296; };
 const nz = (x, s = 0) => { const i = Math.floor(x), f = x - i, u = f * f * (3 - 2 * f); return lerp(hi(i + s * 7919), hi(i + 1 + s * 7919), u) * 2 - 1; };
@@ -32,6 +36,27 @@ function surf(x, T, top, amp = 1) { return top + amp * (Math.sin(x * .021 + T * 
 function restLight(T, lv) {
   const top = lvY(lv), k = clamp((lv - LV0) / .11);
   return { x: lerp(832, 806, k) + Math.sin(T * .7) * 3, y: top - 14 + Math.sin(T * 1.25 + .6) * 3.2 };
+}
+// his light holding on at the basin rim: k 0 (resting at the waterline) .. 1 (pressed against the rim), tr = tremble
+// (absolute time, so pocket's last frame and cold's first frame match)
+function rimLight(T, k = 1, tr = 0) {
+  const r = restLight(T, LV0), ke = clamp(k);
+  return { x: lerp(r.x, RIM.x, ke) + tr * nz(T * 13, 5) * 1.6, y: lerp(r.y, RIM.y + Math.sin(T * 1.25 + .6) * 1.2, ke) + tr * nz(T * 13, 6) * 1.3 };
+}
+// the warm contact where his light presses against the rim slab's underside (world coords; a = strength 0..1)
+function rimContact(ctx, T, x, y, a, warm = 1) {
+  if (a <= 0) return;
+  const k = clamp(a) * clamp(1 - Math.abs(y - RIM.y) / 40), col = PK.lerp2('#cfe2ea', '#ffc47e', warm), x0 = Math.max(SLAB.x0, x - 80), x1 = Math.min(SLAB.x1, x + 90);
+  if (k <= 0 || x1 <= x0) return;
+  ctx.save(); ctx.globalCompositeOperation = 'lighter';
+  ctx.translate(x, SLAB.y1 + 2); ctx.scale(1, .22);
+  const g = ctx.createRadialGradient(0, 0, 0, 0, 0, 110); g.addColorStop(0, rgba(col, .5 * k)); g.addColorStop(1, rgba(col, 0));
+  ctx.fillStyle = g; ctx.fillRect(-110, -110, 220, 220); ctx.restore();
+  ctx.save(); ctx.globalCompositeOperation = 'lighter';
+  const gl = ctx.createLinearGradient(x0, 0, x1, 0); gl.addColorStop(0, rgba('#fff0d6', 0)); gl.addColorStop(clamp((x - x0) / (x1 - x0)), rgba('#fff0d6', .75 * k)); gl.addColorStop(1, rgba('#fff0d6', 0));
+  ctx.fillStyle = gl; ctx.fillRect(x0, SLAB.y1 - 1.5, x1 - x0, 3);
+  if (x < SLAB.x0 + 20) { const ge = ctx.createLinearGradient(0, SLAB.y0, 0, SLAB.y1); ge.addColorStop(0, rgba('#fff0d6', .15 * k)); ge.addColorStop(1, rgba('#fff0d6', .6 * k)); ctx.fillStyle = ge; ctx.fillRect(SLAB.x0 - 1.5, SLAB.y0 + 2, 3, SLAB.y1 - SLAB.y0 - 2); }
+  ctx.restore();
 }
 // handheld drift on absolute time (so neighbouring scenes line up across a fade)
 function drift(T, amt = 1) { return { x: fb(T * .32, 41) * 12 * amt, y: fb(T * .27, 52) * 10 * amt, r: fb(T * .22, 63) * .005 * amt }; }
@@ -53,9 +78,11 @@ function sheenTexLite() {
   }
   x.putImageData(id, 0, 0); PK._sheenLite = c; return c;
 }
-function darkFast(ctx, t, { k = 1, seed = 1, base = '#010203' } = {}) {
+// under(x): optional painter for the quarter-res base (screen coords scaled by .25), e.g. a water gradient, before the sheen
+function darkFast(ctx, t, { k = 1, seed = 1, base = '#010203', under = null } = {}) {
   const [b, x] = L.buf('okDarkFast', 270, 480);
   x.fillStyle = base; x.fillRect(0, 0, 270, 480); x.scale(.25, .25);
+  if (under) { x.save(); under(x); x.restore(); }
   if (k > 0) {
     const tex = sheenTexLite(); x.globalCompositeOperation = 'screen';
     for (let l = 0; l < 2; l++) {
@@ -438,7 +465,7 @@ function waterOver(ctx, T, top, x0, x1, a = .82) {
   ctx.strokeStyle = rgba('#a9e2f2', .5); ctx.lineWidth = 2; ctx.beginPath(); for (let x = x0; x <= x1 + 6; x += 6) { const y = surf(Math.min(x, x1), T, top); x === x0 ? ctx.moveTo(x, y) : ctx.lineTo(Math.min(x, x1), y); } ctx.stroke();
   ctx.restore();
 }
-window.PK.okRoom = { waterOver, blackBG, RM, LV0, lvY, SLAB, BOWL, DOOR, GRIP, CAM_END, surf, restLight, drift, camMatrix, applyCam, toS, darkFast, sheenTexLite, drawRoom, gripHand, bracket, chip2, quiet, iris, lifeLight, nz, fb, hi, litAt, basinPath: () => paths().basin, tapPath: () => paths().tap };
+window.PK.okRoom = { waterOver, blackBG, RM, LV0, lvY, SLAB, BOWL, DOOR, GRIP, RIM, CAM_END, surf, restLight, rimLight, rimContact, drift, camMatrix, applyCam, toS, darkFast, sheenTexLite, drawRoom, gripHand, bracket, chip2, quiet, iris, lifeLight, nz, fb, hi, litAt, basinPath: () => paths().basin, tapPath: () => paths().tap };
 
 // ======================================================================================================
 // the pocket scene
@@ -449,22 +476,26 @@ window.PK.scenes.pocket = function (ctx, t, d, info) {
   const tW = at(info, '물', .02), t1m = at(info, '1미터', .13), tNam = at(info, '남짓', .2), tAir = at(info, '공기가', .25), tLeft = at(info, '남아', .3),
     tHe = at(info, '그는', .48), tInv = at(info, '뒤집힌', .55), tBas = at(info, '세면대', .63), tGrab = at(info, '붙잡고', .72), tHold = at(info, '버텼', .8);
 
-  // ---- camera: barely moving while the air is measured, then a slow push to his light at the basin ----
-  const pA = P(t, -.2, tHe, E.inOutQ), pB = P(t, tHe - .25, d - .05, E.inOutQ);
-  const z = 1 + .06 * pA + (CAM_END.z - 1.06) * pB;
-  const cx = lerp(540, CAM_END.x, pB), cy = lerp(850, CAM_END.y, pB);
+  // ---- camera: starts on swept's landing frame (z 1) and pushes in at once, framing the air gap rather than the room;
+  //      from '그는' on it closes in on the basin: the old floor ends up just under the title, the water cut by the subtitle band ----
+  const pA = P(t, .05, tHe, E.inOutQ), pB = P(t, tHe - .25, d - .05, E.inOutQ);
+  const z = 1 + .32 * pA + (CAM_END.z - 1.32) * pB;
+  const cx = lerp(lerp(540, 700, pA), CAM_END.x, pB), cy = lerp(lerp(850, 700, pA), CAM_END.y, pB);
   const dr = drift(T, 1);
-  const grabK = P(t, tGrab + .12, tGrab + .2) * Math.exp(-Math.max(0, t - tGrab - .2) * 6);
+  const grabK = P(t, tGrab + .06, tGrab + .14) * Math.exp(-Math.max(0, t - tGrab - .14) * 6);
   const sh = 2.4 * grabK;
   const M = camMatrix(cx + dr.x, cy + dr.y, z, dr.r, sh * nz(T * 9, 3), sh * nz(T * 9, 4));
 
+  // ---- him: resting at the waterline -> on '붙잡고' his light rises out of the water and presses against the basin rim ----
+  // (no hand: the hold is told by his light against the rim, the warm contact on the slab, the drips and the tremble)
+  const reachK = t2 => E.inOutQ(P(t2, tGrab - .32, tGrab + .1));
+  const bt = PK.beat(T, 72), holdK = P(t, tHold - .1, tHold + .4);
+  const Lp = rimLight(T, reachK(t), .8 * holdK);
+  const contact = P(t, tGrab, tGrab + .12) * (.72 + .28 * bt) + .6 * P(t, tGrab + .06, tGrab + .1) * Math.exp(-Math.max(0, t - tGrab - .1) * 5);
+
   blackBG(ctx);
   ctx.save(); applyCam(ctx, M);
-  const Lp = restLight(T, LV0);
-  const bt = PK.beat(T, 72), holdK = P(t, tHold - .1, tHold + .4);
-  const hA = P(t, tGrab - .4, tGrab - .12, E.outQ), rise = 1 - P(t, tGrab - .4, tGrab + .02, E.outC), curl = P(t, tGrab - .04, tGrab + .26, E.inOutQ);
-  const handOpts = () => ({ c: curl, a: hA, sx: Lp.x, sy: Lp.y + 2, tremble: holdK * .8, T, rimA: .7 + .25 * bt });
-  const top = drawRoom(ctx, T, { lv: LV0, lx: Lp.x, ly: Lp.y, light: .9 + .1 * bt, zoom: z, onWall: c => { if (hA > 0) { c.save(); c.translate(Lp.x, Lp.y); c.scale(1.55, 1.55); c.translate(-Lp.x, -Lp.y); gripHand(c, GRIP.x, GRIP.y + 46 * rise, GRIP.s, Object.assign(handOpts(), { mode: 'shadow', shadowA: .42 })); c.restore(); } }, airGlow: (.55 * P(t, tW + .15, tAir) * (1 - .45 * P(t, tHe, tHe + .8)) + .25 * (.5 + .5 * Math.sin(T * .45 * Math.PI * 2)) * P(t, tW, tAir)) * (1 - P(t, tHold, d - .2)) });
+  const top = drawRoom(ctx, T, { lv: LV0, lx: Lp.x, ly: Lp.y, light: .9 + .1 * bt, zoom: z, airGlow: (.55 * P(t, tW + .15, tAir) * (1 - .45 * P(t, tHe, tHe + .8)) + .25 * (.5 + .5 * Math.sin(T * .45 * Math.PI * 2)) * P(t, tW, tAir)) * (1 - P(t, tHold, d - .2)) });
 
   // '물 위로': a cold glint runs along the waterline (left -> right)
   const sw = P(t, tW - .05, tW + .75, E.inOutQ);
@@ -476,7 +507,7 @@ window.PK.scenes.pocket = function (ctx, t, d, info) {
     ctx.restore();
   }
   // '1미터': dimension bracket from the waterline up to the ceiling (old floor)
-  const BX = 318, by1 = surf(BX, T, top) - 4;
+  const BX = 400, by1 = surf(BX, T, top) - 4;
   const bA = P(t, t1m - .2, t1m + .05) * (1 - .35 * P(t, tHe, tHe + .6));
   bracket(ctx, BX, RM.y + 4, by1, P(t, t1m - .15, t1m + .35), bA, '#bfeaff', 1 / z);
   if (bA > 0) glow(ctx, BX, lerp(by1, RM.y, E.outC(P(t, t1m - .15, t1m + .35))), 50, '#bfeaff', .4 * bA * (1 - P(t, t1m + .35, t1m + .7)));
@@ -497,9 +528,18 @@ window.PK.scenes.pocket = function (ctx, t, d, info) {
     ctx.restore();
   }
 
-  // '붙잡고': the hand rises out of the glow and hooks over the rim
-  gripHand(ctx, GRIP.x, GRIP.y + 46 * rise, GRIP.s, Object.assign({ cutTop: top }, handOpts()));
-  // grip ripples: rings from the light on the water
+  // '붙잡고': the warm contact where his light holds the rim
+  rimContact(ctx, T, Lp.x, Lp.y, contact);
+  // water running off him as he rises: a few drops fall back to the surface and ring
+  ctx.save(); ctx.lineWidth = 1.6 / z;
+  for (let i = 0; i < 5; i++) {
+    const t0 = tGrab - .16 + i * .16, age = t - t0; if (age <= 0) continue;
+    const L0 = rimLight(info.sc.t0 + t0, reachK(t0), 0), x0 = L0.x + (hi(i * 7 + 3) - .5) * 26, y0 = L0.y + 8, ys = surf(x0, T, top), fallT = Math.sqrt(Math.max(0, 2 * (ys - y0) / 1400));
+    if (age < fallT) { ctx.fillStyle = rgba('#d8f2fa', .55); ctx.beginPath(); ctx.ellipse(x0, y0 + 700 * age * age, 2, 4.5, 0, 0, 7); ctx.fill(); }
+    else { const f = (age - fallT) / .7; if (f < 1) { ctx.strokeStyle = rgba('#cfeef8', .45 * (1 - f)); ctx.beginPath(); ctx.ellipse(x0, ys + 2, 5 + f * 60, 1.5 + f * 8, 0, 0, 7); ctx.stroke(); } }
+  }
+  ctx.restore();
+  // grip ripples: rings spreading on the water under him
   ctx.save(); ctx.lineWidth = 2 / z;
   [tGrab + .15, tHold + .1, tHold + .9].forEach((tr0, i) => { const f = P(t, tr0, tr0 + 1.3); if (f <= 0 || f >= 1) return; const y = surf(Lp.x, T, top) + 3;
     ctx.strokeStyle = rgba('#cfeef8', .5 * (1 - f)); ctx.beginPath(); ctx.ellipse(Lp.x, y, 14 + f * 210, 3 + f * 22, 0, 0, 7); ctx.stroke(); });
@@ -510,8 +550,8 @@ window.PK.scenes.pocket = function (ctx, t, d, info) {
 
   // ---- screen space ----
   const [sx, sy] = toS(M, Lp.x, Lp.y);
-  // tunnel vision + heartbeat pulse on the hold (subtle darkening between beats)
-  iris(ctx, .12 + .2 * P(t, tHe, d) + .05 * holdK * PK.beat(T, 72), .5 + .5 * Math.sin(T * .45 * Math.PI * 2), lerp(540, sx, .5), lerp(850, sy, .5), .1 * holdK * (1 - PK.beat(T, 72)));
+  // tunnel vision (closing in from swept's open landing frame) + heartbeat pulse on the hold (subtle darkening between beats)
+  iris(ctx, .12 + .18 * P(t, 0, 1.2, E.inOutQ) + .25 * P(t, tHe, d) + .05 * holdK * bt, .5 + .5 * Math.sin(T * .45 * Math.PI * 2), lerp(540, sx, .5), lerp(850, sy, .5), .1 * holdK * (1 - bt));
   quiet(ctx, 1);
   // air-gap chip (approved string, broken over two lines) next to the bracket
   const [bx, byM] = toS(M, BX, (RM.y + by1) / 2);

@@ -98,7 +98,9 @@ const SH = { top: 300, side: 994, th: 28, r: 180 };               // hull platin
 const HC = { x: SH.side - SH.r, y: SH.top + SH.r };               // bilge corner centre
 const SRC = { x: HC.x + Math.cos(-.72) * (SH.r + 4), y: HC.y + Math.sin(-.72) * (SH.r + 4) };   // where the knocks land outside
 const LAMP = { x: 1250, y: 640 };                                 // a diver's lamp, outside in the dark
-Object.assign(KN, { RM, DR, WTOP, SH, SRC, LAMP });
+// where he pulled the wall panels off (right of the door, behind the mattresses): the opening, the stringer, two deep frames
+const BW = { x0: RM.x + RM.w * .7, x1: RM.x + RM.w * .97, y0: RM.y + 40, ry: RM.y + 102, fr: [RM.x + RM.w * .72 + 3, RM.x + RM.w * .9 + 3] };
+Object.assign(KN, { RM, DR, WTOP, SH, SRC, LAMP, BW });
 
 // water surface (with the vibration of passing shock rings)
 KN.surfY = function (x, t, rings) {
@@ -123,7 +125,7 @@ function paths() {
   // the cabin's steel (shell ring, exposed frames behind the pulled-off panels, door frame and coaming)
   const room = new Path2D();
   room.rect(x - wall, y - wall, w + wall * 2, wall); room.rect(x - wall, y + h, w + wall * 2, wall); room.rect(x - wall, y, wall, h); room.rect(x + w, y, wall, h);
-  for (let k = 0; k < 3; k++) room.rect(x + w * (.72 + k * .09), y + 40, 7, WTOP - y - 40);
+  room.rect(BW.fr[1] - 12, BW.y0, 26, WTOP - BW.y0);
   room.rect(DR.x0 - 14, DR.y0 - 12, DR.x1 - DR.x0 + 28, 16); room.rect(DR.x0 - 3, DR.y0, 5, DR.y1 - DR.y0); room.rect(DR.x1 - 2, DR.y0, 5, DR.y1 - DR.y0);
   const steel = new Path2D(); steel.addPath(shell); steel.addPath(frames); steel.addPath(room);
   _paths = { inner, shell, outer, frames, room, steel }; return _paths;
@@ -161,6 +163,51 @@ KN.hull = function (ctx, t, { sweep = -1, sweepA = 0, amb = 1 } = {}) {
   ctx.restore();
 };
 
+// the patch of wall where he pulled the lining panels off (straight panel-seam sides, a ragged top where the screws tore out)
+let _tear = null;
+function tearPath() {
+  if (_tear) return _tear;
+  const { x0, x1, y0 } = BW, y1 = WTOP, p = new Path2D();
+  p.moveTo(x0, y1 + 4); p.lineTo(x0, y0 + 10);
+  for (let i = 1; i <= 12; i++) p.lineTo(x0 + (x1 - x0) * i / 12, y0 + (i % 2 ? 7 : 1) + hi(i * 13 + 5) * 6 + (i > 8 ? 4 : 0));
+  p.lineTo(x1, y1 + 4); p.closePath();
+  _tear = p; return p;
+}
+// wall panels pulled off: the bare hull steel behind them (a plate, not a hole: seams, rivet rows, one deep frame), the cut
+// panel edges and a bent panel stub left on its last screws. Same place as the old exposed frames (BW). Shared: KN.cabin
+// draws it; other cabin drawings can call it at the same coordinates.
+KN.bareWall = function (ctx, warm = .6, lx = 812, ly = 746) {
+  const { x0, x1, y0, ry, fr } = BW, y1 = WTOP, tp = tearPath(), wk = clamp(warm), lt = (x, y, r = 220) => wk * Math.exp(-Math.hypot(x - lx, y - ly) / r);
+  ctx.save();
+  ctx.fillStyle = '#0b1418'; ctx.fill(tp);
+  ctx.save(); ctx.clip(tp);
+  if (wk > 0) { const g = ctx.createRadialGradient(lx, ly, 0, lx, ly, 330); g.addColorStop(0, rgba('#ffb36b', .2 * wk)); g.addColorStop(1, 'rgba(255,179,107,0)'); ctx.fillStyle = g; ctx.fillRect(x0, y0, x1 - x0, y1 - y0 + 4); }
+  { const g = ctx.createLinearGradient(x0, 0, x0 + 26, 0); g.addColorStop(0, 'rgba(0,0,0,.6)'); g.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = g; ctx.fillRect(x0, y0, 26, y1 - y0 + 4); }
+  // plate butt seam + lap seam, rivet rows along them
+  ctx.fillStyle = 'rgba(0,0,0,.5)'; ctx.fillRect(x0, ry + 56, x1 - x0, 3); ctx.fillRect(x0 + 92, y0, 3, ry + 56 - y0);
+  ctx.fillStyle = rgba('#9fb3bd', .06 + .12 * wk); ctx.fillRect(x0, ry + 59, x1 - x0, 1.5); ctx.fillRect(x0 + 95, y0, 1.5, ry + 56 - y0);
+  for (let rx = x0 + 12; rx < x1 - 4; rx += 22) { const l = lt(rx, ry + 48); ctx.fillStyle = rgba(l > .12 ? '#ffd2a0' : '#9fb3bd', .1 + .45 * l); ctx.beginPath(); ctx.arc(rx, ry + 48, 2, 0, 7); ctx.arc(rx + 11, ry + 68, 2, 0, 7); ctx.fill(); }
+  for (let yy = y0 + 22; yy < ry + 44; yy += 22) { const l = lt(x0 + 86, yy); ctx.fillStyle = rgba('#9fb3bd', .08 + .3 * l); ctx.beginPath(); ctx.arc(x0 + 86, yy, 2, 0, 7); ctx.fill(); }
+  // one deep frame (web edge-on, flange toward the room); the flank facing his light catches it
+  { const fx = fr[1], l = wk * Math.exp(-Math.abs(fx - lx) / 200), hiR = fx < lx;
+    ctx.fillStyle = 'rgba(0,0,0,.45)'; ctx.fillRect(fx - 20, y0, 8, y1 - y0 + 4);
+    ctx.fillStyle = '#121b20'; ctx.fillRect(fx - 12, y0, 26, y1 - y0 + 4);
+    ctx.fillStyle = '#1b262c'; ctx.fillRect(fx - 12, y0, 6, y1 - y0 + 4);
+    ctx.fillStyle = rgba('#ffcf9a', .06 + .38 * l); ctx.fillRect(hiR ? fx + 12 : fx - 12, y0, 2, y1 - y0 + 4);
+    ctx.fillStyle = rgba('#9fb3bd', .1 + .1 * wk); ctx.fillRect(hiR ? fx - 12 : fx + 12, y0, 1.5, y1 - y0 + 4); }
+  ctx.restore();
+  // cut panel edges (the lining's thickness) and the screws left along the top
+  ctx.lineJoin = 'round'; ctx.strokeStyle = '#141c21'; ctx.lineWidth = 5; ctx.stroke(tp);
+  ctx.strokeStyle = rgba('#9fb3bd', .06 + .12 * wk); ctx.lineWidth = 1.4; ctx.stroke(tp);
+  // a bent panel stub hanging off its last screws at the left edge
+  ctx.save(); ctx.translate(x0 + 4, y0 + 14); ctx.rotate(.2);
+  ctx.fillStyle = '#0d1418'; ctx.fillRect(0, 0, 30, 118);
+  ctx.fillStyle = rgba('#ffcf9a', .04 + .3 * lt(x0 + 30, y0 + 80, 260)); ctx.fillRect(28, 0, 2, 118);
+  ctx.fillStyle = 'rgba(0,0,0,.35)'; ctx.fillRect(0, 118, 30, 6);
+  ctx.restore();
+  ctx.restore();
+};
+
 // the cabin: same design and coordinates as the hand scene's cabin (no diver light here)
 KN.cabin = function (ctx, t, o = {}) {
   const { x, y, w, h, wall } = RM;
@@ -173,10 +220,8 @@ KN.cabin = function (ctx, t, o = {}) {
   ctx.fillStyle = '#030607'; ctx.fillRect(x, y, w, h);
   if (warm > 0) { const g = ctx.createRadialGradient(lx, ly, 0, lx, ly, w * .7); g.addColorStop(0, rgba('#ffb36b', .22 * warm)); g.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = g; ctx.fillRect(x, y, w, h); }
   ctx.fillStyle = 'rgba(160,190,205,.12)'; for (let i = 1; i < 6; i++) ctx.fillRect(x + w * i / 6, y, 2, h);
-  // wall panels pulled off (right): exposed frames and the dark gap behind them
-  ctx.fillStyle = '#010203'; ctx.fillRect(x + w * .7, y + 40, w * .27, WTOP - y - 40);
-  ctx.fillStyle = rgba('#9fb3bd', .14 + .2 * warm); for (let k = 0; k < 3; k++) ctx.fillRect(x + w * (.72 + k * .09), y + 40, 7, WTOP - y - 40);
-  ctx.strokeStyle = rgba('#9fb3bd', .1 + .15 * warm); ctx.lineWidth = 2; ctx.strokeRect(x + w * .7, y + 40, w * .27, WTOP - y - 40);
+  // wall panels pulled off (right): the bare steel behind them
+  KN.bareWall(ctx, warm, lx, ly);
   // old floor tiles on the ceiling
   ctx.fillStyle = '#0e1418'; ctx.strokeStyle = rgba('#9fb3bd', .22 + .25 * warm); ctx.lineWidth = 3;
   for (let i = 0; i < 9; i++) ctx.strokeRect(x + i * w / 9, y, w / 9, 18);

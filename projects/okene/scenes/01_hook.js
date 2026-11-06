@@ -1,8 +1,9 @@
 // hook: "시신을 찾던 잠수부의 손을, 누군가 붙잡았습니다."
 // Cold open inside the overturned hull, in murky water. A diver's helmet-light cone drifts over dark steel plating (rust streaks
-// run UP from the rivets: the hull is upside down; the door's sill is now at the top of the doorway). '잠수부의' -> his gloved hand
-// slides into the beam; '손을' -> the beam swings onto the black doorway and the glove reaches into it; '누군가' -> a faint warm
-// pulse deep in the dark; '붙잡았습니다' -> a bare hand (neutral backlit silhouette, no skin tone) shoots out of the dark and
+// run UP from the rivets: the hull is upside down; the door's sill is now at the top of the doorway). From the first frame his
+// gloved hand is in the beam, searching into the black doorway; '잠수부의' -> it slides deeper; '손을' -> the beam swings onto the
+// doorway and the glove reaches into it; '누군가' -> a warm heartbeat throbs twice in the dark under the glove's fingers, where
+// his hand will come from; '붙잡았습니다' -> a bare hand (neutral backlit silhouette, no skin tone) shoots out of the dark and
 // clamps onto the glove: impact on the word (sfx), freeze-frame jolt, cold flash, the beam jerks, the diver's breath bursts out.
 // The content warning chip sits at y 492 for the first ~2.5 s.
 //
@@ -495,20 +496,14 @@ window.PK.scenes.hook = function (ctx, t, d, info) {
 
   // ---- beam: drifts over the plating, swings onto the doorway on '손을', jerks when the hand grabs ----
   const bob = fb(t * .4, 60) * 9;
-  const aim = lerp(lerp(.8, .66, P(t, 0, tJa, E.inOutQ)), .58, P(t, tJa, tSo + .35, E.inOutQ)) + fb(tm * .5, 61) * .035 - .075 * P(t, tI, tI + .06) * (1 - .7 * relax);
+  const aim = lerp(lerp(.7, .64, P(t, 0, tJa, E.inOutQ)), .58, P(t, tJa, tSo + .35, E.inOutQ)) + fb(tm * .5, 61) * .035 - .075 * P(t, tI, tI + .06) * (1 - .7 * relax);
   const b = { x: LAMP.x + fb(t * .3, 62) * 8, y: LAMP.y + bob, ang: aim, spread: .3, len: 1180, a: 1 - .05 * (.5 + .5 * nz(t * 11, 63)) };
 
   HG.wall(ctx, b, { amb: .06, gain: 1.15 });
-  // ---- him, before he is seen: a faint warm pulse deep in the doorway on '누군가' ----
-  const bt = beat(t, 96);
-  const glowA = P(t, tNu - .15, tNu + .45, E.inOutQ) * (.8 + .5 * bt) * (1 - .5 * P(t, tL, tI)) + after * (.5 + .5 * bt) * lerp(1.2, .8, relax);
-  const gP = gripPose({ x: G0.x, y: G0.y, ang: G0.ang });
-  const hx = lerp(700, gP.x + 40, after), hy = lerp(990, gP.y + 40, after);
-  HG.light(ctx, x => { HG.heart(x, hx, hy, glowA, bt, lerp(.8, 1.15, after)); HG.cone(x, t, b); });
-  HG.silt(ctx, tm, b, { n: 190, seed: 3, push: { x: G0.x + 60, y: G0.y + 40, k: P(t, tI, tI + 1.4, E.outQ) * .5 } });
 
-  // ---- glove: enters on '잠수부의', reaches into the dark on '손을', yanked on the grab ----
-  const enter = P(t, tJa - .3, tSo + .15, E.outC), creep = P(t, tSo, tI, E.inOutQ);
+  // ---- glove: already reaching into the black doorway on the first frame (searching), slides deeper through '잠수부의',
+  // reaches into the dark on '손을', yanked on the grab ----
+  const enter = P(t, -1.0, tSo + .15, E.outC), creep = P(t, tSo, tI, E.inOutQ);
   const yank = after * (1 - .55 * relax), back = P(t, tI + .25, tI + .9, E.inOutQ) * .6;
   const gu = -(1 - enter) * 54 - (1 - creep) * 3.2 + yank * .9 - back;
   const ga = G0.ang + (1 - enter) * .12 + .05 * yank;
@@ -519,7 +514,23 @@ window.PK.scenes.hook = function (ctx, t, d, info) {
   const far = { x: lock.x + Math.cos(lock.ang) * -30 * S, y: lock.y + Math.sin(lock.ang) * -30 * S };
   const hpose = tt => { const qq = P(tt, tL, tI - .03, E.outExpo); return { x: lerp(far.x, lock.x, qq), y: lerp(far.y, lock.y, qq), ang: lock.ang + .25 * (1 - qq), open: 1, curl: P(tt, tI - .1, tI + .015, E.outQ), vis: 1 }; };
   const h = t >= tL - .02 ? hpose(t) : null;
-  if (h && t < tI + .02) HG.smear(ctx, [hpose(t - .025), hpose(t - .05), hpose(t - .08)], g, .9 * (1 - q * .4));
+
+  // ---- him, before he is seen: on '누군가' a warm heartbeat throbs twice in the dark below the glove, right where his hand
+  // will come from; it travels in with the hand and then beats behind the grip ----
+  const bt = beat(t, 96);
+  const thump = (c, w = .065) => Math.exp(-Math.pow((t - c) / w, 2));
+  const pre = P(t, tNu - .2, tNu + .05, E.inOutQ) * (.7 + 1.9 * (thump(tNu + .04) + .85 * thump(tNu + .26)));
+  const glowA = pre * (1 - .35 * q) * (1 - after) + after * (.5 + .5 * bt) * lerp(1.2, .8, relax);
+  const gP = gripPose({ x: G0.x, y: G0.y, ang: G0.ang });
+  const pX = lock.x + 7.8 * S, pY = lock.y + 4.4 * S;          // the dark under the glove's fingers (screen ~ 830, 1130), on his hand's way in
+  const hk = Math.max(q, after), hx = lerp(pX, gP.x + 40, hk), hy = lerp(pY, gP.y + 40, hk);
+  const hb = after > 0 ? bt : lerp(thump(tNu + .04) + .85 * thump(tNu + .26), bt, q);
+  HG.light(ctx, x => { HG.heart(x, hx, hy, glowA, hb, lerp(.8, 1.15, hk)); HG.cone(x, t, b); });
+  HG.silt(ctx, tm, b, { n: 190, seed: 3, push: { x: G0.x + 60, y: G0.y + 40, k: P(t, tI, tI + 1.4, E.outQ) * .5 } });
+
+  // smear only while the hand travels (two soft ghosts); gone before the fingers curl, so no extra fingers on the clamp
+  const smA = .45 * (1 - q * .4) * (1 - P(t, tI - .12, tI - .06));
+  if (h && smA > .005) HG.smear(ctx, [hpose(t - .025), hpose(t - .05)], g, smA);
   const rimUp = lerp(.35, 1.15, q) + .35 * Math.exp(-Math.max(0, t - tI) * 4) * after;
   HG.hands(ctx, { g, h, b, bareRim: rimUp, bareHalo: .35 * q + .2 * after, gloveHalo: .12 });
 

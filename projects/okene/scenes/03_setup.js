@@ -1,8 +1,10 @@
 // setup (≈12.56-17.25): "그보다 약 60시간 전, 2013년 5월 나이지리아 앞바다."
 // Rewind (VHS tracking tear, reversed bubbles, a 60-tick dial whose hand spins back; the counter lands on −60시간 with "60시간")
 // -> the dial collapses into the offshore marker of a night chart of the Niger Delta coast drawn in thin lines (swell rolling in)
-// -> date + place chips -> dive into the marker -> plan view of the mooring: a tanker on the loading buoy, held astern by the
-// small tug on a taut line while heavy swell crests roll through; the camera pushes in on the tug for the hand-over to "capsize".
+// -> date + place chips -> dive into the marker on "나이지리아" -> plan view of the mooring: a tanker on the loading buoy, held
+// astern by the small tug on a taut line while heavy swell crests roll through; the camera pushes in on the tug for the
+// hand-over to "capsize". The place chip is screen-fixed in the lower slot and holds from the chart through the dive.
+// Chip strings come from the scene data (info.sc.data) so a script.json correction reaches the video.
 (function () {
 'use strict';
 const { W, H, E, P, clamp, lerp, hash, noise1, fbm, rgba, glow, text, measure, roundRect, drift, FONT } = L;
@@ -65,6 +67,7 @@ function lead(ctx, x0, y0, x1, y1, a, col = 'rgba(160,220,255,.55)') {
 // REWIND: dial + counter
 // =====================================================================================================================
 const DC = { x: 540, y: 850, R: 320 };
+const PLX = 470, PLY = 1160;                                // place chip: fixed lower slot, under the marker and clear of the tug's ring
 function rewindFX(ctx, t, spd, u) {
   if (spd <= .002) return;
   // reversed bubbles: streaking DOWN (time running backwards)
@@ -286,9 +289,13 @@ const MT = { buoy: -404, bow: -334, stern: 142, tugS: 292, tugB: 396 };
 function swellPlan(ctx, t, a) {
   // crests perpendicular to the axis (horizontal in the local frame), rolling from the buoy end toward the tug
   const SP = 172, span = SP * 18;
+  // local y-range covered by the canvas (crests are horizontal lines here, so this test is exact); off-screen crests are skipped
+  const inv = ctx.getTransform().inverse(); let vy0 = 1e9, vy1 = -1e9;
+  for (const [qx, qy] of [[0, 0], [W, 0], [0, H], [W, H]]) { const q = inv.transformPoint(new DOMPoint(qx, qy)); vy0 = Math.min(vy0, q.y); vy1 = Math.max(vy1, q.y); }
   ctx.save(); ctx.lineCap = 'round';
   for (let k = 0; k < 18; k++) {
     const yk = ((k * SP + t * 74) % span) - span / 2;
+    if (yk + 130 < vy0 || yk - 130 > vy1) continue;     // band reaches yk-60-38 .. yk+70+38
     const pts = []; for (let x = -1500; x <= 1500; x += 40) pts.push([x, yk + Math.sin(x * .006 + k * 1.3) * 22 + noise1(x * .008 + k * 5, 2) * 16]);
     // trough shade ahead of the crest
     ctx.beginPath(); pts.forEach(([x, y], i) => i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)); for (let i = pts.length - 1; i >= 0; i--) ctx.lineTo(pts[i][0], pts[i][1] + 70);
@@ -386,6 +393,13 @@ function mooring(ctx, t, o) {
   ctx.restore();
   ctx.restore();
 }
+// mooring sea backdrop (static radial gradient): painted once, then blitted (a full-frame radial fill costs ~6 ms more)
+let SEA = null;
+function seaBG() {
+  if (SEA) return SEA; const c = document.createElement('canvas'); c.width = W; c.height = H; const x = c.getContext('2d');
+  const sg = x.createRadialGradient(560, 860, 60, 540, 860, 1100); sg.addColorStop(0, '#0a2730'); sg.addColorStop(.6, '#051419'); sg.addColorStop(1, '#010405');
+  x.fillStyle = sg; x.fillRect(0, 0, W, H); SEA = c; return c;
+}
 // rain over the open sea (plan view: fast fine streaks + pin-prick ripples)
 function rainPlan(ctx, t, a) {
   if (a <= 0) return;
@@ -396,8 +410,11 @@ function rainPlan(ctx, t, a) {
 }
 
 window.PK.scenes.setup = function (ctx, t, d, info) {
+  // the incoming half of a dip/cut/flash only ever shows the outgoing scene: skip the work (pixel-identical composite)
+  const tr = info.sc.trans; if (t < 0 && tr && (tr.type === 'dip' || tr.type === 'cut' || tr.type === 'flash')) return;
+  const D = info.sc.data || {};
   const t60 = at(info, '60시간', .19), tJeon = at(info, '전', .3), tYr = at(info, '2013', .43), tMay = at(info, '5월', .63), tNg = at(info, '나이지리아', .7), tSea = at(info, '앞바다', .82);
-  const T = { cm: tJeon - .33, dive: tMay - .02 };          // chart in (≈1.1) / dive into the marker (≈2.9)
+  const T = { cm: tJeon - .33, dive: tNg - .05 };           // chart in (≈1.1) / dive into the marker on "나이지리아" (≈3.2)
   const dr = drift(t, 1, 41);
   ctx.save(); ctx.fillStyle = '#010203'; ctx.fillRect(0, 0, W, H); ctx.restore();
 
@@ -437,15 +454,9 @@ window.PK.scenes.setup = function (ctx, t, d, info) {
     text(ctx, '나이지리아', ngS[0] + dr.x, ngS[1] + dr.y, { size: 44, weight: 800, color: '#9fc6d8', ls: 10, alpha: mapA * .7 * P(t, T.cm + .35, T.cm + .9) * (1 - P(t, T.dive, T.dive + .25)) });
     const mk = [mkS[0] + dr.x, mkS[1] + dr.y];
     ctx.save(); ctx.globalAlpha = mapA; marker(ctx, mk[0], mk[1], t, P(t, T.cm + .32, T.cm + .7), 1 + 1.6 * P(t, T.dive, T.dive + .4, E.inQ)); ctx.restore();
-    const pA = P(t, tYr + .3, tYr + .62, E.outQ) * (1 - P(t, T.dive - .05, T.dive + .15));
-    const cy2 = Math.min(1150, mk[1] + 128);
-    lead(ctx, mk[0], mk[1] + 24, mk[0], cy2 - 30, pA);
-    const cs = lerp(.9, 1, E.outBack(P(t, tYr + .3, tYr + .66)));
-    ctx.save(); ctx.translate(clamp(mk[0], 330, 750), cy2); ctx.scale(cs, cs); chip(ctx, '에스크라보스 앞바다 · 해안에서 약 30km', 0, 0, pA, { size: 33, color: '#fff', border: 'rgba(255,217,160,.55)' }); ctx.restore();
+    // leader from the marker down to the place chip (chart only; retracts into the marker before the dive)
+    lead(ctx, mk[0], mk[1] + 24, mk[0], PLY - 30, P(t, tYr + .3, tYr + .62, E.outQ) * (1 - P(t, T.dive - .3, T.dive - .02)));
   }
-  // date chip (top slot), typed on "2013년"
-  const dA = P(t, tYr - .12, tYr + .1) * (1 - P(t, T.dive + .1, T.dive + .35));
-  typedChip(ctx, t, '2013.5.26', 540, 528, dA, P(t, tYr - .05, tYr + .45), { size: 42 });
 
   // ---------------- MOORING (plan view) ----------------
   const moA = P(t, T.dive + .18, T.dive + .5, E.inOutQ);
@@ -460,20 +471,27 @@ window.PK.scenes.setup = function (ctx, t, d, info) {
     const m = new DOMMatrix().translate(540 + ox + shx, 880 + oy + shy).scale(z).rotate(th * 180 / Math.PI).translate(-cxl, -cyl);
     // sea
     ctx.save(); ctx.globalAlpha = moA;
-    const sg = ctx.createRadialGradient(560, 860, 60, 540, 860, 1100); sg.addColorStop(0, '#0a2730'); sg.addColorStop(.6, '#051419'); sg.addColorStop(1, '#010405');
-    ctx.fillStyle = sg; ctx.fillRect(0, 0, W, H);
+    ctx.drawImage(seaBG(), 0, 0);
     ctx.setTransform(ctx.getTransform().multiply(m));
-    mooring(ctx, t, { a: 1, strain: .6 + .4 * P(t, tSea, d), tugHL: .4 + .6 * P(t, tNg, tNg + .5), ring: P(t, tNg + .1, tNg + .5) });
+    mooring(ctx, t, { a: 1, strain: .6 + .4 * P(t, tSea, d), tugHL: .4 + .6 * P(t, T.dive + .4, T.dive + .85), ring: P(t, T.dive + .45, T.dive + .85) });
     ctx.restore();
     rainPlan(ctx, t, moA);
     // chip: loading buoy / tanker mooring, with a leader to the buoy
     const rp = (lx, ly) => { const q = m.transformPoint(new DOMPoint(lx, ly)); return [q.x, q.y]; };
     const bS = rp(0, MT.buoy);
-    const nA = P(t, T.dive + .5, T.dive + .8, E.outQ) * (1 - P(t, d - .35, d - .1));
+    const nA = P(t, T.dive + .22, T.dive + .47, E.outQ) * (1 - P(t, d - .2, d + .02));
     lead(ctx, bS[0], bS[1] - 30, clamp(bS[0], 260, 820), 560, nA * (1 - push));
-    const ns = lerp(.9, 1, E.outBack(P(t, T.dive + .5, T.dive + .85)));
-    ctx.save(); ctx.translate(540, 528); ctx.scale(ns, ns); chip(ctx, '셰브런 원유 선적 부이 · 유조선 계류 작업', 0, 0, nA, { size: 33, color: '#fff' }); ctx.restore();
+    const ns = lerp(.9, 1, E.outBack(P(t, T.dive + .22, T.dive + .55)));
+    ctx.save(); ctx.translate(540, 528); ctx.scale(ns, ns); chip(ctx, D.note || '셰브런 원유 선적 부이 · 유조선 계류 작업', 0, 0, nA, { size: 33, color: '#fff' }); ctx.restore();
   }
+  // ---------------- chips over the chart / mooring ----------------
+  // place chip: screen-fixed in the lower slot, held from the chart through the dive into the mooring ("나이지리아 앞바다")
+  const pA = P(t, tYr + .3, tYr + .62, E.outQ) * (1 - P(t, tSea + .2, tSea + .45));
+  const cs = lerp(.9, 1, E.outBack(P(t, tYr + .3, tYr + .66)));
+  ctx.save(); ctx.translate(PLX, PLY); ctx.scale(cs, cs); chip(ctx, D.place || '에스크라보스 앞바다 · 해안에서 약 30km', 0, 0, pA, { size: 33, color: '#fff', border: 'rgba(255,217,160,.55)' }); ctx.restore();
+  // date chip (top slot), typed on "2013년"
+  const dA = P(t, tYr - .12, tYr + .1) * (1 - P(t, T.dive + .02, T.dive + .22));
+  typedChip(ctx, t, D.date || '2013.5.26', 540, 528, dA, P(t, tYr - .05, tYr + .45), { size: 42 });
   // crossing into the mooring: a soft cold flash
   L.flash(ctx, .12 * P(t, T.dive + .12, T.dive + .2) * (1 - P(t, T.dive + .2, T.dive + .5)), '#bfe9ff');
   quiet(ctx, 1);
