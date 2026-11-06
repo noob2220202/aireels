@@ -1,7 +1,8 @@
 // hell (real audio, Boodram): pitch-black POV inside the pipe right after the suction.
 // Afterimage burn of the impact, eyes trying to adjust (phosphenes that swim and fade), one weak amber light (him)
 // barely flickering with a heartbeat, a breathing tunnel-vision iris, an extremely slow push.
-// "...not sure if I was alive" -> the light nearly goes out, then catches; "...this was hell" -> the blotches burn red, the dark closes in.
+// "...not sure if I was alive" -> the light nearly goes out, then catches; "...this was hell" -> the blotches burn red, the dark closes in
+// (snaps shut on "hell", with one short red flash at the periphery).
 (function () {
 const { W, H, E, P, clamp, lerp, hash, noise1, fbm, rgba, glow, camera, drift, flash } = L;
 const { K, dark, souls, beat, sourceCard, lerp2 } = window.PK;
@@ -115,7 +116,7 @@ function phosphenes(ctx, t, amt, red) {
     const R = 120 + hash(i * 5 + cyc * 3) * 230;
     const isRed = hash(i * 3 + cyc * 5) < .22 + .7 * red;
     const col = isRed ? (hash(i + cyc * 2) > .5 ? '#a8311f' : '#7a1622') : (hash(i + cyc) > .5 ? '#1a5c68' : '#35214f');
-    const a = amt * ev * (isRed ? .13 + .17 * red : .13);
+    const a = amt * ev * (isRed ? .2 + .17 * red : .2);
     ctx.save(); ctx.translate(x, y); ctx.rotate(hash(i * 9 + cyc) * 3); ctx.scale(1, .65 + hash(i * 4 + cyc) * .35);
     const g = ctx.createRadialGradient(0, 0, 0, 0, 0, R);
     if (i % 4 === 0) { g.addColorStop(0, rgba(col, a * .2)); g.addColorStop(.45, rgba(col, a * .7)); g.addColorStop(.7, rgba(col, a * .45)); g.addColorStop(1, rgba(col, 0)); }
@@ -155,11 +156,15 @@ function waveLine(ctx, t, x, y, w, h, a, lev) {
 window.PK.scenes.hell = function (ctx, t, d, info) {
   const D = info.sc.data || {};
   const v0 = info.sc.voice_t - info.sc.t0;              // voice starts (~0.5 s)
-  const tAlive = v0 + 2.05, tAnd = v0 + 2.62, tHell = v0 + 4.05; // "alive" ~2.0-2.45, "and" ~2.6-2.9, "hell" ~4.0-4.3 in the clip
-  const red = P(t, tAnd + .4, tHell + .35, E.inOutQ) * (1 - .35 * P(t, d - .3, d + .3));
+  // clip RMS: "...if I was alive" ends ~2.95, silence 3.0-3.8, "and this" 3.8-4.1, "hell" ~4.12-4.45 (clip-relative)
+  const tAlive = v0 + 2.05, tAdj = v0 + 2.6, tAnd = v0 + 3.8, tHell = v0 + 4.12;
+  const red = P(t, tAnd - .1, tHell + .3, E.inOutQ) * (1 - .35 * P(t, d - .3, d + .3));
   const bpm = lerp(92, 116, P(t, tHell - .6, tHell + .3, E.inOutQ));
   const hb = beat(t, bpm);
-  const adj = P(t, .4, tAnd, E.outQ) * (1 - .55 * P(t, tAnd + .3, tHell + .3, E.inOutQ));   // eyes adjust, then the dark closes back in
+  const adj = P(t, .4, tAdj, E.outQ) * (1 - .55 * P(t, tAnd - .1, tHell + .3, E.inOutQ));   // eyes adjust, then the dark closes back in
+  const closeIn = P(t, tAnd - .1, tHell - .05, E.inOutQ);                // the dark starts to lean in on "and this"...
+  const snap = P(t, tHell - .05, tHell + .3, E.outQ);                     // ...and snaps shut on "hell"
+  const rflash = P(t, tHell - .03, tHell + .02) * (1 - P(t, tHell + .09, tHell + .22, E.inQ));   // one ~0.12 s red flash
 
   // retina layer, composed into the quarter-res background: phosphenes swimming as the eyes try to adjust,
   // the afterimage of the impact burnt in, and a burning periphery on "hell"
@@ -180,9 +185,9 @@ window.PK.scenes.hell = function (ctx, t, d, info) {
   };
   darkFast(ctx, t, { k: lerp(.45, .25, red), seed: 6, extra: retina });
   const dr = drift(t, .9, 6), shake = .85 * (1 - P(t, 0, .8, E.outQ));
-  const zoom = lerp(1.0, 1.13, P(t, -.2, d + .3, E.inOutQ));
+  const zoom = (lerp(1.0, 1.13, P(t, -.2, d + .3, E.inOutQ)) + .03 * snap) * (1 + .015 * hb);
   // his light: barely there, flickering with the heartbeat; nearly goes out on "...if I was", catches on "alive"
-  const me = { z: 1.9, xo: -.08, yo: .3 };
+  const me = { z: 1.15, xo: -.08, yo: .3 };
   const doubt = 1 - .78 * P(t, tAlive - .55, tAlive + .05, E.inOutQ) * (1 - P(t, tAlive + .2, tAlive + .45, E.outQ));
   const catchP = Math.exp(-Math.pow((t - tAlive - .38) / .22, 2));
   const flick = .84 + .16 * noise1(t * 11, 3) - (hash(Math.floor(t * 30) + 7) > .94 ? .22 : 0);
@@ -191,15 +196,21 @@ window.PK.scenes.hell = function (ctx, t, d, info) {
   const lp = lightXY(me);
 
   ctx.save();
-  camera(ctx, { x: lp.x + dr.x * .6, y: lp.y + 120 / zoom + dr.y, zoom, rot: dr.r, shake, t, seed: 6 });
-  povTunnel(ctx, t, { k: .2 + .62 * adj, lights: [me], ripple: .6 });
-  glow(ctx, lp.x, lp.y + 10, 300, '#ff9a3c', .07 * clamp(me.a));
-  souls(ctx, t, [{ x: lp.x, y: lp.y, a: clamp(me.a), s: lp.s * (1.15 + .35 * catchP) }], { bpm, size: 1 });
+  camera(ctx, { x: lp.x + dr.x * .6, y: lp.y + 80 / zoom + dr.y, zoom, rot: dr.r, shake, t, seed: 6 });
+  // his own light warms the nearest weld rings: the steel tube around him shows, the rest stays black
+  povTunnel(ctx, t, { k: .45 + .4 * adj, lights: [me], ripple: .6, warmK: .55, warmMax: .65 });
+  glow(ctx, lp.x, lp.y + 10, 420, '#ff9a3c', .1 * clamp(me.a));
+  souls(ctx, t, [{ x: lp.x, y: lp.y, a: clamp(me.a), s: lp.s * (1.15 + .35 * catchP) }], { bpm, size: 1.5 });
   ctx.restore();
 
   sparks(ctx, t, .55 + .45 * P(t, 0, 1.2) + .25 * red, red);
-  // tunnel vision: breathes with every heartbeat, tightens on "hell"
-  iris(ctx, lerp(.6, .8, red) + .06 * (1 - adj), hb, 540, 840);
+  // tunnel vision: breathes with every heartbeat, leans in on "and this", snaps shut on "hell"
+  iris(ctx, .42 + .13 * closeIn + .2 * snap + .06 * (1 - adj), hb, 540, 860);
+  if (rflash > 0) {
+    const g = ctx.createRadialGradient(540, 860, H * .16, 540, 860, H * .62);
+    g.addColorStop(0, 'rgba(150,18,22,0)'); g.addColorStop(.45, rgba('#9c1418', .3 * rflash)); g.addColorStop(1, rgba('#b3161c', .55 * rflash));
+    ctx.save(); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H); ctx.restore();
+  }
   // attribution + a subtle waveform of the real voice
   const ca = P(t, .1, .45, E.outQ) * (1 - P(t, d + .02, d + .25));
   waveLine(ctx, t, 540, 1093, 300, 40, ca * .6, venv(t - v0));

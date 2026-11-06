@@ -82,65 +82,93 @@ function mouth(ctx, t, cx, cy, R, swirl) {
   }
   ctx.restore();
 }
-// one of the five lights: hovering, then pulled in along a tightening spiral
+// low-frequency camera shake: a heavy lurch, not a per-frame buzz (analytic check: <= ~7 px per frame at 30 fps)
+function cam(ctx, { x, y, zoom = 1, rot = 0, shake = 0, t = 0 }) {
+  const sx = shake * (noise1(t * 8, 1) * 18 + noise1(t * 24, 6) * 2), sy = shake * (noise1(t * 8, 2) * 18 + noise1(t * 24, 7) * 2), sr = shake * noise1(t * 6, 3) * .006;
+  ctx.translate(W / 2 + sx, H / 2 + sy); ctx.rotate(rot + sr); ctx.scale(zoom, zoom); ctx.translate(-x, -y);
+}
+// one of the five lights: drifting round the mouth on the outer swirl from frame 0, then pulled in along a tightening spiral
 function lightPos(i, tt, tS, cx, cy, R) {
   const k = P(tt, tS - .35 + i * .09, tS + .75 + i * .12, E.inC);
-  const a0 = i / 5 * Math.PI * 2 + .6, rr = lerp(R * 2.05 + 40 * hash(i), 6, k), ang = a0 + k * 4.2;
+  const a0 = i / 5 * Math.PI * 2 + .6, rr = lerp(R * 1.55 + 30 * hash(i), 6, k), ang = a0 + tt * .22 + k * 4.2;
   const hx = noise1(tt * .6, 40 + i) * 14 * (1 - k), hy = noise1(tt * .5, 50 + i) * 12 * (1 - k);
-  return { x: cx + Math.cos(ang) * rr + hx, y: cy + Math.sin(ang) * rr * .9 + hy, k };
+  return { x: cx + Math.cos(ang) * rr + hx, y: cy + Math.sin(ang) * rr * lerp(.64, .9, k) + hy, k };
+}
+// the light that comes back: from the depth of the bore toward the lens, settling just under the '1'
+function backPos(tt, t1, tLive, v0) {
+  const q = P(tt, t1 + .15, tLive + .35, E.outC);
+  return { x: lerp(v0.x, 540, q) + noise1(tt * .7, 61) * 6 * q, y: lerp(v0.y, 790, q) + Math.sin(tt * 1.8) * 6 * q, q };
 }
 window.PK.scenes.hook = function (ctx, t, d, info) {
   const tS = at(info, '빨려', .3), t5 = at(info, '다섯', .15), t1 = at(info, '한', .62), tLive = at(info, '살아', .8);
-  const swirl = clamp(.25 + P(t, 0, tS, E.inQ) * .5 + P(t, tS, tS + .6) * .5 - P(t, t1, t1 + 1.2) * .6);
+  const swirl = clamp(.45 + P(t, 0, tS, E.inQ) * .35 + P(t, tS, tS + .6) * .4 - P(t, t1, t1 + 1.2) * .6);
   dark(ctx, t, { k: .6, seed: 2 });
   const dr = drift(t, 1.2, 3);
+  // impact lurch on the opening suction/impact SFX (0.05 s) and again on '빨려'; the camera is pulled into the mouth on '빨려'
+  const shake = .7 * (1 - P(t, .05, .6)) + .7 * P(t, tS - .1, tS + .12) * (1 - P(t, tS + .4, tS + 1.1));
+  const zoom = lerp(1, 1.05, P(t, 0, tS, E.inOutQ)) * lerp(1, 1.38, P(t, tS - .05, tS + .55, E.inOutC)) * lerp(1, 1.06, P(t, tS + .55, d, E.inOutQ));
   ctx.save();
-  camera(ctx, { x: 540 + dr.x, y: 860 + dr.y, zoom: lerp(1.0, 1.22, P(t, 0, d, E.inOutQ)), rot: dr.r, shake: P(t, tS - .1, tS + .3) * (1 - P(t, tS + .9, tS + 1.6)) * .9, t });
+  cam(ctx, { x: 540 + dr.x, y: 860 + dr.y, zoom, rot: dr.r, shake, t });
   const cx = 540, cy = 860, R = 230;
   // surrounding murky water
   glow(ctx, cx, cy, 760, '#0f4656', .35, 'screen');
   mouth(ctx, t, cx, cy, R, swirl);
-  // implosion ring: the pressure difference pulling the water in on '빨려'
-  const ir = P(t, tS - .12, tS + .45, E.inQ);
-  if (ir > 0 && ir < 1) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = rgba('#bfe9ff', .35 * Math.sin(ir * Math.PI)); ctx.lineWidth = 3 + 10 * (1 - ir); ctx.beginPath(); ctx.arc(cx, cy, lerp(R * 3.2, R * .95, ir), 0, 7); ctx.stroke(); ctx.restore(); }
-  // five lights spiral in after "빨려", dragging warm trails
+  // implosion rings: the opening impact, then the pressure difference pulling the water in on '빨려'
+  for (const ir of [P(t, .02, .45, E.inQ), P(t, tS - .12, tS + .45, E.inQ)]) {
+    if (ir > 0 && ir < 1) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = rgba('#bfe9ff', .35 * Math.sin(ir * Math.PI)); ctx.lineWidth = 3 + 10 * (1 - ir); ctx.beginPath(); ctx.arc(cx, cy, lerp(R * 3.2, R * .95, ir), 0, 7); ctx.stroke(); ctx.restore(); }
+  }
+  // five lights circle the mouth from the first frame, then spiral in after "빨려", dragging warm trails
   const pts = [];
   for (let i = 0; i < 5; i++) {
-    const p = lightPos(i, t, tS, cx, cy, R), a = (1 - P(p.k, .85, 1)) * P(t, 0, .35);
+    const p = lightPos(i, t, tS, cx, cy, R), a = 1 - P(p.k, .85, 1);
     if (p.k > 0 && p.k < 1 && a > 0) {
       ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.lineCap = 'round';
       let q0 = p;
-      for (let j = 1; j <= 9; j++) {
-        const q = lightPos(i, t - j * .028, tS, cx, cy, R), f = 1 - j / 10;
-        ctx.strokeStyle = rgba('#ffb347', .5 * f * a * Math.min(1, p.k * 8)); ctx.lineWidth = 9 * f * lerp(1.1, .4, p.k);
+      for (let j = 1; j <= 16; j++) {
+        const q = lightPos(i, t - j * .028, tS, cx, cy, R), f = 1 - j / 17;
+        ctx.strokeStyle = rgba('#ffb347', .5 * f * a * Math.min(1, p.k * 8)); ctx.lineWidth = 14 * f * lerp(1.1, .4, p.k);
         ctx.beginPath(); ctx.moveTo(q0.x, q0.y); ctx.lineTo(q.x, q.y); ctx.stroke(); q0 = q;
       }
       ctx.restore();
     }
-    pts.push({ x: p.x, y: p.y, a, s: lerp(1.1, .3, p.k) });
+    pts.push({ x: p.x, y: p.y, a, s: lerp(1.9, .35, p.k) });
   }
   souls(ctx, t, pts);
-  // one light comes back out of the dark on "살아"
-  const back = P(t, t1 + .15, tLive + .35, E.outBack);
-  if (back > 0) souls(ctx, t, [{ x: cx + lerp(0, 150, back), y: cy - lerp(0, 380, back), a: back, s: lerp(.3, 1.5, back) }], { bpm: 88 });
+  // where the bore vanishes, in screen space (the returning light starts there)
+  const m = ctx.getTransform(), vpw = (tt) => ({ x: cx + Math.sin(tt * .5) * R * .16, y: cy - R * .1 + Math.cos(tt * .4) * R * .06 });
+  const v0w = vpw(t), v0 = m.transformPoint(new DOMPoint(v0w.x, v0w.y));
   ctx.restore();
   // keep the subtitle band calm under the vortex
   { const g = ctx.createLinearGradient(0, 1150, 0, 1300); g.addColorStop(0, 'rgba(1,2,3,0)'); g.addColorStop(1, 'rgba(1,2,3,.62)'); ctx.fillStyle = g; ctx.fillRect(0, 1150, W, 150); ctx.fillStyle = 'rgba(1,2,3,.62)'; ctx.fillRect(0, 1300, W, H - 1300); }
-  // 5 -> 1 counter
+  // one light comes back out of the dark on "살아": from deep in the bore toward the lens, settling under the '1'
+  const bq = P(t, t1 + .15, tLive + .35, E.outC);
+  if (bq > 0) {
+    ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.lineCap = 'round';
+    let q0 = backPos(t, t1, tLive, v0);
+    for (let j = 1; j <= 10; j++) {
+      const q = backPos(t - j * .03, t1, tLive, v0), f = 1 - j / 11;
+      ctx.strokeStyle = rgba('#ffb347', .45 * f * bq * (1 - P(t, tLive + .35, tLive + .9))); ctx.lineWidth = 16 * f * lerp(.3, 1, bq);
+      ctx.beginPath(); ctx.moveTo(q0.x, q0.y); ctx.lineTo(q.x, q.y); ctx.stroke(); q0 = q;
+    }
+    ctx.restore();
+    const b = backPos(t, t1, tLive, v0);
+    glow(ctx, b.x, b.y, lerp(40, 260, bq), '#ffb347', .26 * bq);
+    souls(ctx, t, [{ x: b.x, y: b.y, a: clamp(bq * 1.5), s: lerp(.3, 2.3, bq) }], { bpm: 88 });
+  }
+  // 5 -> 1 counter, above the mouth so the vortex centre stays clear
   const c5 = P(t, t5 - .05, t5 + .25, E.outBack), flip = P(t, t1 - .05, t1 + .2, E.inOutQ);
   if (c5 > 0) {
-    const y = 875, sc = lerp(.6, 1, c5) * (1 + .04 * beat(t, 80));
+    const y = 615, sc = lerp(.6, 1, c5) * (1 + .04 * beat(t, 80));
     ctx.save(); ctx.translate(540, y); ctx.scale(sc, sc * (1 - Math.sin(flip * Math.PI) * .9));
     const n = flip < .5 ? '5' : '1', col = flip < .5 ? '#ffffff' : '#ffb347';
-    text(ctx, n, 0, 0, { size: 230, weight: 900, color: col, stroke: '#000', strokeW: 16, alpha: c5 });
+    text(ctx, n, 0, 0, { size: 190, weight: 900, color: col, stroke: '#000', strokeW: 14, alpha: c5 });
     ctx.restore();
-    text(ctx, flip < .5 ? '명이 빨려 들어갔다' : '명만 살아 나왔다', 540, 1222, { size: 46, weight: 800, color: '#cfe8ff', alpha: c5, stroke: '#000', strokeW: 8 });
   }
-  // content warning (first ~2.2 s)
-  const wa = P(t, .05, .35) * (1 - P(t, 2.0, 2.4));
-  chip(ctx, '※ 실제 생존자 음성 포함 · 시청 주의', 540, 492, wa, { size: 30, color: '#ffd9a0', border: 'rgba(255,180,90,.45)' });
-  // suction flash
+  // content warning: on from the first frames until the hook's last line
+  const wa = P(t, .05, .35) * (1 - P(t, 3.4, 3.8));
+  chip(ctx, '※ 실제 생존자 음성 포함 · 시청 주의', 540, 492, wa, { size: 34, color: '#ffd9a0', border: 'rgba(255,180,90,.45)' });
+  // cyan implosion flash on the opening impact; suction flash on '빨려'
+  flash(ctx, .18 * (1 - P(t, .05, .35)), '#bfe9ff');
   flash(ctx, .18 * (1 - P(t, tS, tS + .25)) * P(t, tS - .08, tS), '#bfe9ff');
-  flash(ctx, .5 * (1 - P(t, 0, .25)), '#000');
 };
 })();

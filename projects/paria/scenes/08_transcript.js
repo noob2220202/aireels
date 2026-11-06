@@ -1,8 +1,10 @@
 // transcript (hold card, no audio played): the published transcript of the recording, line by line.
-// Black. A badge '실제 관 속 녹음 · 녹취' + small source line. Four lights in a faint chain on the oil (front = 크리스,
-// the one behind = 카즈), the fifth far back. As each subtitle line appears, the speaker's light swells and sends a faint
-// voice ring; on '카즈, 괜찮아?' the ring reaches the light behind; '아니.' is a weak, slow swell from that light.
-// Faint tape-static flicker between lines; tunnel vision tightens toward the decision.
+// Black. A document card '실제 관 속 녹음 · 녹취' + source line sits right above the subtitle lines (where the clip scenes
+// put their attribution card), so the viewer knows they are reading a transcript. Four lights in a faint chain on the oil
+// (front = 크리스, the one behind = 카즈), the fifth far back. As each line appears, the speaker's light swells (soft glow,
+// only very faint rings: no audio is played); on '카즈, 괜찮아?' the camera drifts from his light to the one behind;
+// '아니.' is a weak, slow swell from that light while the tunnel vision tightens. Drips from the unseen crown and
+// ripples in the oil keep the dark alive; faint tape-static flicker between lines.
 (function () {
 const { W, H, E, P, clamp, lerp, fbm, rgba, glow, camera, text, measure, roundRect, flash } = L;
 const { souls, beat } = window.PK;
@@ -60,26 +62,31 @@ function ring(ctx, ex, ey, R, a) {
     ctx.restore();
   }
 }
-// badge: small transcript glyph + text (no recording dot: the audio is not played here)
-function badge(ctx, s, y, a) {
+// document card: transcript glyph + badge line + source line (no recording dot: the audio is not played here).
+// Same slot as the clip scenes' attribution card (y ~1185), right above the subtitle lines it describes.
+function docCard(ctx, s, src, y, a, sa) {
   if (a <= 0) return;
-  const size = 34, tw = measure(ctx, s, size, L.FONT.sub, 800), w = tw + 96, h = size + 30, x0 = 540 - w / 2;
+  const F = L.FONT.sub, bs = 32;
+  let ss = 27; if (src) { while (ss > 21 && measure(ctx, src, ss, F, 600) > 900) ss--; }
+  const tw = measure(ctx, s, bs, F, 800), sw = src ? measure(ctx, src, ss, F, 600) : 0;
+  const w = Math.min(1040, Math.max(tw + 70, sw) + 56), h = src ? 98 : 64, x0 = 540 - w / 2, y0 = y - h / 2;
   ctx.save(); ctx.globalAlpha *= a;
-  ctx.fillStyle = 'rgba(4,10,14,.86)'; roundRect(ctx, x0, y - h / 2, w, h, 12); ctx.fill();
-  ctx.strokeStyle = 'rgba(143,211,232,.45)'; ctx.lineWidth = 2.5; ctx.stroke();
-  // glyph: a sheet with lines
-  const gx = x0 + 26, gy = y - 15;
-  ctx.strokeStyle = 'rgba(207,232,255,.85)'; ctx.lineWidth = 2; roundRect(ctx, gx, gy, 24, 30, 3); ctx.stroke();
-  ctx.fillStyle = 'rgba(207,232,255,.85)'; for (let i = 0; i < 4; i++) ctx.fillRect(gx + 5, gy + 6 + i * 5.5, i === 3 ? 8 : 14, 2);
+  ctx.fillStyle = 'rgba(3,8,12,.88)'; roundRect(ctx, x0, y0, w, h, 14); ctx.fill();
+  ctx.strokeStyle = 'rgba(143,211,232,.42)'; ctx.lineWidth = 2.5; ctx.stroke();
+  // glyph: a sheet with lines, left of the badge text
+  const ly = src ? y0 + 30 : y, gx = 540 - (tw + 46) / 2, gy = ly - 15;
+  ctx.strokeStyle = 'rgba(207,232,255,.9)'; ctx.lineWidth = 2; roundRect(ctx, gx, gy, 24, 30, 3); ctx.stroke();
+  ctx.fillStyle = 'rgba(207,232,255,.9)'; for (let i = 0; i < 4; i++) ctx.fillRect(gx + 5, gy + 6 + i * 5.5, i === 3 ? 8 : 14, 2);
   ctx.restore();
-  text(ctx, s, x0 + 66, y + 2, { size, weight: 800, color: '#e8f4ff', align: 'left', alpha: a });
+  text(ctx, s, gx + 46, ly + 2, { size: bs, weight: 800, color: '#e8f4ff', align: 'left', alpha: a });
+  if (src && sa > 0) text(ctx, src, 540, y0 + h - 27, { size: ss, weight: 600, color: '#a9c6d6', alpha: a * sa });
 }
 
 window.PK.scenes.transcript = function (ctx, t, d, info) {
   const D = info.sc.data || {};
   const T0 = info.sc.t0;
   // the subtitle lines of this card (absolute -> local), speaker index from the label
-  let lines = ((info.TL && info.TL.subs) || []).filter(c => c.t0 >= T0 - .01 && c.t0 < info.sc.t1).map(c => ({ a: c.t0 - T0, b: c.t1 - T0, sp: c.who === '카즈' ? 1 : 0 }));
+  let lines = ((info.TL && info.TL.subs) || []).filter(c => c.t0 >= T0 - .01 && c.t0 < info.sc.t1).map(c => ({ a: c.t0 - T0, b: c.t1 - T0, sp: /^카즈/.test(c.who || '') ? 1 : 0 }));
   if (!lines.length) lines = [{ a: .25, b: 1.75, sp: 0 }, { a: 1.75, b: 3.25, sp: 0 }, { a: 3.5, b: 4.9, sp: 0 }, { a: 4.9, b: 5.85, sp: 1 }];
   const bpm = 92;
 
@@ -96,7 +103,7 @@ window.PK.scenes.transcript = function (ctx, t, d, info) {
   const rings = [];
   lines.forEach((ln, k) => {
     const n = ln.sp === 1 ? 1 : 2;
-    for (let j = 0; j < n; j++) rings.push({ c: ln.a + j * .45 + (ln.sp === 1 ? .2 : 0), x: XS[ln.sp], s: ln.sp === 1 ? .45 : (j ? .55 : .85) });
+    for (let j = 0; j < n; j++) rings.push({ c: ln.a + j * .45 + (ln.sp === 1 ? .2 : 0), x: XS[ln.sp], s: .3 * (ln.sp === 1 ? .5 : (j ? .6 : 1)) });
   });
   const live = [];
   for (const r of rings) { const age = t - r.c; if (age < 0 || age > 2) continue; live.push({ x: r.x, R: 12 + 330 * age, a: r.s * Math.pow(1 - age / 2, 1.5) * P(12 + 330 * age, 12, 70, E.inQ) }); }
@@ -112,9 +119,13 @@ window.PK.scenes.transcript = function (ctx, t, d, info) {
 
   darkFastT(ctx, t, { k: .22, seed: 10 });
   const dr = { x: fb(t * .35, 31) * 14, y: fb(t * .3, 40) * 14, r: fb(t * .25, 35) * .005 };
-  const zoom = lerp(1.3, 1.42, P(t, -.1, d + .2, E.inOutQ));
+  // slow push in; during '카즈, 괜찮아?' the camera drifts from his light to the light behind, which answers '아니.'
+  const Lq = lines[Math.min(2, lines.length - 1)], La = lines[lines.length - 1];
+  const zoom = lerp(1.7, 2.1, P(t, -.1, d + .2));          // steady push (no ease: it never settles)
+  const tr = P(t, Lq.a, La.a + .1, E.inOutQ), no = P(t, La.a - .1, La.a + .6, E.inOutQ);
+  const camX = lerp(lerp(462, 512, P(t, 0, Lq.a, E.inOutQ)), XS[1], tr);
   ctx.save();
-  camera(ctx, { x: 575 + dr.x / zoom, y: LYT + 90 / zoom + dr.y / zoom, zoom, rot: dr.r, t });
+  camera(ctx, { x: camX + dr.x / zoom, y: LYT + 90 / zoom + dr.y / zoom, zoom, rot: dr.r, t });
   ctx.globalAlpha = fl;
   // oil surface: faint, the only geometry
   ctx.save();
@@ -124,6 +135,21 @@ window.PK.scenes.transcript = function (ctx, t, d, info) {
   const sg = ctx.createLinearGradient(0, 0, W, 0); sg.addColorStop(0, 'rgba(143,211,232,0)'); sg.addColorStop(.25, 'rgba(143,211,232,.16)'); sg.addColorStop(.75, 'rgba(143,211,232,.16)'); sg.addColorStop(1, 'rgba(143,211,232,0)');
   ctx.strokeStyle = sg; ctx.lineWidth = 1.5; ctx.beginPath(); for (let x = -200; x <= W + 210; x += 12) { const y = sy(x); x === -200 ? ctx.moveTo(x, y) : ctx.lineTo(x, y); } ctx.stroke();
   ctx.restore();
+  // drips from the unseen crown of the pipe into the oil, and their rings (something always moves in the dark)
+  const CR = LYT - 250;
+  ctx.save(); ctx.globalCompositeOperation = 'lighter';
+  for (let k = Math.floor((t + 2) / .55) - 4; k <= Math.floor((t + 2) / .55); k++) {
+    const t0 = k * .55 - 2 + hi(k * 7 + 3) * .3, u = t - t0; if (u < 0 || u > 2) continue;
+    const dx = camX + (hi(k * 13 + 11) * 2 - 1) * 400 / zoom;
+    if (u < .55) { const yy = CR + (SURF - CR) * Math.pow(u / .55, 2); ctx.fillStyle = rgba('#bfe9ff', .32 * P(yy, CR + 60, CR + 160)); ctx.beginPath(); ctx.ellipse(dx, yy, 1.8, 4.2, 0, 0, 7); ctx.fill(); }
+    else { const q = (u - .55) / 1.45; ctx.strokeStyle = rgba('#8fd3e8', .24 * (1 - q)); ctx.lineWidth = 1.3; ctx.beginPath(); ctx.ellipse(dx, sy(dx) + 1, 5 + q * 80, 1.4 + q * 4.5, 0, 0, 7); ctx.stroke(); }
+  }
+  // slow oil ripples spreading from under the lights (they are breathing in it)
+  for (let i = 0; i < 4; i++) for (let j = 0; j < 2; j++) {
+    const ph = (t * .45 + j / 2 + i * .29) % 1, a = .2 * Math.sin(ph * Math.PI) * (i < 2 ? 1 : .6);
+    ctx.strokeStyle = rgba('#8fd3e8', a); ctx.lineWidth = 1.2; ctx.beginPath(); ctx.ellipse(XS[i], sy(XS[i]) + 2, 14 + ph * 95, 2 + ph * 6, 0, 0, 7); ctx.stroke();
+  }
+  ctx.restore();
   for (const r of live) ring(ctx, r.x, LYT, r.R, r.a * fl);
 
   // the lights
@@ -131,7 +157,7 @@ window.PK.scenes.transcript = function (ctx, t, d, info) {
   for (let i = 0; i < 5; i++) {
     let a = i < 2 ? .58 : i < 4 ? .4 : .2;
     if (i < 2) a += .32 * spk[i] + .3 * swell[i];
-    if (i === 1) a += .35 * glint(XS[1]);
+    if (i === 1) a += .9 * glint(XS[1]);
     if (i < 4) a *= (.93 + .07 * nz(t * 6, i + 20)) * (hi(f + i * 31) > .985 ? .7 : 1);   // the fifth stays steady
     a *= P(t, -.3, .35, E.outQ);
     A.push(clamp(a));
@@ -158,11 +184,7 @@ window.PK.scenes.transcript = function (ctx, t, d, info) {
     for (let s = 0; s < 3; s++) { const w = (15 - s * 4) * (.7 + .3 * Math.sin(t * 2.6 + s * 1.9 + x)); ctx.fillStyle = rgba('#ffc477', a * .1 * (1 - s / 3)); ctx.fillRect(x - w + Math.sin(t * 2 + s) * 3, SURF + 5 + s * 11, w * 2, 1.5); }
   }
   ctx.restore();
-  // who is speaking: a small name tag over the light, only while it speaks
-  for (let i = 0; i < 2; i++) {
-    let ta = 0; for (const ln of lines) if (ln.sp === i) ta = Math.max(ta, P(t, ln.a - .02, ln.a + .14, E.outQ) * (1 - P(t, ln.b - .2, ln.b - .04)));
-    if (ta > .01) text(ctx, i === 0 ? '크리스' : '카즈', XS[i], LYT - 56 - 6 * ta, { size: 24, weight: 700, color: '#cfe8ff', alpha: ta * .78 });
-  }
+  // (speaker names are carried by the subtitle labels only)
   ctx.restore();
 
   // tape static between lines
@@ -175,14 +197,13 @@ window.PK.scenes.transcript = function (ctx, t, d, info) {
     ctx.restore();
   }
 
-  // tunnel vision (tightens toward the decision), breathing with the heart
+  // tunnel vision (tightens toward the decision, and once more on '아니.'), breathing with the heart; centred on the pair
   const brth = .5 + .5 * Math.sin(t * Math.PI * 2 * .4);
-  iris(ctx, lerp(.6, .74, P(t, 2.5, d, E.inOutQ)), .5 * brth + .5 * beat(t, bpm), 500, 870);
+  const icx = 540 + (lerp((XS[0] + XS[1]) / 2, XS[1] - 20, no) - camX) * zoom;
+  iris(ctx, lerp(.6, .74, P(t, 2.5, d, E.inOutQ)) + .1 * no, .5 * brth + .5 * beat(t, bpm), icx, 880);
 
-  // badge + source line (above the action, below the persistent title)
+  // document card + source line, right above the transcript lines
   const ba = P(t, .05, .4, E.outQ) * (hi(f * 3 + 1) > .2 || t > .45 ? 1 : .4);
-  badge(ctx, D.badge || '실제 관 속 녹음 · 녹취', 520 + 8 * (1 - ba), ba);
-  const sa = P(t, .3, .7, E.outQ);
-  if (sa > 0 && D.src) text(ctx, D.src, 540, 586, { size: 24, weight: 600, color: '#8fb3c4', alpha: sa * .9 });
+  docCard(ctx, D.badge || '실제 관 속 녹음 · 녹취', D.src || '', 1183 + 8 * (1 - ba), ba, P(t, .2, .6, E.outQ));
 };
 })();

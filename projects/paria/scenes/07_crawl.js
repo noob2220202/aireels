@@ -134,7 +134,7 @@ function ring(ctx, ex, ey, R, a) {
   }
   ctx.restore();
 }
-// generic action camera (no brand): lens on the left, dead black screen with a live audio line on the right
+// generic action camera (no brand, no REC light): lens on the left, dead black screen with a live audio line on the right
 function actionCam(ctx, t, x, y, s, a, live) {
   if (a <= 0) return;
   ctx.save(); ctx.translate(x, y); ctx.scale(s, s); ctx.globalAlpha *= a;
@@ -166,11 +166,7 @@ function actionCam(ctx, t, x, y, s, a, live) {
   }
   ctx.stroke();
   ctx.restore();
-  // small red recording dot
-  const on = (t * 1.1) % 1 < .62 ? 1 : .25;
-  ctx.fillStyle = rgba('#e3262f', .9 * on); ctx.beginPath(); ctx.arc(w / 2 - 16, -h / 2 + 10, 4, 0, 7); ctx.fill();
-  if (on > .5) glow(ctx, w / 2 - 16, -h / 2 + 10, 14, '#e3262f', .3);
-  ctx.restore();
+  ctx.restore();          // no recording indicator: the recording is only ever shown as a text transcript
 }
 
 // ---- motion of the five lights (world x) ----
@@ -188,7 +184,7 @@ function moving(pl, i, t) { let m = 0; for (const [a, d] of pl.mv[i]) m = Math.m
 
 window.PK.scenes.crawl = function (ctx, t, d, info) {
   const pl = plan(info);
-  const tC = at(info, '사슬처럼', .2), tV = at(info, '목소리는', .55), tK = at(info, '카짐', .63), tP = at(info, '고프로에', .78);
+  const tC = at(info, '사슬처럼', .2), tV = at(info, '목소리', .55), tK = at(info, '카짐', .63), tP = at(info, '고프로에', .78);
   const bpm = 98;
 
   // ---- lights ----
@@ -213,12 +209,13 @@ window.PK.scenes.crawl = function (ctx, t, d, info) {
   const push = P(t, d - 1.25, d + .15, E.inOutQ);
   const camIcon = L5[1].x;
   let camX = lerp(680, cc + 62, P(t, -.2, 1.6, E.inOutQ)); camX = lerp(camX, camIcon, push);
-  const zoom = lerp(1.16, 1.33, P(t, .3, 2.4, E.inOutQ)) + .04 * P(t, 2.4, d - 1.2) + 1.0 * E.inQ(push);
+  // close on the air gap (picks up who's eased-back ~1.5 framing, then tightens on the chain)
+  const zoom = lerp(1.5, 1.8, P(t, 0, 2.4, E.inOutQ)) + .04 * P(t, 2.4, d - 1.2) + 1.0 * E.inQ(push);
   const dr = drift2(t, 1, 21);
-  let sh = 0; for (const p of pl.pulls) sh += .18 * Math.exp(-Math.pow((t - p - .12) / .1, 2));
+  let sh = 0; for (const p of pl.pulls) sh += .32 * Math.exp(-Math.pow((t - p - .12) / .1, 2));
   sh += .3 * Math.exp(-Math.pow((t - tP + .1) / .09, 2));
   const sk = shake2(t, sh, 21);
-  const camY = lerp(TB.cy + 150 / zoom, TB.top + 108 + 260 / zoom, push);
+  const camY = lerp(TB.cy + lerp(145, 100, P(t, 0, 1.6, E.inOutQ)) / zoom, TB.top + 108 + 260 / zoom, push);
 
   darkFastC(ctx, t, { k: .3, seed: 8 });
   ctx.save();
@@ -281,11 +278,20 @@ window.PK.scenes.crawl = function (ctx, t, d, info) {
     const ex = lerp(ax, bx, rv), ey = lerp(ay, by, rv);
     const cx = lerp(ax, mx, rv), cy = lerp(ay, my, rv);
     const pull = Math.max(A.m, B.m);
-    const al = (.2 + .25 * taut + .25 * pull + .55 * cFlash) * Math.min(A.a, B.a) * 1.15;
-    ctx.strokeStyle = rgba('#ff9a3c', al * .2); ctx.lineWidth = 10; ctx.beginPath(); ctx.moveTo(ax, ay); ctx.quadraticCurveTo(cx, cy, ex, ey); ctx.stroke();
-    ctx.strokeStyle = rgba('#ffd9a0', al * .85); ctx.lineWidth = 1.4; ctx.beginPath(); ctx.moveTo(ax, ay); ctx.quadraticCurveTo(cx, cy, ex, ey); ctx.stroke();
+    // tension pulse: on each pull a flare runs back along the chain from the front light
+    let tp = 0; for (const p of pl.pulls) tp = Math.max(tp, Math.exp(-Math.pow((t - p - .08 - j * .1) / .13, 2)));
+    const al = (.2 + .25 * taut + .25 * pull + .55 * cFlash + .5 * tp) * Math.min(A.a, B.a) * 1.15;
+    ctx.strokeStyle = rgba('#ff9a3c', al * .2); ctx.lineWidth = 10 + 6 * tp; ctx.beginPath(); ctx.moveTo(ax, ay); ctx.quadraticCurveTo(cx, cy, ex, ey); ctx.stroke();
+    ctx.strokeStyle = rgba('#ffd9a0', clamp(al * .9)); ctx.lineWidth = 2.4 + 1.2 * tp; ctx.beginPath(); ctx.moveTo(ax, ay); ctx.quadraticCurveTo(cx, cy, ex, ey); ctx.stroke();
     const cy2 = lerp(ay, my + 4 * Math.sin(t * 2.1 + j * 2) - sag * .35, rv);
-    ctx.strokeStyle = rgba('#ffc477', al * .4); ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(ax, ay - 1); ctx.quadraticCurveTo(cx, cy2, ex, ey - 1); ctx.stroke();
+    ctx.strokeStyle = rgba('#ffc477', al * .4); ctx.lineWidth = 1.4; ctx.beginPath(); ctx.moveTo(ax, ay - 1); ctx.quadraticCurveTo(cx, cy2, ex, ey - 1); ctx.stroke();
+    // the flare itself: a bright bead running from A to B along this link
+    for (const p of pl.pulls) {
+      const u = (t - p - .02 - j * .1) / .16; if (u < 0 || u > 1 || rv < 1) continue;
+      const bxp = (1 - u) * (1 - u) * ax + 2 * (1 - u) * u * mx + u * u * bx, byp = (1 - u) * (1 - u) * ay + 2 * (1 - u) * u * my + u * u * by;
+      const ba = Math.sin(u * Math.PI) * Math.min(A.a, B.a);
+      glow(ctx, bxp, byp, 34, '#ffd27a', .5 * ba); ctx.fillStyle = rgba('#fff0d7', .85 * ba); ctx.beginPath(); ctx.arc(bxp, byp, 2.6, 0, 7); ctx.fill();
+    }
     // bead of light travelling along the chain on '사슬처럼'
     const bq = bead * 3 - j;
     if (bead > 0 && bead < 1 && bq >= 0 && bq <= 1) {
@@ -299,9 +305,9 @@ window.PK.scenes.crawl = function (ctx, t, d, info) {
   ctx.save(); ctx.globalCompositeOperation = 'lighter';
   for (let i = 0; i < 4; i++) for (let j = 0; j < 4; j++) {
     const ph = (t * 1.5 + j / 4 + i * .13) % 1, tt = t - ph * .9;
-    const am = moving(pl, i, tt), a = am * (1 - ph) * .3 * L5[i].a; if (a < .01) continue;
+    const am = moving(pl, i, tt), a = am * (1 - ph) * .6 * L5[i].a; if (a < .01) continue;
     const ex = xAt(pl, i, tt) + 10;
-    ctx.strokeStyle = rgba('#8fd3e8', a); ctx.lineWidth = 1.4; ctx.beginPath(); ctx.ellipse(ex, TB.fl + 1, 10 + ph * 60, 2 + ph * 4, 0, Math.PI * .05, Math.PI * .95); ctx.stroke();
+    ctx.strokeStyle = rgba('#8fd3e8', a); ctx.lineWidth = 1.8; ctx.beginPath(); ctx.ellipse(ex, TB.fl + 1, 10 + ph * 60, 2 + ph * 4, 0, Math.PI * .05, Math.PI * .95); ctx.stroke();
   }
   ctx.restore();
 
@@ -359,7 +365,7 @@ window.PK.scenes.crawl = function (ctx, t, d, info) {
   // ---- tunnel vision: breathing, then closing on the black screen ----
   const brth = .5 + .5 * Math.sin(t * Math.PI * 2 * .42);
   const ik = lerp(.52, .62, P(t, 1.5, d - 1.4, E.inOutQ)) + .3 * push;
-  iris(ctx, ik, .6 * brth + .4 * beat(t, bpm), lerp(540, iconSX, push), lerp(840, iconSY + 40, push));
+  iris(ctx, ik, .6 * brth + .4 * beat(t, bpm), lerp(540, iconSX, push), lerp(900, iconSY + 40, push));
 
   // ---- label (screen space, under the pipe) ----
   const lab = P(t, tP + .25, tP + .6, E.outQ);

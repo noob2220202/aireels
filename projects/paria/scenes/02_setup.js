@@ -248,7 +248,7 @@ function drawHabitat(ctx, t, o) {
   ctx.fillStyle = 'rgba(0,0,0,.5)'; for (let k = 0; k < 9; k++) { ctx.beginPath(); ctx.arc(x - w / 2 + 12 + k * (w - 24) / 8, y - h / 2 + 7, 2, 0, 7); ctx.fill(); ctx.beginPath(); ctx.arc(x - w / 2 + 12 + k * (w - 24) / 8, y + h / 2 - 8, 2, 0, 7); ctx.fill(); }
   ctx.restore();
   // five lives at work around the riser mouth
-  const pts = HL.map(([dx, dy], i) => ({ x: x + dx + noise1(t * .6, i * 5) * 3, y: y + dy + noise1(t * .5, i * 5 + 2) * 2.5, a: o.lights[i], s: .68 }));
+  const pts = HL.map(([dx, dy], i) => ({ x: x + dx + noise1(t * .6, i * 5) * 3, y: y + dy + noise1(t * .5, i * 5 + 2) * 2.5, a: o.lights[i], s: o.ls || .68 }));
   souls(ctx, t, pts, { bpm: 70 });
 }
 
@@ -285,10 +285,11 @@ window.PK.scenes.setup = function (ctx, t, d, info) {
     const tyy = pinS[1] - 150;
     lead(ctx, pinS[0], pinS[1] - 48, pinS[0] - 40, tyy + 30, tagA);
     chip(ctx, 'Pointe-à-Pierre, 트리니다드', clamp(pinS[0] - 40, 300, 780), tyy, tagA, { size: 34 });
-    const cA = P(t, tPar - .05, tPar + .3, E.outQ) * (1 - P(t, tSea - .15, tSea + .15));
+    // state-company chip: in on '국영기업', held until the dive on '해저'
+    const cA = P(t, tGuk - .05, tGuk + .3, E.outQ) * (1 - P(t, tSea - .05, tSea + .15));
     const cy2 = pinS[1] + 120;
     lead(ctx, pinS[0], pinS[1] + 10, pinS[0] - 40, cy2 - 30, cA);
-    const cs = lerp(.9, 1, E.outBack(P(t, tPar - .05, tPar + .3)));
+    const cs = lerp(.9, 1, E.outBack(P(t, tGuk - .05, tGuk + .3)));
     ctx.save(); ctx.translate(clamp(pinS[0] - 40, 300, 780), cy2); ctx.scale(cs, cs); chip(ctx, 'Paria Fuel Trading (국영)', 0, 0, cA, { size: 34, color: '#fff', border: 'rgba(255,200,130,.5)' }); ctx.restore();
     ctx.restore();
     // date (top info slot), typed on "2022년"
@@ -299,15 +300,17 @@ window.PK.scenes.setup = function (ctx, t, d, info) {
   const siteA = P(t, tSea + .1, tSea + .42, E.inOutQ);
   if (siteA > 0) {
     const desc = P(t, tSea - .05, tSea + .8, E.outC);
-    const pIn = P(t, tFix - .15, d + .7, E.inOutQ);
-    const z = Math.exp(lerp(0, Math.log(2.8), pIn));
-    const cx = lerp(540, ST.rx + 6, pIn) + dr.x / z, cy = lerp(lerp(380, 850, desc), ST.hab - 6, pIn) + dr.y / z;
+    // push in on '하청' so the habitat is ~630 px wide by '다섯 명이' (lights countable), then keep closing in so the five
+    // lights land where the suction cutaway opens (spread ~±320 px, y ~630-690) for the hand-over
+    const e1 = E.inOutQ(P(t, tSub - .15, t5 + .05)), e2 = E.inQ(P(t, t5 + .05, d + .2));
+    const z = Math.pow(3.3, e1) * Math.pow(5 / 3.3, e2);
+    const cx = lerp(540, ST.rx, e1) + dr.x / z, cy = lerp(lerp(lerp(380, 850, desc), ST.hab - 6, e1), 874, e2) + dr.y / z;
     ctx.save(); ctx.globalAlpha = siteA;
     cam(ctx, { x: cx, y: cy, zoom: z, rot: dr.r, t, shake: .12 * (1 - desc) });
     drawSite(ctx, t, z, {
-      pipeHL: P(t, tPipe, tPipe + .6) * (1 - .6 * P(t, tFix + .2, tSub + .3)), pulse: P(t, tPipe - .05, tFix + .55, E.inOutQ), dim: P(t, tPipe + .1, tPipe + .55) * (1 - P(t, tDiv - .2, tDiv + .15)),
-      on: .25 + .75 * P(t, tFix - .05, tFix + .35, E.outQ) * (hash(Math.floor(t * 30)) > .35 || t > tFix + .3 ? 1 : .4),
-      lights: [0, 1, 2, 3, 4].map(i => P(t, tSub + i * .17, tSub + i * .17 + .35, E.outQ)),
+      pipeHL: P(t, tPipe, tPipe + .6) * (1 - .6 * P(t, tFix + .2, tSub + .3)), pulse: P(t, tPipe - .05, tFix + .55, E.inOutQ), dim: P(t, tPipe + .1, tPipe + .55) * (1 - P(t, tSub + .05, tSub + .3)),
+      on: .25 + .75 * P(t, tFix - .05, tFix + .35, E.outQ) * (hash(Math.floor(t * 12)) > .35 || t > tFix + .3 ? 1 : .55),
+      lights: [0, 1, 2, 3, 4].map(i => P(t, tSub + i * .17, tSub + i * .17 + .35, E.outQ)), ls: .68 * Math.min(1, 2.2 / z),
     });
     const m = ctx.getTransform();
     const dimS = toS(m, 820, ST.ry - ST.r), deckS = toS(m, ST.rx + 40, ST.deck - 16);
@@ -316,10 +319,11 @@ window.PK.scenes.setup = function (ctx, t, d, info) {
     const bA = siteA * P(t, tPipe - .15, tPipe + .2, E.outQ) * (1 - P(t, d - .7, d - .2));
     lead(ctx, deckS[0], deckS[1], 540, 560, bA * (1 - P(t, tFix, tFix + .4)));
     chip(ctx, '6번 부두 · 36번 해저관', 540, 528, bA, { size: 36 });
-    const dA = siteA * P(t, tPipe + .15, tPipe + .5, E.outQ) * (1 - P(t, tDiv - .2, tDiv + .15));
+    const dA = siteA * P(t, tPipe + .15, tPipe + .5, E.outQ) * (1 - P(t, tSub + .05, tSub + .3));
     lead(ctx, dimS[0], dimS[1] - 4, dimS[0], dimS[1] - 64, dA);
     chip(ctx, '지름 30인치 ≈ 76cm', clamp(dimS[0], 260, 820), dimS[1] - 96, dA, { size: 32 });
-    const cA = P(t, tDiv - .15, tDiv + .2, E.outQ), cs = lerp(.88, 1, E.outBack(P(t, tDiv - .15, tDiv + .25))) * (1 + .05 * Math.exp(-Math.max(0, t - t5) * 6) * (t > t5 ? 1 : 0));
+    // crew chip: in on '하청', out before the hand-over so it never ghosts over the next scene
+    const cA = P(t, tSub - .1, tSub + .25, E.outQ) * (1 - P(t, d - .45, d - .2)), cs = lerp(.88, 1, E.outBack(P(t, tSub - .1, tSub + .3))) * (1 + .05 * Math.exp(-Math.max(0, t - t5) * 6) * (t > t5 ? 1 : 0));
     ctx.save(); ctx.translate(540, 1150); ctx.scale(cs, cs); chip(ctx, '하청 LMCS 잠수부 5명', 0, 0, cA, { size: 38, color: '#fff', border: 'rgba(255,179,71,.6)' }); ctx.restore();
   }
   flash(ctx, .14 * P(t, tSea - .08, tSea + .02) * (1 - P(t, tSea + .02, tSea + .35)), '#bfe9ff');
@@ -347,5 +351,9 @@ window.PK.scenes.setup = function (ctx, t, d, info) {
   }
   // the calm before the storm: a faint tightening as we close in on the habitat
   suffocate(ctx, t, .12 * P(t, tSub, d + .2, E.inQ), .25);
+  // hand-over: the frame goes dark through the transition window (only rendered there) so the outgoing habitat
+  // does not ghost over the suction cutaway
+  const ho = P(t, d - .2, d + .2);
+  if (ho > 0) { ctx.save(); ctx.fillStyle = `rgba(1,2,3,${(.97 * E.outQ(clamp(ho * 3.6))).toFixed(3)})`; ctx.fillRect(0, 0, W, H); ctx.restore(); }
 };
 })();

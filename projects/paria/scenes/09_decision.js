@@ -2,9 +2,12 @@
 // Same side cutaway as "crawl" (the pipe very slightly rising to the right, so the air gap is a little larger there).
 // '물이' -> the oil shivers, bubbles; '차올라' -> it surges up fast until only a thin air gap is left at the top; the lights
 // are pushed up and flatten against the steel; the air-gap gauge drops and turns red, the tunnel vision tightens and the
-// heart races ('15센티미터만' + approved label). Faint knocks travel down the pipe from the right. '부드램은' -> the front
-// light lets go of the chain and moves ahead (left) alone, with a small two-tank icon ('공기통 2개'); the other three
-// draw back to the right where there is a little more air; the fifth stays dim and far back.
+// heart races ('15센티미터만' + approved label). Once the surge settles, swell crests keep running along the surface; the
+// first ones reach the crown and briefly press each light flat and dim it (bubbles burst out), the later ones are lower.
+// '남자' -> the conditions as two static chips under the pipe: '숨 쉴 틈 ≈ 15cm (6인치)' and '공기통 2개' (a two-tank glyph
+// in the chip, attached to no light), both gone as he moves. '부드램은' -> the front light turns, then only starts to pull
+// away (left); its thread to the light behind stretches thin but holds (leave picks it up); the other two draw back a
+// little to the right where there is more air; the fifth stays dim and far back.
 (function () {
 const { W, H, E, P, clamp, lerp, fbm, rgba, glow, camera, text, roundRect, flash } = L;
 const { at, souls, beat, chip, gapMeter } = window.PK;
@@ -70,6 +73,19 @@ function interior(ctx, x0, x1) { ctx.beginPath(); ctx.moveTo(x0, topY(x0)); ctx.
 function band(ctx, x0, x1, y0f, y1f) { ctx.beginPath(); ctx.moveTo(x0, y0f(x0)); ctx.lineTo(x1, y0f(x1)); ctx.lineTo(x1, y1f(x1)); ctx.lineTo(x0, y1f(x0)); ctx.closePath(); }
 
 const START = [452, 520, 592, 662, 905];
+// two small horizontal tanks (a condition glyph inside the chip; never drawn on a light)
+function tankChip(ctx, s, x, y, a) {
+  if (a <= 0) return;
+  const size = 32, tw = L.measure(ctx, s, size, L.FONT.sub, 800), iw = 58, w = tw + iw + 52, h = size + 24, x0 = x - w / 2;
+  ctx.save(); ctx.globalAlpha *= a;
+  ctx.fillStyle = 'rgba(4,10,14,.84)'; roundRect(ctx, x0, y - h / 2, w, h, 10); ctx.fill();
+  ctx.strokeStyle = 'rgba(143,211,232,.45)'; ctx.lineWidth = 2.5; ctx.stroke();
+  ctx.strokeStyle = 'rgba(191,233,255,.9)'; ctx.fillStyle = 'rgba(191,233,255,.9)'; ctx.lineWidth = 2;
+  const gx = x0 + 22 + 8;
+  for (const dy of [-8, 8]) { roundRect(ctx, gx, y + dy - 6, 44, 12, 6); ctx.stroke(); ctx.fillRect(gx - 7, y + dy - 3, 5, 6); }
+  ctx.restore();
+  text(ctx, s, x0 + 22 + iw + 4, y + 2, { size, weight: 800, color: '#cfe8ff', align: 'left', alpha: a });
+}
 
 window.PK.scenes.decision = function (ctx, t, d, info) {
   const tW = at(info, '물이', .02), tR = at(info, '차올라', .07), t15 = at(info, '15센티미터만', .28), tNam = at(info, '남자', .42);
@@ -83,13 +99,26 @@ window.PK.scenes.decision = function (ctx, t, d, info) {
   const riseV = Math.sin(P(t, tR - .05, tR + 1.15) * Math.PI);       // how violently it is moving
   const S0 = TB.cy + TB.r - level * 2 * TB.r;
   const wav = 2 + 7 * riseV;
-  const surf = x => S0 + Math.sin(x * .021 - t * (1.4 + 4 * riseV)) * wav * .6 + Math.sin(x * .057 + t * 1.1) * wav * .4;
-  const gapAt = x => Math.max(6, S0 - topY(x));
+  // swell crests once the surge has settled (mean level unchanged): bumps running right -> left along the surface.
+  // The first two (before '부드램은') reach the crown; the later ones stay lower and never cover a light.
+  const XM = 557, CV = 330, CW = 52, CT = 1.7;
+  // (the second one has cleared his light before '부드램은', so nothing dims him as he decides)
+  const CRESTS = [[tR + 1.33, 1.3], [Math.min(tR + 2.33, tB - .55), 1.3], [tB + .97, .38], [tB + 2.07, .34], [tB + 3.17, .3]];
+  const g0 = S0 - topY(XM);
+  // wave profile: steep front (left, the direction of travel), longer back, shallow troughs either side
+  const prof = dx => Math.exp(-Math.pow(dx / (dx < 0 ? CW * .75 : CW * 1.25), 2)) - .22 * Math.exp(-Math.pow((Math.abs(dx) - 2.1 * CW) / (1.1 * CW), 2));
+  const bump = x => { let b = 0; for (const [tc, am] of CRESTS) { const u = t - tc; if (Math.abs(u) > CT / 2) continue; const xc = XM - CV * u; b += am * g0 * Math.pow(Math.cos(Math.PI * u / CT), 2) * prof(x - xc); } return b; };
+  const surf0 = x => S0 + Math.sin(x * .021 - t * (1.4 + 4 * riseV)) * wav * .6 + Math.sin(x * .057 + t * 1.1) * wav * .4;
+  const surf = x => Math.max(topY(x) + 2, surf0(x) - bump(x));
+  const gapAt = x => Math.max(6, S0 - bump(x) - topY(x));
 
   // ---- the lights ----
   const mv = [[], [], [], [], []];
-  mv[0].push([tB - .2, .22, 9], [tB + .05, .7, -55], [tA + .2, .68, -58], [tN + .55, .7, -62], [tH + .75, .72, -60], [tH + 1.5, .7, -55]);
-  for (let i = 1; i < 4; i++) mv[i].push([tA + .1 + i * .08, .95, 36], [tH + .25 + i * .1, .95, 30]);
+  // he turns, then only starts to pull away (the separation itself happens in "leave"); the light behind leans after him,
+  // the other two draw back a little towards the air
+  mv[0].push([tB - .2, .22, 9], [tB + .05, .7, -34], [tA + .25, .68, -30], [tN + .6, .7, -22]);
+  mv[1].push([tA + .45, .8, -8]);
+  for (let i = 2; i < 4; i++) mv[i].push([tA + .1 + i * .08, .95, 22], [tH + .25 + i * .1, .95, 16]);
   const xAt = (i, tt) => { let x = START[i]; for (const [a, dd, dx] of mv[i]) x += dx * E.inOutQ(clamp((tt - a) / dd)); return x; };
   const mvg = (i, tt) => { let m = 0; for (const [a, dd] of mv[i]) m = Math.max(m, Math.sin(clamp((tt - a) / dd) * Math.PI)); return m; };
   const press = P(level, .55, .78);
@@ -101,22 +130,26 @@ window.PK.scenes.decision = function (ctx, t, d, info) {
     y = Math.max(y, topY(x) + 14);
     let a = i < 4 ? .84 * (.9 + .1 * nz(t * 7, i + 9)) * (hi(Math.floor(t * 14) + i * 97) > .95 ? .75 : 1) : .22;
     if (i === 0) a *= 1 + .18 * Math.exp(-Math.pow((t - tB + .05) / .25, 2)) + .1 * m;
-    Ls.push({ x, y, a: clamp(a), s: i < 4 ? 1 : .5, m });
+    const cover = i < 4 ? 1 - clamp((g - 10) / 26) : 0;               // a crest has reached the crown here
+    a *= 1 - .5 * cover;
+    Ls.push({ x, y, a: clamp(a), s: i < 4 ? 1 : .5, m, cover });
   }
 
   // ---- camera ----
   const away = P(t, tB, tB + 2.6, E.inOutQ);
-  const mid = (Ls[0].x + Ls[2].x) / 2;
-  const camX = lerp(lerp(600, 572, P(t, tR, tR + 1.2, E.inOutQ)), mid + 80, away);
-  const zoom = lerp(1.16, 1.52, P(t, tR - .1, t15 + .4, E.inOutQ)) - .3 * away;
-  // frame on the air gap: it rides up the screen with the water, then sits a little above centre
+  const mid = (Ls[0].x + Ls[3].x) / 2;
+  const camX = lerp(lerp(600, 572, P(t, tR, tR + 1.2, E.inOutQ)), mid, away);
+  // push in hard with the surge until the sliver of air fills the upper frame; only a slight ease back as he turns
+  const zoom = lerp(1.16, 2.2, P(t, tR - .1, t15 + .4, E.inOutQ)) - .12 * away;
+  // frame on the air gap: it rides up the screen with the water, sits high (water fills the frame below it),
+  // then settles a little lower for the hand-off to "leave"
   const gapC = (topY(camX) + Math.min(S0, TB.cy + TB.r - LV0 * 2 * TB.r)) / 2;
-  const tgt = lerp(820, 730, P(t, tR, tR + 1.3, E.inOutQ));
+  const tgt = lerp(820, 620, P(t, tR, tR + 1.3, E.inOutQ)) + 130 * away;
   const camY = gapC + (960 - tgt) / zoom;
   const dr = drift2(t, 1, 33);
-  const tk = [0, .55, 1.1].map(o => tB - 1.4 + o);
-  let sh = .3 * riseV + .12 * Math.exp(-Math.pow((t - tR) / .12, 2));
-  for (const k of tk) sh += .09 * Math.exp(-Math.pow((t - k - .05) / .07, 2));
+  // shake: the surge, each crest hitting the crown, and a faint heartbeat thump while the air is gone
+  let sh = .3 * riseV + .12 * Math.exp(-Math.pow((t - tR) / .12, 2)) + .05 * beat(t, bpm) * press;
+  for (const [tc, am] of CRESTS) if (am >= 1) sh += .1 * Math.exp(-Math.pow((t - tc) / .12, 2));
   const sk = shake2(t, sh, 33);
 
   darkFastD(ctx, t, { k: .3, seed: 11 });
@@ -124,6 +157,7 @@ window.PK.scenes.decision = function (ctx, t, d, info) {
   camera(ctx, { x: camX + (dr.x + sk.x) / zoom, y: camY + (dr.y + sk.y) / zoom, zoom, rot: dr.r + sk.r, t });
   const M = ctx.getTransform();
   const x0 = camX - 820 / zoom, x1 = camX + 820 / zoom;
+  const yLim = x => (1232 - M.f - M.b * x) / M.d;     // world y of screen row 1232: keep the subtitle band clean below it
 
   // walls
   const wg = ctx.createLinearGradient(0, yc(camX) - TB.r - TB.wall, 0, yc(camX) - TB.r);
@@ -133,20 +167,6 @@ window.PK.scenes.decision = function (ctx, t, d, info) {
   ctx.beginPath(); ctx.moveTo(x0, topY(x0)); ctx.lineTo(x1, topY(x1)); ctx.moveTo(x0, botY(x0)); ctx.lineTo(x1, botY(x1)); ctx.stroke();
   ctx.fillStyle = 'rgba(160,190,201,.035)';
   for (let x = Math.floor(x0 / 520) * 520 + 140; x < x1; x += 520) { ctx.fillRect(x, topY(x) - TB.wall, 3, TB.wall); ctx.fillRect(x, botY(x), 3, TB.wall); }
-
-  // knocks: a faint shiver travelling down the steel from the far right
-  ctx.save(); ctx.globalCompositeOperation = 'lighter';
-  for (const k of tk) {
-    const u = t - k; if (u < 0 || u > 1.4) continue;
-    const px = camX + 600 / zoom - u * 1000, a = .5 * Math.pow(1 - u / 1.4, 1.6) * P(u, 0, .06);
-    for (const [yf, h] of [[x => topY(x) - TB.wall, TB.wall], [botY, TB.wall]]) {
-      const hw = 90; const lg = ctx.createLinearGradient(px - hw, 0, px + hw, 0);
-      lg.addColorStop(0, 'rgba(159,179,189,0)'); lg.addColorStop(.5, rgba('#9fb3bd', .3 * a)); lg.addColorStop(1, 'rgba(159,179,189,0)');
-      ctx.fillStyle = lg; ctx.fillRect(px - hw, yf(px), hw * 2, h);
-    }
-    ctx.strokeStyle = rgba('#8fd3e8', .18 * a); ctx.lineWidth = 1.2; ctx.beginPath(); ctx.ellipse(camX + 700 / zoom, S0 + 1, 20 + u * 160, 2 + u * 6, 0, 0, 7); ctx.stroke();
-  }
-  ctx.restore();
 
   // interior: back wall in the light, the fluid
   ctx.save(); interior(ctx, x0, x1); ctx.clip();
@@ -177,7 +197,7 @@ window.PK.scenes.decision = function (ctx, t, d, info) {
   // the lights reach a little way down into the oily water; suspended specks drift in it
   ctx.save(); ctx.globalCompositeOperation = 'lighter';
   for (const l of Ls) {
-    if (l.a < .05) continue; const sy = surf(l.x), dep = 260;
+    const sy = surf(l.x), dep = Math.min(260, yLim(l.x) - sy); if (l.a < .05 || dep < 20) continue;
     ctx.save(); ctx.translate(l.x, sy); ctx.scale(.34, 1);
     const rg = ctx.createRadialGradient(0, 0, 0, 0, 0, dep); rg.addColorStop(0, rgba('#ff9a3c', .085 * l.a)); rg.addColorStop(.5, rgba('#ff9a3c', .025 * l.a)); rg.addColorStop(1, 'rgba(255,154,60,0)');
     ctx.fillStyle = rg; ctx.fillRect(-dep, 0, dep * 2, dep); ctx.restore();
@@ -185,7 +205,7 @@ window.PK.scenes.decision = function (ctx, t, d, info) {
   for (let i = 0; i < 46; i++) {
     const px = camX + ((hi(i * 3 + 7) * 2 - 1) * 560 + t * 9 * (hi(i + 40) - .5) + nz(t * .3 + i, 50) * 20) / zoom;
     const py = lerp(S0 + 10, TB.cy + TB.r - 10, hi(i * 5 + 9)) + nz(t * .25 + i * 2, 51) * 14 - t * 4 * hi(i * 7);
-    if (py < surf(px) + 6) continue;
+    if (py < surf(px) + 6 || py > yLim(px) - 4) continue;
     ctx.fillStyle = rgba('#9cc9d6', .12 + .14 * hi(i * 11)); ctx.beginPath(); ctx.arc(px, py, .8 + 1.6 * hi(i * 13), 0, 7); ctx.fill();
   }
   ctx.restore();
@@ -195,11 +215,31 @@ window.PK.scenes.decision = function (ctx, t, d, info) {
   for (let i = 0; i < 34; i++) {
     const life = 1 + hi(i * 3 + 1) * .9, ph = ((t / life + hi(i * 7 + 2)) % 1);
     const bx = camX + (hi(i * 11 + 3) * 2 - 1) * 520 / zoom + Math.sin(t * 3 + i) * 6 * ph;
-    const yb = botY(bx) - 8, by = lerp(yb, surf(bx) + 6, ph);
+    const yb = Math.min(botY(bx) - 8, yLim(bx) - 8), by = lerp(yb, surf(bx) + 6, ph);
     if (by < surf(bx) + 3) continue;
     const r = (2 + 4 * hi(i * 13 + 4)) * (1 + ph * .5), a = bub * .32 * Math.sin(ph * Math.PI) * (i < 12 ? 1 : riseV + .15);
     if (a < .01) continue;
     ctx.strokeStyle = rgba('#bfe9ff', a); ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(bx, by, r, 0, 7); ctx.stroke();
+  }
+  ctx.restore();
+  // where a crest closes the gap over a light: a burst of bubbles under it and a cold glint on the steel
+  ctx.save(); ctx.globalCompositeOperation = 'lighter';
+  for (const [tc, am] of CRESTS) {
+    if (am < 1) continue;
+    for (let i = 0; i < 4; i++) {
+      const xi = xAt(i, tc), tb = tc + (XM - xi) / CV, u = t - tb; if (u < -.15 || u > 1.1) continue;
+      const k = Math.round(tc * 10) * 17 + i * 5;
+      const sp = Math.exp(-Math.pow(u / .14, 2));
+      if (sp > .02) { const ty = topY(xi), lg = ctx.createLinearGradient(xi - 70, 0, xi + 70, 0); lg.addColorStop(0, 'rgba(207,232,255,0)'); lg.addColorStop(.5, rgba('#cfe8ff', .3 * sp)); lg.addColorStop(1, 'rgba(207,232,255,0)'); ctx.fillStyle = lg; ctx.fillRect(xi - 70, ty, 140, 4); }
+      if (u < 0) continue;
+      for (let b = 0; b < 9; b++) {
+        const q = u / (.6 + .5 * hi(k + b * 3)); if (q > 1) continue;
+        const bx = xi + (hi(k + b * 7 + 1) * 2 - 1) * 34 + Math.sin(u * 9 + b) * 3;
+        const y0b = surf(bx) + 14 + 46 * hi(k + b * 11 + 2), by = lerp(y0b, surf(bx) + 3, Math.pow(q, .8));
+        if (by < surf(bx) + 2) continue;
+        ctx.strokeStyle = rgba('#bfe9ff', .45 * Math.sin(q * Math.PI)); ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(bx, by, 1.6 + 3 * hi(k + b * 13 + 3), 0, 7); ctx.stroke();
+      }
+    }
   }
   ctx.restore();
   // surface line (brighter while it churns)
@@ -217,7 +257,7 @@ window.PK.scenes.decision = function (ctx, t, d, info) {
   for (let j = 0; j < 3; j++) {
     const A = Ls[j], B = Ls[j + 1], dist = B.x - A.x;
     let al = (.24 + .2 * Math.max(A.m, B.m)) * Math.min(A.a, B.a);
-    if (j === 0) al *= clamp(1 - (dist - 80) / 85);
+    if (j === 0) al *= clamp(1 - (dist - 100) / 170);      // stretched thin as he pulls away, but it holds
     if (al < .01) continue;
     const taut = clamp((dist - 60) / 26), sag = lerp(10, 1.5, taut) * (1 - .6 * press);
     const ax = A.x + 13, ay = A.y + 2, bx = B.x - 13, by = B.y + 2, mx = (ax + bx) / 2, my = (ay + by) / 2 + sag + 2 * Math.sin(t * 1.4 + j);
@@ -269,35 +309,28 @@ window.PK.scenes.decision = function (ctx, t, d, info) {
     ctx.beginPath(); ctx.moveTo(bx - 8, y0); ctx.lineTo(bx + 8, y0); ctx.moveTo(bx, y0); ctx.lineTo(bx, y1); ctx.moveTo(bx - 8, y1); ctx.lineTo(bx + 8, y1); ctx.stroke();
     ctx.restore(); glow(ctx, bx, (y0 + y1) / 2, 60, '#e3262f', .18 * ga * pu);
   }
-  // two tanks go with him
-  const ta = P(t, tN - .2, tN + .25), tsc = E.outBack(P(t, tN - .2, tN + .35), 1.6);
-  if (ta > 0) {
-    const l = Ls[0], ix = l.x + 6, iy = surf(l.x) + 30;
-    ctx.save(); ctx.translate(ix, iy); ctx.scale(tsc, tsc); ctx.globalAlpha = ta * .9;
-    glow(ctx, 0, 0, 70, '#8fd3e8', .1);
-    ctx.strokeStyle = 'rgba(191,233,255,.85)'; ctx.lineWidth = 2;
-    for (const dy of [-8, 8]) { roundRect(ctx, -26, dy - 6, 52, 12, 6); ctx.stroke(); ctx.beginPath(); ctx.moveTo(-26, dy); ctx.lineTo(-33, dy); ctx.stroke(); ctx.fillStyle = 'rgba(191,233,255,.85)'; ctx.fillRect(-37, dy - 3, 4, 6); }
-    ctx.restore();
-  }
-  const l0s = { x: M.a * Ls[0].x + M.c * Ls[0].y + M.e, y: M.b * Ls[0].x + M.d * Ls[0].y + M.f };
+  const scr = (x, y) => ({ x: M.a * x + M.c * y + M.e, y: M.b * x + M.d * y + M.f });
+  const l0s = scr(Ls[0].x, Ls[0].y), l3s = scr(Ls[3].x, Ls[3].y), gcs = scr(camX, gapC);
   ctx.restore();
 
   // ---- tunnel vision: closes as the air goes, eases a little when he moves, follows him ----
   const brth = .5 + .5 * Math.sin(t * Math.PI * 2 * lerp(.4, .75, press));
   const ik = .52 + .34 * P(t, tR, t15 + .4, E.inOutQ) - .1 * away + .04 * P(t, tH, d);
-  iris(ctx, ik, .5 * brth + .5 * beat(t, bpm), lerp(540, (l0s.x + 560) / 2, away), lerp(800, 780, away));
+  iris(ctx, ik, .5 * brth + .5 * beat(t, bpm), lerp(540, (l0s.x + l3s.x) / 2, away), gcs.y + 40);
 
-  // ---- gauge (right) + approved labels (under the pipe) ----
+  // ---- gauge (right, next to the sliver, 1.3x) + approved labels (under the pipe) ----
   const gv = clamp(gapAt(Ls[0].x) / (2 * TB.r));
   const gma = P(t, tR + .2, tR + .6, E.outQ) * (1 - P(t, tB - .2, tB + .25, E.inQ));
-  gapMeter(ctx, 92, 610, 360, gv, { a: gma, label: '숨 쉴 틈', val: '', t });
-  const ca = P(t, t15 - .05, t15 + .3, E.outQ) * (1 - P(t, tB + .3, tB + .65, E.inQ));
+  if (gma > 0) { ctx.save(); ctx.translate(942, 572); ctx.scale(1.3, 1.3); gapMeter(ctx, 0, 0, 270, gv, { a: gma, label: '숨 쉴 틈', val: '', t }); ctx.restore(); }
+  // the conditions behind the decision: static chips under the pipe, attached to no light, gone as he starts to move
+  const out = 1 - P(t, tB + .3, tB + .65, E.inQ);
+  const ca = P(t, t15 - .05, t15 + .3, E.outQ) * out;
   if (ca > 0) {
     const pu = .6 + .4 * Math.sin(t * 9);
-    chip(ctx, '숨 쉴 틈 ≈ 15cm (6인치)', 540, 1130 + 10 * (1 - ca), ca, { size: 34, color: '#fff', border: rgba('#e3262f', .5 + .4 * pu), bg: 'rgba(30,4,6,.82)' });
+    chip(ctx, '숨 쉴 틈 ≈ 15cm (6인치)', 540, 1098 + 10 * (1 - ca), ca, { size: 34, color: '#fff', border: rgba('#e3262f', .5 + .4 * pu), bg: 'rgba(30,4,6,.82)' });
   }
-  const kc = P(t, tN + .05, tN + .4, E.outQ) * (1 - P(t, d - .35, d + .2));
-  if (kc > 0) chip(ctx, '공기통 2개', clamp(l0s.x, 150, 930), 1130 + 10 * (1 - kc), kc, { size: 32, color: '#cfe8ff', border: 'rgba(143,211,232,.45)' });
+  const kc = P(t, tNam - .1, tNam + .25, E.outQ) * out;
+  tankChip(ctx, '공기통 2개', 540, 1172 + 10 * (1 - kc), kc);
 
   // the moment the air closes in: a cold breath of light
   flash(ctx, .035 * Math.exp(-Math.pow((t - tR - .1) / .1, 2)), '#8fd3e8');

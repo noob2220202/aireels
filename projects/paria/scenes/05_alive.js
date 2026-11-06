@@ -1,6 +1,7 @@
 // alive: "그런데, 다섯 명 모두 아직 살아 있었습니다."
 // Continues the hell POV down the pipe: his light is joined, one by one, by four more amber lights at different
-// distances along the faintly revealed pipe interior; the fifth lands on '살아' and all five hearts fall into one beat.
+// distances along the faintly revealed pipe interior (each arrival warms the weld ring nearest to it); all five are lit
+// by the end of '다섯 명 모두' (the counter climbs with the words), and on '살아' all five hearts fall into one beat.
 // A small swell of warmth, but the dark still presses in (iris, oily walls, slow dolly back).
 (function () {
 const { W, H, E, P, clamp, lerp, hash, noise1, fbm, rgba, glow, camera, drift, flash, text } = L;
@@ -114,7 +115,7 @@ function ignite(t, t0, seed) {
 }
 // world positions down the pipe (z = distance, xo = across, yo = height above the axis; heads just above the oil)
 const MEN = [
-  { z: 1.9, xo: -.08, yo: .3, seed: 1 },   // the first light (continues from "hell")
+  { z: 1.41, xo: -.08, yo: .3, seed: 1 },  // the first light (continues from "hell": same distance, z 1.15, at the start)
   { z: 3.7, xo: .56, yo: .3, seed: 2 },
   { z: 1.26, xo: .55, yo: .33, seed: 3 },
   { z: 6.2, xo: -.42, yo: .3, seed: 4 },
@@ -123,35 +124,37 @@ const MEN = [
 const PH = [0, .37, .71, .19, .53];  // heartbeat phases (fall into one beat on '살아')
 
 window.PK.scenes.alive = function (ctx, t, d, info) {
-  const tA = at(info, '그런데', .0), t5 = at(info, '다섯', .27), tM = at(info, '모두', .43), tJ = at(info, '아직', .55), tL = at(info, '살아', .65);
-  const on = [tA + .08, t5, tM, tJ, tL];
+  const tA = at(info, '그런데', .0), t5 = at(info, '다섯', .27), tM = at(info, '모두', .43), tL = at(info, '살아', .65);
+  const on = [tA + .08, t5, at(info, '명', .35), tM, tM + .3];   // 2..5 climb with '다섯 명 모두' (all five lit before '살아')
   const sync = P(t, tL - .15, tL + .35, E.inOutQ);
   const bpm = lerp(92, 80, P(t, 0, tL + .5, E.inOutQ));
   const swell = Math.exp(-Math.pow((t - tL - .25) / .45, 2));          // the gentle swell on '살아'
   const reveal = P(t, tA, tL + .4, E.inOutQ);
   const camZ = lerp(.26, -.06, P(t, -.25, tL + .7, E.inOutQ)) - .06 * P(t, tL + .7, d + .3);  // slow dolly back
+  const carry = 1 - P(t, 0, tA + 1.1, E.inOutQ);                     // hell's close, warm framing hands over, then eases off
   const lights = MEN.map((m, i) => {
     let a = ignite(t, on[i], m.seed);
     if (i === 0) a = Math.max(a, .62 * (1 - P(t, on[0], on[0] + .3)));   // already glowing weakly from "hell"
     a *= .88 + .12 * noise1(t * 9, i + 3);
-    return Object.assign({}, m, { a, w: 1 + .5 * swell });
+    const u = t - on[i], flare = u > 0 ? Math.exp(-u / .5) * P(u, 0, .08) : 0;   // each arrival warms the ring nearest to it
+    return Object.assign({}, m, { a, w: 1 + .5 * swell + 3.2 * flare + (i === 0 ? 3.5 * carry : 0) });
   });
 
   darkFast(ctx, t, { k: .4 + .15 * reveal, seed: 7 });
   const dr = drift(t, .9, 7);
   const p0 = lightXY(MEN[0], camZ);
-  const zoom = lerp(1.13, 1.08, reveal) + .04 * P(t, tL, d + .3, E.inOutQ);
+  const zoom = lerp(1.45, 1.35, reveal) + .04 * P(t, tL, d + .3, E.inOutQ);
   ctx.save();
-  camera(ctx, { x: lerp(p0.x, 590, reveal) + dr.x * .6, y: lerp(p0.y, 820, reveal) + 120 / zoom + dr.y, zoom, rot: dr.r, t, seed: 7 });
+  camera(ctx, { x: lerp(p0.x, 590, reveal) + dr.x * .6, y: lerp(p0.y + 80 / zoom, 820 + 120 / zoom, reveal) + dr.y, zoom, rot: dr.r, t, seed: 7 });
   const sweep = t > tA && t < tA + 1.8 ? lerp(.4, 10, P(t, tA, tA + 1.8, E.inQ)) : -1;
-  povTunnel(ctx, t, { k: .2 + .55 * reveal + .2 * swell, lights, camZ, ripple: .8, sweep, warmK: .065, warmMax: .15 });
+  povTunnel(ctx, t, { k: .45 + .35 * reveal + .2 * swell, lights, camZ, ripple: .8, sweep, warmK: .1, warmMax: .6 });
   // the five lights, far to near
   const order = [3, 1, 4, 0, 2];
   for (const i of order) {
     const l = lights[i]; if (l.a <= .002) continue;
     const p = lightXY(l, camZ), tb = t + PH[i] * (1 - sync);
     glow(ctx, p.x, p.y + 8, 170 * p.s, '#ff9a3c', (.08 + .06 * swell) * clamp(l.a));
-    souls(ctx, tb, [{ x: p.x, y: p.y, a: clamp(l.a), s: p.s * (1.05 + .18 * swell) }], { bpm });
+    souls(ctx, tb, [{ x: p.x, y: p.y, a: clamp(l.a), s: p.s * (1.05 + .18 * swell) * (i === 0 ? 1 + .3 * carry : 1) }], { bpm });
     // ignition bloom ring
     const u = t - on[i];
     if (u > 0 && u < .9) {

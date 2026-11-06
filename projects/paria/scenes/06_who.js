@@ -2,6 +2,7 @@
 // Total dark, a side cutaway of the pipe that is only revealed where the voices touch it (sound rings = echolocation).
 // His light calls out -> rings travel along the pipe and brush another light in the dark -> it answers -> he inches toward the
 // voice through the oil -> on "Kaz" the two lights meet and glow warmer. Attribution card stays up while the voice plays.
+// Framed close (zoom ~1.8): the air gap fills the frame; each ring paints the steel crown and the oil where its front touches them.
 (function () {
 const { W, H, E, P, clamp, lerp, hash, noise1, fbm, rgba, glow, camera, drift, text } = L;
 const { K, dark, souls, beat, sourceCard } = window.PK;
@@ -100,24 +101,31 @@ function ring(ctx, ex, ey, R, a) {
   const { top, fl, bot, wall } = TB;
   ctx.save();
   ctx.beginPath(); ctx.rect(-400, top, W + 800, fl - top); ctx.clip();
-  ctx.lineWidth = 1.5 + 2.5 * a; ctx.strokeStyle = rgba('#cfe8ff', .6 * a); ctx.beginPath(); ctx.arc(ex, ey, R, 0, 7); ctx.stroke();
-  if (R > 20) { ctx.lineWidth = 1; ctx.strokeStyle = rgba('#8fd3e8', .28 * a); ctx.beginPath(); ctx.arc(ex, ey, R - 16, 0, 7); ctx.stroke(); }
+  ctx.lineWidth = 3 + 5 * a; ctx.strokeStyle = rgba('#cfe8ff', .6 * a); ctx.beginPath(); ctx.arc(ex, ey, R, 0, 7); ctx.stroke();
+  if (R > 20) { ctx.lineWidth = 2; ctx.strokeStyle = rgba('#8fd3e8', .28 * a); ctx.beginPath(); ctx.arc(ex, ey, R - 16, 0, 7); ctx.stroke(); }
   ctx.restore();
   ctx.save(); ctx.beginPath(); ctx.rect(-400, fl, W + 800, bot - fl); ctx.clip();
   ctx.lineWidth = 2; ctx.strokeStyle = rgba('#8fd3e8', .1 * a); ctx.beginPath(); ctx.arc(ex, ey, R, 0, 7); ctx.stroke(); ctx.restore();
-  // reveals
+  // reveals: where the ring front touches the steel crown or the oil, that stretch (about +-60) lights up
+  // (the bottom wall lies under the oil: the muffled ring only grazes it)
   ctx.save(); ctx.globalCompositeOperation = 'lighter';
   for (const [wy, isWall] of [[top, true], [fl, false], [bot, true]]) {
     const dy = Math.abs(ey - wy); if (R <= dy) continue;
-    const dx = Math.sqrt(R * R - dy * dy), ra = a * (isWall && wy === bot ? .35 : 1);
+    const dx = Math.sqrt(R * R - dy * dy), ra = a * (isWall && wy === bot ? .2 : 1);
     for (const px of [ex - dx, ex + dx]) {
-      const hw = 70 + Math.min(110, dx * .25);
+      const hw = 60 + Math.min(40, dx * .12);
       const lg = ctx.createLinearGradient(px - hw, 0, px + hw, 0);
       const c = isWall ? '#9fb3bd' : '#8fd3e8';
-      lg.addColorStop(0, rgba(c, 0)); lg.addColorStop(.5, rgba(c, (isWall ? .3 : .32) * ra)); lg.addColorStop(1, rgba(c, 0));
+      lg.addColorStop(0, rgba(c, 0)); lg.addColorStop(.5, rgba(c, .6 * ra)); lg.addColorStop(1, rgba(c, 0));
       ctx.fillStyle = lg;
-      if (isWall) { ctx.fillRect(px - hw, wy === top ? wy - wall : wy, hw * 2, wall); ctx.fillStyle = rgba('#e6f6ff', .55 * ra); ctx.fillRect(px - 10, wy - 1, 20, 2); }
-      else { ctx.fillRect(px - hw, wy - 1.5, hw * 2, 3); ctx.fillStyle = rgba('#e6f6ff', .5 * ra); ctx.fillRect(px - 8, wy - 1, 16, 2); }
+      if (isWall) {
+        ctx.fillRect(px - hw, wy === top ? wy - wall : wy, hw * 2, wall);
+        if (wy === top) {   // the inside of the crown catches it too: a short falloff into the air gap
+          ctx.save(); for (let k = 0; k < 4; k++) { ctx.globalAlpha = .4 * (1 - k / 4); ctx.fillRect(px - hw, top + k * 8, hw * 2, 8); } ctx.restore();
+        }
+        ctx.fillStyle = rgba('#e6f6ff', .6 * ra); ctx.fillRect(px - 12, wy - 1.5, 24, 3);
+      }
+      else { ctx.fillRect(px - hw, wy - 2.5, hw * 2, 5); ctx.fillStyle = rgba('#e6f6ff', .6 * ra); ctx.fillRect(px - 10, wy - 1.5, 20, 3); }
     }
   }
   ctx.restore();
@@ -154,10 +162,13 @@ window.PK.scenes.who = function (ctx, t, d, info) {
 
   darkFast(ctx, t, { k: .3, seed: 8 });
   const dr = drift(t, .8, 8);
-  const zoom = lerp(1.0, 1.08, P(t, -.2, v0 + S2, E.inOutQ)) + .08 * P(tc, S2 + .2, S2 + 2.2, E.inOutQ);
-  const camX = lerp(470, 640, P(tc, S1 - .2, S2 + .9, E.inOutQ)) + 40 * P(tc, S2 + .7, S2 + 2.4, E.inOutQ);
+  // close on the air gap: the call (the answering light at the right edge, in the dark) -> pan to hold both when it answers
+  // -> follow the crawl to the meeting on "Kaz" (the others at the right edge); eases back a little after the voice for crawl
+  const pb = P(t, d - .75, d + .2, E.inOutQ);              // after the last "Kaz": ease back towards crawl's wider framing
+  const zoom = lerp(1.75, 1.85, P(t, -.2, v0 + S2, E.inOutQ)) + .1 * P(tc, S2 + .2, S2 + 2.2, E.inOutQ) - .5 * pb;
+  const camX = 470 + 95 * P(tc, S1 - .35, S1 + .9, E.inOutQ) + 125 * P(tc, S2 - .1, S2 + 1.1, E.inOutQ) + 20 * P(tc, S2 + 1.1, S2 + 2.4, E.inOutQ);
   ctx.save();
-  camera(ctx, { x: camX + dr.x, y: TB.cy + 150 / zoom + dr.y, zoom, rot: dr.r, t, seed: 8 });
+  camera(ctx, { x: camX + dr.x, y: TB.cy + lerp(100, 150, pb) / zoom + dr.y, zoom, rot: dr.r, t, seed: 8 });
   pipe(ctx, t, -300, W + 400, 1);
   for (const r of live) ring(ctx, r.x, r.y, r.R, r.v);
   // wake in the oil while he drags himself forward
@@ -198,7 +209,7 @@ window.PK.scenes.who = function (ctx, t, d, info) {
   ctx.restore();
   ctx.restore();
 
-  iris(ctx, lerp(.64, .5, warm) + .04 * (1 - P(t, 0, 1)), beat(t, bpm), 540, 840);
+  iris(ctx, lerp(.6, .48, warm) + .04 * (1 - P(t, 0, 1)), beat(t, bpm), 540, 870);
   // attribution: up while the voice plays
   const ca = P(t, 0, .4, E.outQ) * (1 - P(t, d - .05, d + .2));
   sourceCard(ctx, D.who || '', D.where || '', ca, 1185);

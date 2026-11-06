@@ -5,8 +5,9 @@
 const { W, H, E, P, clamp, lerp, hash, noise1, rgba, glow, text, measure, roundRect, flash, drift, FONT } = L;
 const { K, at, dark, souls, chip, suffocate } = window.PK;
 
+// low-frequency shake (a heavy lurch with a faint buzz on top) instead of a per-frame jitter
 function cam(ctx, { x, y, zoom = 1, rot = 0, shake = 0, t = 0, seed = 0, cy = 850 }) {
-  const sx = shake * noise1(t * 22, seed + 1) * 18, sy = shake * noise1(t * 22, seed + 2) * 18, sr = shake * noise1(t * 15, seed + 3) * .012;
+  const sx = shake * (noise1(t * 8, seed + 1) * 18 + noise1(t * 24, seed + 6) * 2), sy = shake * (noise1(t * 8, seed + 2) * 18 + noise1(t * 24, seed + 7) * 2), sr = shake * noise1(t * 6, seed + 3) * .006;
   ctx.translate(540 + sx, cy + sy); ctx.rotate(rot + sr); ctx.scale(zoom, zoom); ctx.translate(-x, -y);
 }
 // geometry (world == screen at zoom 1)
@@ -133,21 +134,27 @@ window.PK.scenes.suction = function (ctx, t, d, info) {
   const sag = 10 * P(t, tMom, tMom + .5, E.outQ) + 26 * P(t, tPr, tThem) + 210 * P(t, tGd - .15, tS + .35, E.inQ);
   const S = { base: G.surf - 18 * P(t, tPr, tThem, E.inOutQ) - 90 * P(t, tGd, tS + .45, E.inQ), A: 2.4 + 9 * P(t, tPr - .1, tPr + .5) + 16 * P(t, tGd - .2, tS), slosh: 16 * P(t, tPr, tPr + .4) * (1 - .5 * P(t, tS, tS + .5)), sag, w: lerp(170, 120, P(t, tGd, tS)) };
   const vort = P(t, tGd - .25, tS, E.inQ) * (1 - P(t, tS + .7, tS + 1.1));
-  const lamp = (1 - P(t, tS + .05, tS + .5)) * (t > tMom && t < tMom + .3 ? (hash(Math.floor(t * 40)) > .4 ? 1 : .35) : 1) * (t > tS - .25 && t < tS + .5 ? (hash(Math.floor(t * 30) + 7) > .45 ? 1 : .3) : 1);
+  const lamp = (1 - P(t, tS + .05, tS + .5)) * (t > tMom && t < tMom + .3 ? (hash(Math.floor(t * 12)) > .4 ? 1 : .6) : 1) * (t > tS - .25 && t < tS + .5 ? (hash(Math.floor(t * 10) + 7) > .45 ? 1 : .55) : 1);
   const bo = P(t, tS + .58, tS + .95, E.inQ);
   // ---------- camera ----------
   const dr = drift(t, 1, 33);
   const pPlug = P(t, tAir - .2, tAir + .7, E.inOutQ) * (1 - P(t, tKwan - .25, tKwan + .4, E.inOutQ));
   const dive = P(t, tS - .05, tS + .75, E.inOutQ);
-  let cy = lerp(lerp(842, 872, pPlug), 1390, dive), z = lerp(1.03, 1, P(t, -.3, tAir)) * lerp(1, 1.08, pPlug) * (1 + .07 * P(t, tThem, tS, E.inQ));
+  // tighter opening (habitat fills the width, pool surface ~y 700, plug ~y 1010), then a slow push toward the plug from '압력'
+  const pBuild = P(t, tPr - .1, tS + .05, E.inOutQ);
+  let cy = lerp(lerp(lerp(842, 880, pPlug), 900, pBuild), 1390, dive), z = lerp(1.16, 1.12, P(t, -.3, tAir, E.outQ)) * lerp(1, 1.1, pPlug) * lerp(1, 1.15, pBuild) * (1 + .04 * P(t, tThem, tS, E.inQ));
   z *= Math.exp(Math.log(2.5) * dive);
-  const shake = .5 * (t > tMom - .03 ? Math.exp(-(t - tMom + .03) * 6) : 0) + .22 * P(t, tThem, tS) + 1.0 * P(t, tS - .1, tS + .05) * (1 - P(t, tS + .45, tS + 1.0)) + .5 * (t > tS + .35 ? Math.exp(-(t - tS - .35) * 5) : 0);
+  // kick on '순간', a rumble that builds from '압력', the climax lurch with the dive and a tail on the impact
+  const shake = .6 * P(t, tMom - .07, tMom) * Math.exp(-Math.max(0, t - tMom) * 6) + P(t, tPr - .2, tPr + .3) * lerp(.22, .4, P(t, tPr, tS)) * (1 - P(t, tS + .6, tS + 1.1))
+    + .75 * P(t, tS - .1, tS + .05) * (1 - P(t, tS + .45, tS + 1.0)) + .4 * P(t, tS + .3, tS + .4) * Math.exp(-Math.max(0, t - tS - .35) * 5);
   ctx.save(); ctx.fillStyle = '#010203'; ctx.fillRect(0, 0, W, H); ctx.restore();
   // culling: nothing of the world survives the black-out; the habitat leaves the frame as the camera dives down the bore
   const habVis = (cy - 850 / z) < G.bot + 40;
+  let LAB = null; // labels: computed in world space below, drawn in screen space (steady, unscaled) after the camera block
   if (bo < 1) {
   ctx.save();
   cam(ctx, { x: 540 + dr.x / z, y: cy + dr.y / z, zoom: z, rot: dr.r, shake, t, seed: 4 });
+  const M = ctx.getTransform(), toS = (x, y) => { const q = M.transformPoint(new DOMPoint(x, y)); return [q.x, q.y]; };
   // ---------- outside sea ----------
   let g = ctx.createLinearGradient(0, 380, 0, 1300); g.addColorStop(0, '#062631'); g.addColorStop(.5, '#03141b'); g.addColorStop(1, '#010508');
   ctx.fillStyle = g;
@@ -269,22 +276,21 @@ window.PK.scenes.suction = function (ctx, t, d, info) {
   const hiA = P(t, tPr - .05, tPr + .3) * (1 - P(t, tGd - .2, tGd + .15));
   const dpA = P(t, tCha - .08, tCha + .25) * (1 - P(t, tS - .15, tS + .1));
   if (hiA > 0) {
-    // chevrons pressing in toward the mouth (pool) and against the shell (sea)
+    // chevrons pressing in toward the mouth through the pool
     ctx.save(); ctx.strokeStyle = rgba('#8fd3e8', .75 * hiA); ctx.lineWidth = 5; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
     for (let k = 0; k < 3; k++) {
       const q = ((t * 1.1 + k / 3) % 1), al = Math.sin(q * Math.PI);
       for (const sgn of [-1, 1]) {
         const x = G.cx + sgn * lerp(360, 150, q), y = G.floor - 40; ctx.globalAlpha = al;
         ctx.beginPath(); ctx.moveTo(x + sgn * 14, y - 16); ctx.lineTo(x - sgn * 4, y); ctx.lineTo(x + sgn * 14, y + 16); ctx.stroke();
-        const xo = sgn > 0 ? lerp(1060, G.R + 14, q) : lerp(20, G.L - 14, q), yo = 600 + k * 0;
-        for (const yy of [610, 760]) { ctx.beginPath(); ctx.moveTo(xo + sgn * 12, yy - 14); ctx.lineTo(xo - sgn * 3, yy); ctx.lineTo(xo + sgn * 12, yy + 14); ctx.stroke(); }
       }
     }
     ctx.restore();
   }
   if (dpA > 0) {
     // big red ΔP arrow down into the pipe
-    const p = P(t, tCha - .08, tCha + .3, E.outC), y0 = G.rim - 40, y1 = 1172, yl = lerp(y0, y1, p), hw = 50, hl = 62, sw = 15;
+    const y1 = Math.min(1172, M.inverse().transformPoint(new DOMPoint(540, 1120)).y);
+    const p = P(t, tCha - .08, tCha + .3, E.outC), y0 = G.rim - 40, yl = lerp(y0, y1, p), hw = 50, hl = 62, sw = 15;
     const ap = new Path2D(); ap.moveTo(G.cx - sw, y0); ap.lineTo(G.cx + sw, y0); ap.lineTo(G.cx + sw, yl - hl); ap.lineTo(G.cx + hw, yl - hl); ap.lineTo(G.cx, yl); ap.lineTo(G.cx - hw, yl - hl); ap.lineTo(G.cx - sw, yl - hl); ap.closePath();
     ctx.save(); ctx.globalAlpha *= dpA; ctx.shadowColor = K.red; ctx.shadowBlur = 30; ctx.fillStyle = K.red; ctx.fill(ap); ctx.shadowBlur = 0;
     ctx.clip(ap); ctx.strokeStyle = 'rgba(255,200,200,.5)'; ctx.lineWidth = 6;
@@ -292,14 +298,9 @@ window.PK.scenes.suction = function (ctx, t, d, info) {
     ctx.restore();
     glow(ctx, G.cx, yl - 30, 160, K.red, .25 * dpA);
   }
-  // labels (world space; camera is near 1x here)
-  const pA = P(t, tBal, tBal + .3, E.outQ) * (1 - P(t, tKwan - .3, tKwan));
-  lead(ctx, G.cx + pg.rx - 6, py - 6, 760, 1004, pA);
-  chip(ctx, '풍선 마개', 820, 1030, pA, { size: 34, border: 'rgba(255,190,120,.55)', color: '#ffe3c4' });
-  lead(ctx, G.cx + 20, 1110, 760, 1050, lowA);
-  gchip(ctx, '관 속 저압', 812, 1030, lowA, lerp(.5, .06, P(t, tKwan, tKwan + .7, E.outBack)) + .02 * noise1(t * 20, 2), '#8fd3e8');
-  gchip(ctx, '바깥 물 고압', 268, 1030, hiA, lerp(.5, .9, P(t, tPr, tPr + .7, E.outBack)) + .02 * noise1(t * 20, 5), '#ffd7a0');
-  if (dpA > 0) { const s = lerp(.8, 1, E.outBack(P(t, tCha - .05, tCha + .3))); ctx.save(); ctx.translate(G.cx, 1196); ctx.scale(s, s); chip(ctx, 'ΔP (델타 P) · 압력 차', 0, 0, dpA, { size: 38, color: '#fff', border: K.red, bg: 'rgba(40,4,6,.9)' }); ctx.restore(); }
+  // label anchors (screen space): plug / pipe below the plug (low pressure) / habitat pool (high pressure)
+  LAB = { pA: P(t, tBal, tBal + .3, E.outQ) * (1 - P(t, tKwan - .3, tKwan)), lowA, hiA, dpA, plug: toS(G.cx + pg.rx - 6, py - 6), low: toS(G.cx + 20, 1110),
+    plugChip: toS(820, 1030), hiChip: toS(300, 770) };
   // ---------- vortex streaks around the funnel ----------
   if (vort > 0) {
     ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.lineCap = 'round';
@@ -340,6 +341,18 @@ window.PK.scenes.suction = function (ctx, t, d, info) {
   souls(ctx, t, pts.map(p => ({ x: p.x, y: p.y, a: p.a, s: p.s })), { bpm });
   ctx.restore();
   }
+  // ---------- labels (screen space, steady): '풍선 마개' / '관 속 저압' beside the riser, '바깥 물 고압' up in the pool, ΔP under the arrow ----------
+  if (LAB && bo < 1) {
+    const { pA, lowA, hiA, dpA } = LAB, cxR = (x, w) => clamp(x, w / 2 + 16, W - w / 2 - 16);
+    const px = cxR(LAB.plugChip[0], 230), py2 = Math.min(LAB.plugChip[1], 1170);
+    lead(ctx, LAB.plug[0], LAB.plug[1], px - 70, py2 - 26, pA);
+    chip(ctx, '풍선 마개', px, py2, pA, { size: 34, border: 'rgba(255,190,120,.55)', color: '#ffe3c4' });
+    const lx = cxR(LAB.plugChip[0], 290);
+    lead(ctx, LAB.low[0], LAB.low[1], lx - 140, py2 + 14, lowA);
+    gchip(ctx, '관 속 저압', lx, py2, lowA, lerp(.5, .06, P(t, tKwan, tKwan + .7, E.outBack)) + .02 * noise1(t * 20, 2), '#8fd3e8');
+    gchip(ctx, '바깥 물 고압', cxR(LAB.hiChip[0], 320), LAB.hiChip[1], hiA, lerp(.5, .9, P(t, tPr, tPr + .7, E.outBack)) + .02 * noise1(t * 20, 5), '#ffd7a0');
+    if (dpA > 0) { const s = lerp(.8, 1, E.outBack(P(t, tCha - .05, tCha + .3))); ctx.save(); ctx.translate(540, 1178); ctx.scale(s, s); chip(ctx, 'ΔP (델타 P) · 압력 차', 0, 0, dpA, { size: 38, color: '#fff', border: K.red, bg: 'rgba(40,4,6,.9)' }); ctx.restore(); }
+  }
   // ---------- screen space: speed lines converging into the mouth, quiet bands, black-out ----------
   const sl = P(t, tS - .1, tS + .2) * (1 - P(t, tS + .6, tS + .9));
   if (sl > 0 && bo < 1) {
@@ -367,5 +380,7 @@ window.PK.scenes.suction = function (ctx, t, d, info) {
     }
     suffocate(ctx, t, .9 * bo, .25);
   }
+  // hand-over from setup: start from black (local t < 0 only renders inside the transition window)
+  if (t < .06) { ctx.save(); ctx.fillStyle = `rgba(1,2,3,${(1 - E.outQ(P(t, -.1, .06))).toFixed(3)})`; ctx.fillRect(0, 0, W, H); ctx.restore(); }
 };
 })();

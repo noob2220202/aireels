@@ -1,11 +1,12 @@
 // promise (real audio, Trinidad Express interview): "I promise each and every one of them that I'll be back for them.
 // If I can't come back, I'll send help."
-// Side cutaway, wider than "leave". The pipe dips gently to the left; the air pocket tapers to nothing and beyond it the line
-// is completely flooded. His light stops where the air runs out ("I promise"); on "each and every one" the four lights left
-// in the pocket give one soft pulse each, in turn, nearest first (three together, one further back). On "back" his own light
-// answers once. On "If I can't come back" he slips under the surface (ripple, then bubbles that rise to the crown and creep
-// back up the slope towards the air), and on "I'll send help" he swims on into the black while the camera eases back and
-// the four lights recede, small and steady. The last thread from "leave" dissolves in the first second.
+// Side cutaway, kept close (zoom 1.5-1.9). The pipe dips gently to the left; the air pocket tapers to nothing and beyond it
+// the line is completely flooded. His light stops where the air runs out ("I promise"); on "each and every one" the camera
+// dollies along the pocket and the four lights give one pulse each, in turn, as each nears frame centre, each lighting its own
+// pool of steel (three together, one further back). The camera swings back to him for "back", where his own light answers
+// once. On "If I can't come back" he slips under the surface (ripple, then bubbles that rise to the crown and creep back up
+// the slope towards the air); the camera follows him down into the flooded line and the pocket, small and steady, slides
+// away up-frame and out around "I'll send help". The last thread from "leave" dissolves in the first second.
 (function () {
 const { W, H, E, P, clamp, lerp, fbm, rgba, glow, camera } = L;
 const { souls, beat, sourceCard } = window.PK;
@@ -60,8 +61,8 @@ function hisPath(v0, t) {
   const xPre = 252 - 82 * E.inOutQ(P(t, -.3, v0 + .55)) - 4 * Math.sin(P(t, v0 + .55, v0 + 3.3) * Math.PI);
   const dv = P(t, v0 + 3.42, v0 + 4.5, E.inOutQ), dvY = P(t, v0 + 3.5, v0 + 4.55, E.inOutC);
   const pre = Math.sin(P(t, v0 + 3.15, v0 + 3.55) * Math.PI);            // a breath before going under
-  let x = lerp(xPre, 36, dv);
-  const strokes = [[v0 + 4.55, .55, -48], [v0 + 5.2, .55, -54], [v0 + 5.85, .55, -56], [v0 + 6.45, .55, -50]];
+  let x = lerp(xPre, 50, dv);
+  const strokes = [[v0 + 4.55, .55, -40], [v0 + 5.2, .55, -44], [v0 + 5.85, .55, -46], [v0 + 6.45, .55, -42]];
   let mv = 0; for (const [a, d, dx] of strokes) { const q = clamp((t - a) / d); x += dx * E.inOutQ(q); mv = Math.max(mv, Math.sin(q * Math.PI)); }
   const y = lerp(hy(xPre) - 5 * pre, topAt(x) + 58, dvY);
   const under = clamp((y - SURF + 4) / 18);
@@ -85,21 +86,61 @@ function ring(ctx, ex, ey, R, a, x0, x1, q) {
   ctx.restore();
 }
 
+// ---- the far inner wall seen through the air pocket: same oily steel as "leave" (identical generator and cache key, so
+// whichever scene builds it first, the texture is the same), lit only around the lights ----
+function wallTex() {
+  if (window.PK._leaveWallTex) return window.PK._leaveWallTex;
+  const c = document.createElement('canvas'); c.width = 512; c.height = 96; const x = c.getContext('2d');
+  const id = x.createImageData(512, 96);
+  for (let j = 0; j < 96; j++) for (let i = 0; i < 512; i++) {
+    const u = i / 512, v = j / 96;
+    const n = fb(v * 11 + fb(u * 2.5, 13) * 1.3, 17, 4) * .9 + fb(u * 26 + v * 3, 19) * .3 + (hi(i * 3 + j * 1013) - .5) * .16;
+    const val = clamp(.42 + n * 1.3) * (.75 + .25 * Math.sin(v * Math.PI)), o = (j * 512 + i) * 4;
+    id.data[o] = 205 * val; id.data[o + 1] = 170 * val; id.data[o + 2] = 138 * val; id.data[o + 3] = 255 * Math.pow(val, 1.3);
+  }
+  x.putImageData(id, 0, 0); window.PK._leaveWallTex = c; return c;
+}
+function pocketWall(ctx, x0, x1, lights) {
+  const top = PR.base - PR.r, bot = SURF + 6, xa = Math.max(x0, XT - 8);
+  if (xa >= x1) return;
+  const [b, x] = L.buf('promiseWall', 360, 640); x.setTransform(1, 0, 0, 1, 0, 0); x.globalCompositeOperation = 'source-over'; x.clearRect(0, 0, 360, 640);
+  const m = ctx.getTransform(); x.setTransform(m.a / 3, m.b / 3, m.c / 3, m.d / 3, m.e / 3, m.f / 3);
+  x.save(); x.beginPath(); x.moveTo(xa, bot); for (let xx = xa; xx <= x1 + 16; xx += 16) x.lineTo(xx, topAt(xx)); x.lineTo(x1 + 16, bot); x.closePath(); x.clip();
+  const tw = 760;
+  for (let k = Math.floor(xa / tw); k * tw < x1; k++) { if (k & 1) { x.save(); x.translate((k + 1) * tw, 0); x.scale(-1, 1); x.drawImage(wallTex(), 0, top, tw, bot - top); x.restore(); } else x.drawImage(wallTex(), k * tw, top, tw, bot - top); }
+  x.restore();
+  const [mb, mx] = L.buf('promiseWallMask', 360, 640); mx.setTransform(1, 0, 0, 1, 0, 0); mx.globalCompositeOperation = 'source-over'; mx.clearRect(0, 0, 360, 640);
+  mx.setTransform(m.a / 3, m.b / 3, m.c / 3, m.d / 3, m.e / 3, m.f / 3); mx.globalCompositeOperation = 'lighter';
+  for (const l of lights) {
+    if (!(l.a > .02)) continue; const R = 150 * (l.s || 1) * (1 + .5 * (l.p || 0));
+    mx.save(); mx.translate(l.x, l.y); mx.scale(1.35, 1);
+    const g = mx.createRadialGradient(0, 0, 0, 0, 0, R); g.addColorStop(0, `rgba(0,0,0,${Math.min(1, .9 * l.a + .5 * (l.p || 0))})`); g.addColorStop(.4, `rgba(0,0,0,${Math.min(1, .38 * l.a + .3 * (l.p || 0))})`); g.addColorStop(1, 'rgba(0,0,0,0)');
+    mx.fillStyle = g; mx.fillRect(-R, -R, R * 2, R * 2); mx.restore();
+  }
+  x.setTransform(1, 0, 0, 1, 0, 0); x.globalCompositeOperation = 'destination-in'; x.drawImage(mb, 0, 0); x.globalCompositeOperation = 'source-over';
+  const ya = m.d * top + m.f, yb = m.d * bot + m.f, r0 = clamp(Math.floor((Math.min(ya, yb) - 90) / 3), 0, 639), r1 = clamp(Math.ceil((Math.max(ya, yb) + 90) / 3), r0 + 1, 640);
+  ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = .34; ctx.drawImage(b, 0, r0, 360, r1 - r0, 0, r0 * 3, W, (r1 - r0) * 3); ctx.restore();
+}
+
 window.PK.scenes.promise = function (ctx, t, d, info) {
   const D = info.sc.data || {};
   const v0 = info.sc.voice_t - info.sc.t0, tc = t - v0;
   const bpm = 100;
   const B = hisPath(v0, t);
 
-  // ---- camera: settle, ease back to hold all of them for the promise, then follow him into the flooded line ----
+  // ---- camera: close the whole way. Opens on him where the air runs out, dollies along the pocket so each light is near
+  // frame centre as it pulses ("each and every one"), swings back to him for "back", then follows him down into the
+  // flooded line ("If I can't come back") while the pocket slides away up-frame. ----
   const push = P(t, d - .95, d + .2, E.inQ);
-  const zoom = lerp(1.3, 1.04, P(t, -.2, v0 + 1.1, E.inOutQ)) - .3 * P(t, v0 + 2.6, v0 + 5.9, E.inOutQ) + .05 * push;
-  let bs = 0; for (let k = 0; k < 6; k++) bs += hisPath(v0, t - k * .14).x; bs /= 6;
-  let camX = lerp(380, 470, P(t, -.2, v0 + 1.2, E.inOutQ));
-  camX = lerp(camX, bs + 400, P(t, v0 + 2.6, v0 + 5.3, E.inOutQ));
-  camX = lerp(camX, B.x + 330, push * .4);
-  const yScr = lerp(735, 700, P(t, v0 + 2.6, d, E.inOutQ));
-  const camY = LYP + (960 - yScr) / zoom;
+  let zoom = lerp(1.9, 1.76, P(tc, -.3, .9, E.inOutQ));
+  zoom = lerp(zoom, 1.62, P(tc, 1.95, 2.75, E.inOutQ));
+  zoom = lerp(zoom, 1.5, P(tc, 3.3, 4.7, E.inOutQ)) + .08 * push;
+  let bs = 0, by = 0; for (let k = 0; k < 6; k++) { const q = hisPath(v0, t - k * .09); bs += q.x; by += q.y; } bs /= 6; by /= 6;
+  let camX = 300 + 400 * E.inOutQ(P(tc, .55, 1.85)) - 340 * E.inOutQ(P(tc, 2.0, 2.75)) - 50 * E.inOutQ(P(tc, 2.9, 3.9));
+  const fol = P(tc, 3.1, 4.6, E.inOutQ);
+  camX = lerp(camX, bs + lerp(215, 120, P(tc, 4.3, 6.7)), fol);   // the pocket slides out right around "send help"
+  const yScr = lerp(860, 830, fol);
+  const camY = lerp(LYP, by, .8 * P(tc, 3.5, 5.8, E.inOutQ)) + (960 - yScr) / zoom;
   const dr = drift2(t, .9, 53);
   let sh = .12 * Math.exp(-Math.pow((tc - 3.95) / .12, 2));
   const sk = shake2(t, sh, 53);
@@ -123,11 +164,14 @@ window.PK.scenes.promise = function (ctx, t, d, info) {
   for (let x = x0; x <= x1 + 16; x += 16) ctx.lineTo(x, topAt(x));
   for (let x = x1 + 16; x >= x0 - 16; x -= 16) ctx.lineTo(x, botAt(x));
   ctx.closePath(); ctx.fillStyle = 'rgba(2,4,5,.92)'; ctx.fill();
+  // far wall of the pocket, its steel lit in a pool around each light (a pulse widens and brightens its pool)
+  pocketWall(ctx, x0, x1, pl.concat(B.under < 1 ? [{ x: Bl.x, y: Bl.y, a: Bl.a * (1 - B.under), s: Bl.s, p: rep }] : []));
   ctx.save(); ctx.globalCompositeOperation = 'lighter';
   for (const l of pl.concat(B.under < 1 ? [Bl] : [])) {
     const a = l.a * (l === Bl ? 1 - B.under : 1); if (a < .02) continue;
+    const pp = l === Bl ? rep : l.p;
     ctx.save(); ctx.translate(l.x, (topAt(l.x) + SURF) / 2); ctx.scale(3, 1);
-    const rg = ctx.createRadialGradient(0, 0, 0, 0, 0, 60); rg.addColorStop(0, rgba('#ffb36b', .1 * a)); rg.addColorStop(1, rgba('#ff9a3c', 0));
+    const rg = ctx.createRadialGradient(0, 0, 0, 0, 0, 60); rg.addColorStop(0, rgba('#ffb36b', .1 * a + .2 * pp)); rg.addColorStop(1, rgba('#ff9a3c', 0));
     ctx.fillStyle = rg; ctx.fillRect(-60, -60, 120, 120); ctx.restore();
   }
   ctx.restore();
@@ -159,6 +203,21 @@ window.PK.scenes.promise = function (ctx, t, d, info) {
     for (let s = 0; s < 5; s++) {
       const w = (16 - s * 2.6) * l.s * (.55 + .45 * Math.sin(t * 2.4 + s * 1.9 + l.x * .01));
       ctx.fillStyle = rgba('#ffc477', l.a * .12 * (1 - s / 5)); ctx.fillRect(l.x - w + Math.sin(t * 2 + s * 1.3) * 3, SURF + 4 + s * 8 + Math.sin(t * 1.7 + s) * 1.2, w * 2, 1.4 * px);
+    }
+    // light bleeding a little way into the oil
+    ctx.save(); ctx.translate(l.x, SURF + 24); ctx.scale(1.7, .55);
+    const bg = ctx.createRadialGradient(0, 0, 0, 0, 0, 110); bg.addColorStop(0, rgba('#c07a35', .14 * l.a)); bg.addColorStop(1, rgba('#c07a35', 0));
+    ctx.fillStyle = bg; ctx.fillRect(-110, -110, 220, 220); ctx.restore();
+  }
+  // suspended specks in the oil (fixed in the world, drifting slowly), caught by the nearest light
+  {
+    const lits = pl.concat(B.under < 1 ? [{ x: Bl.x, y: SURF, a: Bl.a }] : []);
+    for (let i = 0; i < 70; i++) {
+      const sx = -400 + ((hi(i * 3 + 7) * 1500 + t * (5 + 9 * hi(i))) % 1500); if (sx < x0 || sx > x1) continue;
+      const sy = SURF + 12 + hi(i * 5 + 1) * 200 + nz(t * .4 + i, 3) * 7; if (sy < topAt(sx) + 4 || sy > botAt(sx) - 4) continue;
+      let lit = 0; for (const l of lits) lit += l.a * Math.exp(-Math.pow(Math.hypot(sx - l.x, (sy - SURF) * 1.6) / 150, 2));
+      const a = (.04 + .5 * lit) * (.5 + .5 * hi(i * 9)); if (a < .02) continue;
+      ctx.fillStyle = rgba(lit > .1 ? '#ffc98a' : '#8fd3e8', a); ctx.beginPath(); ctx.arc(sx, sy, (.8 + 1.2 * hi(i * 11)) * px * 1.4, 0, 7); ctx.fill();
     }
   }
   // entry ripple when he goes under
@@ -204,20 +263,24 @@ window.PK.scenes.promise = function (ctx, t, d, info) {
     for (let x = x1 + 16; x >= x0 - 16; x -= 16) ctx.lineTo(x, edge(x) + dir * PR.wall);
     ctx.closePath();
   };
-  ctx.fillStyle = '#0e1316'; band(topAt, -1); ctx.fill(); band(botAt, 1); ctx.fill();
+  ctx.fillStyle = '#0e1316'; band(topAt, -1); ctx.fill();
+  // at these zooms the bottom wall falls in the subtitle band: keep it as dark as the outside so it adds no stripe there
+  const bz = P(zoom, 1.25, 1.45);
+  ctx.fillStyle = `rgb(${Math.round(lerp(14, 3, bz))},${Math.round(lerp(19, 4, bz))},${Math.round(lerp(22, 5, bz))})`; band(botAt, 1); ctx.fill();
   ctx.fillStyle = 'rgba(1,2,3,.95)';
   ctx.beginPath(); ctx.moveTo(x0 - 16, topAt(x0 - 16) - PR.wall); for (let x = x0; x <= x1 + 16; x += 16) ctx.lineTo(x, topAt(x) - PR.wall); ctx.lineTo(x1 + 16, topAt(x1) - 1600); ctx.lineTo(x0 - 16, topAt(x1) - 1600); ctx.closePath(); ctx.fill();
   ctx.beginPath(); ctx.moveTo(x0 - 16, botAt(x0 - 16) + PR.wall); for (let x = x0; x <= x1 + 16; x += 16) ctx.lineTo(x, botAt(x) + PR.wall); ctx.lineTo(x1 + 16, botAt(x0) + 1600); ctx.lineTo(x0 - 16, botAt(x0) + 1600); ctx.closePath(); ctx.fill();
-  ctx.strokeStyle = 'rgba(150,185,200,.11)'; ctx.lineWidth = 1.4 * px;
-  for (const edge of [topAt, botAt]) { ctx.beginPath(); for (let x = x0; x <= x1 + 16; x += 16) { const y = edge(x); x === x0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y); } ctx.stroke(); }
+  // inner edge highlights (the bottom one only when it sits well below the subtitle band, i.e. never at these zooms)
+  ctx.lineWidth = 1.4 * px;
+  for (const [edge, ea] of [[topAt, .11], [botAt, .11 * (1 - P(zoom, 1.25, 1.45))]]) { if (ea < .005) continue; ctx.strokeStyle = `rgba(150,185,200,${ea.toFixed(3)})`; ctx.beginPath(); for (let x = x0; x <= x1 + 16; x += 16) { const y = edge(x); x === x0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y); } ctx.stroke(); }
   // girth welds
   ctx.strokeStyle = 'rgba(150,185,200,.06)'; ctx.lineWidth = 2.5 * px;
   for (let x = Math.floor(x0 / 540) * 540 + 130; x < x1; x += 540) { ctx.beginPath(); ctx.moveTo(x, topAt(x) - PR.wall); ctx.lineTo(x, topAt(x)); ctx.moveTo(x, botAt(x)); ctx.lineTo(x, botAt(x) + PR.wall); ctx.stroke(); }
   // warm spill on the crown steel above the pocket lights
   ctx.save(); ctx.globalCompositeOperation = 'lighter';
   for (const l of pl.concat(B.under < 1 ? [Bl] : [])) {
-    const a = l.a * (l === Bl ? 1 - B.under : 1); const hw = 120 * l.s; const yy = topAt(l.x);
-    const lg = ctx.createLinearGradient(l.x - hw, 0, l.x + hw, 0); lg.addColorStop(0, rgba('#ffd9a0', 0)); lg.addColorStop(.5, rgba('#ffd9a0', .2 * a)); lg.addColorStop(1, rgba('#ffd9a0', 0));
+    const a = l.a * (l === Bl ? 1 - B.under : 1), pp = l === Bl ? rep * (1 - B.under) : l.p; const hw = 120 * l.s; const yy = topAt(l.x);
+    const lg = ctx.createLinearGradient(l.x - hw, 0, l.x + hw, 0); lg.addColorStop(0, rgba('#ffd9a0', 0)); lg.addColorStop(.5, rgba('#ffd9a0', .2 * a + .35 * pp)); lg.addColorStop(1, rgba('#ffd9a0', 0));
     ctx.fillStyle = lg; ctx.fillRect(l.x - hw, yy - 1.2 * px, hw * 2, 1.6 * px);
   }
   ctx.restore();
@@ -232,12 +295,12 @@ window.PK.scenes.promise = function (ctx, t, d, info) {
   }
   ctx.restore();
 
-  // ---- tunnel vision: wide while they are all in frame, closing on him as he goes ----
+  // ---- tunnel vision: centred on the pocket while the camera rides along it, closing on him as he goes ----
   const focus = P(t, v0 + 3.3, d, E.inOutQ);
   const sB = { x: 540 + (B.x - camX) * zoom, y: 960 + (B.y - camY) * zoom };
-  const sP = { x: 540 + ((pl[0].x + pl[2].x) / 2 - camX) * zoom, y: 960 + (LYP - camY) * zoom };
-  const cx = lerp((sB.x + sP.x) / 2, lerp((sB.x + sP.x) / 2, sB.x, .35), focus), cy = lerp(sP.y, (sB.y + sP.y) / 2, focus);
-  const k = lerp(.5, .62, focus) + .06 * push;
+  const yP = 960 + (LYP - camY) * zoom;
+  const cx = lerp(540, lerp(540, sB.x, .55), focus), cy = lerp(yP, lerp(yP, sB.y, .7), focus);
+  const k = lerp(.5, .6, focus) + .06 * push;
   const pulse = .55 * (.5 + .5 * Math.sin(t * Math.PI * 2 * .42)) + .45 * beat(t, bpm);
   const r0 = H * lerp(.4, .085, k) * (1 + .06 * pulse), r1 = r0 + H * lerp(.5, .3, k);
   ctx.save(); ctx.translate(cx, cy); ctx.scale(1.55, 1);
@@ -245,8 +308,8 @@ window.PK.scenes.promise = function (ctx, t, d, info) {
   ig.addColorStop(0, 'rgba(1,2,3,0)'); ig.addColorStop(.55, `rgba(1,2,3,${(.5 + .3 * k).toFixed(3)})`); ig.addColorStop(1, 'rgba(1,2,3,.97)');
   ctx.fillStyle = ig; ctx.fillRect(-W * 1.5, -H * 1.5, W * 3, H * 3); ctx.restore();
 
-  // attribution: up while the voice plays
-  const ca = lerp(.4, 1, P(t, -.02, .25, E.outQ)) * (1 - P(t, d - .3, d - .02, E.inQ));       // voice ends ~0.35 s before the cut
+  // attribution: up while the voice plays (full from the first frame: the card from "leave" is full at the hard cut)
+  const ca = 1 - P(t, d - .3, d - .02, E.inQ);                                                 // voice ends ~0.35 s before the cut
   sourceCard(ctx, D.who || '', D.where || '', ca, 1185);
 };
 })();
