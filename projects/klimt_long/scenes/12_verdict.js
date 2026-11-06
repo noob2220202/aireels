@@ -8,7 +8,7 @@ const { K, HATCH, T, WALL_OX, mk, wt, vend, noise2, poly, darkness, brackets, la
 const ITALY_ = () => window.KL.ITALY;
 
 // ---------------------------------------------------------------------------
-// "엑스레이와 뒷면 봉인을 대조한 결과 진품, 추정가 6천만 유로 이상."
+// "엑스레이와 뒷면 봉인을 대조한 결과 진품, 추정가는 최소 6천만 유로."
 // An authentication lab, cool navy, one examiner silhouette (right, cyan rim light). Beats on narration words:
 //  start      match-dissolve from "bag": the canvas fills the frame exactly where bag left it, camera pulls back
 //  엑스레이와  the 1996 radiograph slides over the canvas as a transparency, a scan line sweeps it, the face /
@@ -22,9 +22,11 @@ const ITALY_ = () => window.KL.ITALY;
 //  결과       anticipation: room dims, gold brackets lock on, the examiner turns the canvas back to the front
 //  진품       the red/gold seal slams onto the canvas (stamp sfx): flash, shockwave, gold burst, camera kick,
 //             glasses glint; chip "2020.1.17 검찰 발표 · 진품"
-//  추정가     checklist folds away, the value panel unfolds ("추정가" tab), camera eases back
-//  6천만      split-flap digits roll and lock left→right on the 12 flap sfx: €60,000,000
-//  유로/이상  € pulses, "+" pops on the tick, gold glint sweep, sub-label "미술관 추정 6천만~1억 유로"
+//  추정가     checklist folds away, the value panel unfolds ("추정가" tab), camera eases back;
+//             the digit wheels spin as an unreadable motion-blur (no specific amounts are ever legible)
+//  최소       "최소" tab pops next to "추정가"
+//  6천만      the digits lock left→right with the flap sfx, "€6" reads on the word: €60,000,000
+//  유로       € pulses, gold glint sweep on the tick, sub-label "미술관 추정 6천만~1억 유로"
 //  end        slow push, motes; framing matches the opening of "condition" for a clean crossfade
 // ---------------------------------------------------------------------------
 
@@ -347,11 +349,14 @@ function digitCell(ctx, cx, cy, cw, ch, s, roll, lockP, size, color) {
   ctx.fillStyle = '#10141c'; roundRect(ctx, cx - cw / 2, cy - ch / 2, cw, ch, 9); ctx.fill();
   ctx.save(); ctx.beginPath(); roundRect(ctx, cx - cw / 2, cy - ch / 2, cw, ch, 9); ctx.clip();
   if (roll != null) {
-    const a = Math.floor(roll), f = roll - a, step = ch * .82;
-    for (let k = -1; k <= 1; k++) {
-      const dgt = String(((a + k) % 10 + 10) % 10), yy = cy + (k - f) * step;
-      text(ctx, dgt, cx, yy + size * .05, { size, family: FONT.disp, weight: 400, color: '#8a93a6', alpha: .85 - Math.abs(k - f) * .45 });
-    }
+    // spinning wheel, drawn as a motion-blur strip only: no digit is ever legible before it locks,
+    // so a paused frame never shows an amount that is not in the sources
+    const f = roll - Math.floor(roll), step = ch * .41;
+    const sg = ctx.createLinearGradient(0, cy - ch / 2, 0, cy + ch / 2);
+    sg.addColorStop(0, 'rgba(138,147,166,0)'); sg.addColorStop(.5, 'rgba(138,147,166,.16)'); sg.addColorStop(1, 'rgba(138,147,166,0)');
+    ctx.fillStyle = sg;
+    for (const [ox, sw] of [[-.27, .13], [-.06, .1], [.15, .12]]) { ctx.fillRect(cx + (ox - .04) * cw, cy - ch / 2, (sw + .08) * cw, ch); ctx.fillRect(cx + ox * cw, cy - ch / 2, sw * cw, ch); }   // smeared glyph strokes (soft edge)
+    for (let k = -2; k <= 2; k++) { const yy = cy + (k - f) * step; ctx.fillStyle = `rgba(170,180,200,${.16 * (1 - Math.abs(k - f) / 2.5)})`; ctx.fillRect(cx - cw * .34, yy - 2, cw * .68, 4); }   // flap edges streaming past
   } else {
     const q = clamp(lockP), yy = cy + (1 - E.outBack(q, 2.2)) * ch * .5;
     text(ctx, s, cx, yy + size * .05, { size, family: FONT.disp, weight: 400, color, alpha: clamp(q * 3) });
@@ -367,12 +372,12 @@ window.KL.scenes.verdict = function (ctx, t, d, info) {
   if (!V) initV();
   const tX = at(info, '엑스레이와', .0), tB = at(info, '뒷면', .14), tS = at(info, '봉인을', .23), tD = at(info, '대조한', .315), tR = at(info, '결과', .392),
     tJ = at(info, '진품', .459), tE = at(info, '추정가', .592), tMin = at(info, '최소', .743), tM = at(info, '6천만', .825), tU = at(info, '유로', .927);
-  const tI = tU + .25;                                 // tick sfx (유로 +.25): the '+' pops
+  const tI = tU + .25;                                 // tick sfx (유로 +.25): gold glint over the digits ('추정가는 최소 6천만 유로')
   const tc = [tB + .15, tB + .33, tB + .51];          // the three tick sfx (checks)
   const tImp = tJ + .08;                               // stamp sfx
   const tF0 = tB - .17, tF1 = tB + .1;                 // flip to back (whoosh at tB - .15)
   const tG0 = tR - .08, tG1 = tR + .22;                // flip back to front
-  const lockT = k => tM + .08 + k * .068;
+  const lockT = k => tM - .06 + k * .065;             // '6' lands on the word onset, all 8 digits locked before '유로'
 
   // ---- canvas angle ----
   let th = -.06 * tri(t, tF0 - .2, tF0 + .02) + Math.PI * P(t, tF0, tF1, E.inOutC);
@@ -675,7 +680,7 @@ window.KL.scenes.verdict = function (ctx, t, d, info) {
     if (vIn > .6) {
       const size = 80, cw = size * .66, ch = size * 1.24, gap = size * .07, sepW = size * .3;
       const cells = '€60,000,000'.split('');
-      let tw = 0; cells.forEach(cc => { tw += (cc === ',' ? sepW : cw) + gap; }); tw -= gap; tw += cw * .9 + gap;   // room for '+'
+      let tw = 0; cells.forEach(cc => { tw += (cc === ',' ? sepW : cw) + gap; }); tw -= gap;
       let x = 540 - tw / 2; const y = Y0 + HV / 2;
       let dk = 0;
       ctx.save(); ctx.globalAlpha *= clamp((vIn - .6) * 3);
@@ -693,9 +698,6 @@ window.KL.scenes.verdict = function (ctx, t, d, info) {
         digitCell(ctx, x + cw / 2, y, cw, ch, cc, roll, P(t, lt, lt + .12), size, K.goldHi);
         x += cw + gap;
       });
-      // '+' pops on the tick
-      const pp = P(t, tI - .04, tI + .18, E.outBack);
-      if (pp > 0) { ctx.save(); ctx.translate(x + cw * .45, y); ctx.scale(pp * 1.0, pp * 1.0); text(ctx, '+', 0, 4, { size: size * 1.05, family: FONT.disp, weight: 400, color: K.goldHi, shadow: { color: 'rgba(255,200,90,.8)', blur: 26, y: 0 } }); ctx.restore(); glow(ctx, x + cw * .45, y, 120, K.goldHi, .6 * (1 - P(t, tI + .1, tI + .6))); }
       // glint across the digits
       const gl = P(t, tI - .02, tI + .5);
       if (gl > 0 && gl < 1) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.beginPath(); ctx.rect(X0, Y0, wv, HV); ctx.clip(); ctx.translate(lerp(X0 - 100, X0 + wv + 100, E.inOutQ(gl)), y); ctx.rotate(.4); const gg = ctx.createLinearGradient(-50, 0, 50, 0); gg.addColorStop(0, 'rgba(255,236,170,0)'); gg.addColorStop(.5, 'rgba(255,236,170,.5)'); gg.addColorStop(1, 'rgba(255,236,170,0)'); ctx.fillStyle = gg; ctx.fillRect(-50, -200, 100, 400); ctx.restore(); }

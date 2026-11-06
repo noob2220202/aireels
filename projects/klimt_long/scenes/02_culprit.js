@@ -62,13 +62,12 @@ function initSprites() {
     x.strokeStyle = 'rgba(190,30,40,.75)'; x.lineWidth = 3.4; x.lineCap = 'round';
     for (const i of [1, 3, 4]) { x.beginPath(); x.moveTo(214, 124 + i * 34); x.lineTo(214 + 190 - hash(i * 5) * 60, 120 + i * 34 + (hash(i) - .5) * 6); x.stroke(); }
     S.card = c; }
-  // mugshot backdrop with height chart
+  // plain ID-photo backdrop (no height chart: nobody was arrested or charged, so nothing should read as a booking photo)
   { const { w, h } = MUG; const [c, x] = mk(w, h);
     const g = x.createLinearGradient(0, 0, 0, h); g.addColorStop(0, '#b9b5ab'); g.addColorStop(1, '#8e8a82'); x.fillStyle = g; x.fillRect(0, 0, w, h);
-    x.strokeStyle = 'rgba(30,30,30,.35)'; x.lineWidth = 1.5; for (let y = 14; y < h; y += 18) { x.beginPath(); x.moveTo(0, y); x.lineTo(y % 36 === 14 ? 26 : 14, y); x.stroke(); }
     S.mugBG = c; }
-  // generic mugshot silhouettes (no faces, nobody in particular)
-  const vars = [{ hat: 'fedora' }, {}, { female: true, hair: 'long' }, { female: true, hair: 'bun' }, { hat: 'fedora', hatTilt: .12, coat: false }];
+  // generic noir placeholder silhouettes (no faces, nobody in particular; no female variants, which could evoke a real investigated person)
+  const vars = [{ hat: 'fedora' }, {}, { hat: 'fedora', hatTilt: .12, coat: false }];
   S.mugs = vars.map((o, i) => { const [c, x] = mk(MUG.w, MUG.h); bust(x, MUG.w / 2 + (i % 2 ? 4 : -3), 30 + (i % 3) * 5, Object.assign({ fill: '#2b2e34', rim: 'rgba(230,230,240,.35)', rimX: 2, rimY: -2, rimBlur: 4 }, o)); return c; });
   { const [c, x] = mk(MUG.w, MUG.h); bust(x, MUG.w / 2, 36, { fill: '#33363c' }); S.unknown = c; }
   // small "?" lead cards

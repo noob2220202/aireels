@@ -288,8 +288,9 @@ window.KL.scenes.xray = function (ctx, t, d, info) {
   const hud = P(t, tC + .02, tC + .28) * (1 - P(t, tH - .2, tH + .08));
 
   // ---- camera ----
-  const keys = [[-.5, 546, 826, 1.36], [0, 545, 836, 1.3], [tC - .02, 540, 905, 1.0], [tPa + .12, 540, 900, 1.05], [tM, 542, 893, 1.24], [tW - .05, 544, 895, 1.43],
-    [tEx + .4, 545, 893, 1.49], [tCv + .06, 540, 952, .9], [tK - .1, 540, 958, .92], [rjS + .1, 540, 985, .975], [rjE + .04, 540, 1008, 1.0], [d + .6, 540, 1012, 1.0]];
+  // the face-lock push is capped (z ≈ 1.36) so the full canvas + HUD brackets stay inside y ≈ 465-1250 when the lock box re-expands
+  const keys = [[-.5, 546, 826, 1.36], [0, 545, 836, 1.3], [tC - .02, 540, 905, 1.0], [tPa + .12, 540, 900, 1.05], [tM, 542, 893, 1.24], [tW - .05, 544, 911, 1.35],
+    [tEx + .4, 545, 914, 1.365], [tCv + .06, 540, 952, .9], [tK - .1, 540, 958, .92], [rjS + .1, 540, 985, .975], [rjE + .04, 540, 1008, 1.0], [d + .6, 540, 1012, 1.0]];
   let [cx, cy, z] = camAt(keys, t);
   z *= 1 + .028 * tri(t, tCv - .03, tCv + .28) + .012 * tri(t, rjE - .08, rjE + .2);
   const dr = drift(t, .55, 5);

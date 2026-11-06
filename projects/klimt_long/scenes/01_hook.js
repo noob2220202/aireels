@@ -307,9 +307,10 @@ window.KL.scenes.hook = function (ctx, t, d, info) {
   const { HX, HY, HS } = LW;
 
   // ---- camera: push in -> pull back to the facade -> rush into the hatch -> settle on the emerging canvas
-  const zoom = keys(t, [[0, 1], [tMan - .02, 1.15, E.inOutQ], [tMus + .26, .56, E.inOutC], [tRush, .545, E.lin], [tArr, 1.24, E.inOutC], [d, 1.1, E.outC]])
+  // t = 0 is the loop seam (zoom 1, cy 805): the impact at the seam kicks off a fast push-in instead of a slow creep
+  const zoom = keys(t, [[0, 1], [.5, 1.12, E.outC], [tMan - .02, 1.15, E.inOutQ], [tMus + .26, .56, E.inOutC], [tRush, .545, E.lin], [tArr, 1.24, E.inOutC], [d, 1.1, E.outC]])
     + .035 * pulse(t, tM + .03, 6) + .02 * pulse(t, t22 + .03, 7);
-  const cy = keys(t, [[0, 805], [tMan - .02, 868], [tMus + .26, 640, E.inOutC], [tRush, 636, E.lin], [tArr, 812, E.inOutC], [d, 792, E.outC]]);
+  const cy = keys(t, [[0, 805], [.5, 836, E.outC], [tMan - .02, 868], [tMus + .26, 640, E.inOutC], [tRush, 636, E.lin], [tArr, 812, E.inOutC], [d, 792, E.outC]]);
   const rush = Math.sin(Math.PI * P(t, tRush, tArr));
   const shake = .3 * P(t, 0, .12, E.inOutQ) * Math.exp(-t * 4) + .22 * P(t, tWall, tOpen) * (t < tOpen + .02 ? 1 : 0) + .4 * (t > tOpen ? Math.exp(-(t - tOpen) * 4.5) : 0);
   const cam = { x: 540, y: cy, zoom, shake, hh: lerp(.7, 1.15, P(t, 0, 1.2)) * (1 - .5 * rush) };
@@ -330,8 +331,21 @@ window.KL.scenes.hook = function (ctx, t, d, info) {
 
   // canvas pose (shared by the in-cavity view and the emergence)
   const cv = { x: lerp(HX, HX + 8, kE), y: lerp(HY - 5, HY - 40, kE) + Math.sin(t * 2.2) * 4 * kE, s: lerp(.3, .64, kE), r: lerp(.04, -.045, E.outBack(kE, 1.4)) };
-  const bagSlide = E.inOutQ(P(t, tN - .02, tN + .6));
-  const drawBagOn = (c) => { const bs = cv.s; c.save(); c.globalAlpha *= 1 - P(t, tN + .3, tN + .6); c.translate(cv.x - 10 * bagSlide, cv.y + 235 * bs + bagSlide * 380); c.rotate(cv.r + bagSlide * .4); drawBag(c, 0, 0, 690 * bs, 380 * bs, 0, t); c.restore(); };
+  // black plastic bag: wraps the canvas in the cavity; on emergence it slips off BEHIND the canvas and is gone by ~tN + .15
+  const bagSlide = E.inOutQ(P(t, tN - .1, tN + .3));
+  const drawBagOn = (c) => {
+    const bA = 1 - P(t, tN - .05, tN + .15); if (bA <= 0) return;
+    const bs = cv.s, w = 690 * bs, h = 380 * bs;
+    c.save(); c.globalAlpha *= bA; c.translate(cv.x - 10 * bagSlide, cv.y + 235 * bs + bagSlide * 200); c.rotate(cv.r + bagSlide * .3);
+    drawBag(c, 0, 0, w, h, 0, t);
+    // glossy crinkle highlights so it reads as the same plastic bag as in scene 'bag', not a matte blob
+    c.lineCap = 'round';
+    [[-.36, .02, -.12, -.2, .5], [-.06, .1, .2, -.06, .42], [.14, .3, .38, .16, .46], [-.4, .36, -.18, .26, .34]].forEach(([a, b, c2, d2, al], i) => {
+      c.strokeStyle = `rgba(214,220,232,${al * (.75 + .25 * Math.sin(t * 3 + i * 1.7))})`; c.lineWidth = Math.max(2, 9 * bs);
+      c.beginPath(); c.moveTo(a * w, b * h); c.quadraticCurveTo((a + c2) / 2 * w + 8 * bs, (b + d2) / 2 * h - 30 * bs, c2 * w, d2 * h); c.stroke();
+    });
+    c.restore();
+  };
 
   const m = LW.draw(ctx, t, {
     cam, open, jx, jy, doorLight: light, sway, gust, seep: seepV, light: light * (1 - kE), amb: 1,
@@ -342,6 +356,13 @@ window.KL.scenes.hook = function (ctx, t, d, info) {
       if (kE <= 0) { LW.canvasSprite(c, cv.x, cv.y, cv.s, cv.r); drawBagOn(c); }
     },
     after(c) {
+      // "도둑맞은 명화가": a see-through glimpse of the portrait behind the closed door (0 at t = 0, so the loop seam is untouched)
+      const gh = .55 * Math.sin(Math.PI * P(t, tSt, tM + .45));
+      if (gh > 0) {
+        c.save(); c.beginPath(); c.rect(HX - HS / 2, HY - HS / 2, HS, HS); c.clip();
+        c.globalCompositeOperation = 'screen'; c.globalAlpha = gh; LW.canvasSprite(c, HX, HY - 5, .3, .04);
+        c.restore();
+      }
       // the impact shakes dust off the hatch frame (the ending's slam dust has just settled at the loop seam)
       if (t < 1.3) {
         c.save(); c.globalCompositeOperation = 'lighter';
@@ -369,7 +390,7 @@ window.KL.scenes.hook = function (ctx, t, d, info) {
         const w = 600 * cv.s, h = 700 * cv.s;
         glow(c, cv.x, cv.y, 420 * kE + 60, K.gold, .5 * kE);
         godrays(c, cv.x, cv.y, t * .25, 6.2, 640 * kE, '#ffe1a0', .06 * kE, t, 10);
-        c.save(); c.globalAlpha *= clamp(kE * 4); LW.canvasSprite(c, cv.x, cv.y, cv.s, cv.r); drawBagOn(c); c.restore();
+        c.save(); c.globalAlpha *= clamp(kE * 4); drawBagOn(c); LW.canvasSprite(c, cv.x, cv.y, cv.s, cv.r); c.restore();
         // light sweeping over the varnish
         const sw2 = P(t, tN + .25, tN + .85, E.inOutQ);
         if (sw2 > 0 && sw2 < 1) {
@@ -453,7 +474,7 @@ window.KL.scenes.hook = function (ctx, t, d, info) {
       ctx.fillStyle = K.goldHi; ctx.shadowColor = K.gold; ctx.shadowBlur = 18; ctx.beginPath(); ctx.arc(xb, y, 14 * n2, 0, 7); ctx.fill(); ctx.shadowBlur = 0;
       label(ctx, '2019.12.10 발견', xb - 128, y - 66, { size: 36, color: '#111', bg: K.goldHi, a: clamp(n2 * 1.5) });
     }
-    const ca = P(t, t22 - .04, t22 + .1) * (1 - P(t, tMan + .02, tMan + .16));
+    const ca = P(t, t22 - .04, t22 + .1) * (1 - P(t, tMan - .18, tMan)); // gone before the '2019.12.10 발견' tag pops
     if (ca > 0) { glow(ctx, hx, y, 70, K.goldHi, .7 * ca); LW.yearCounter(ctx, clamp(hx, xa + 80, xb - 80), y, lerp(1997, 2019, lp), ca, 46); }
     ctx.restore();
   }

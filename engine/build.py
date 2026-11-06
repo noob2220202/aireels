@@ -109,18 +109,57 @@ def unit_len(s):
     return n
 
 
-def chunk_words(words, maxu=10.5):
-    chunks, cur = [], []
-    for i, w in enumerate(words):
-        cand = ' '.join([x for _, x in cur] + [w])
-        hard_break = cur and re.search(r'[.?!,…]$', cur[-1][1])
-        if cur and (unit_len(cand) > maxu or hard_break):
-            chunks.append(cur)
-            cur = []
-        cur.append((i, w))
-    if cur:
-        chunks.append(cur)
-    return chunks
+NO_BREAK_AFTER = {'그', '이', '저', '한', '두', '세', '바로', '최소', '약', '총', '단', '더', '또', '몰래', '내내', '빈', '검은'}
+COUNTERS = ('만에', '뒤', '전', '후', '동안', '만')
+PARTICLE_END = ('은', '는', '이', '가', '을', '를', '에', '에서', '의', '도', '로', '으로', '고', '며', '서', '지만', '데')
+
+
+def chunk_words(words, maxu=10.5, target=8.0):
+    """Korean-aware subtitle chunking: dynamic programming over break points.
+    Avoids splitting determiners/modifiers from their noun and numbers from their counter words."""
+    n = len(words)
+
+    def bad(i):  # penalty for breaking between words[i] and words[i+1]
+        w, nx = words[i], words[i + 1]
+        core = re.sub(r'[.,?!…]+$', '', w)
+        if re.search(r'[.?!…]$', w):
+            return -6
+        p = 0.0
+        if w.endswith(','):
+            p -= 3
+        if core in NO_BREAK_AFTER:
+            p += 6
+        if re.search(r'\d', core) and nx.rstrip('.,') in COUNTERS:
+            p += 8
+        if re.search(r'(던|ㄴ|는|은|쓴|진|운|른|한|된|없는|있는)$', core) and not core.endswith(PARTICLE_END[:2]) and len(core) > 1:
+            p += 2.5
+        if core.endswith(PARTICLE_END):
+            p -= 1
+        if re.match(r'(싶|속|안에|밑에|위에|옆|뒤에|앞에|것|수 |적|때)', nx):
+            p += 6
+        return p
+
+    INF = float('inf')
+    best = [0.0] + [INF] * n
+    prev = [0] * (n + 1)
+    for j in range(1, n + 1):
+        for i in range(j - 1, -1, -1):
+            L = unit_len(' '.join(words[i:j]))
+            if L > maxu and j - i > 1:
+                break
+            # sentence end inside the chunk (not at its end) is not allowed
+            if any(re.search(r'[.?!…]$', words[k]) for k in range(i, j - 1)):
+                continue
+            c = .12 * (L - target) ** 2 + (bad(j - 1) if j < n else -6)
+            if L < 3.5 and j < n:
+                c += 4
+            if best[i] + c < best[j]:
+                best[j], prev[j] = best[i] + c, i
+    cuts, j = [], n
+    while j > 0:
+        cuts.append((prev[j], j))
+        j = prev[j]
+    return [[(k, words[k]) for k in range(a, b)] for a, b in reversed(cuts)]
 
 
 def clean_sub(s):

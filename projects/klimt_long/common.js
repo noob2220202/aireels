@@ -52,7 +52,8 @@ function flap(ctx, s, x, y, t, t0, { size = 120, cell = .74, lock = .07, roll = 
   chars.forEach((c, i) => {
     const tl = t0 + roll + i * lock; const locked = t >= tl;
     const f = Math.floor(t * 30) + i * 7;
-    const shown = locked || c === '.' || c === ' ' ? c : pool[Math.floor(hash(f) * 10)];
+    // odometer-style roll that counts into the target digit (no random, impossible dates)
+    const shown = locked || c === '.' || c === ' ' || !/[0-9]/.test(c) ? c : pool[(+c + Math.ceil((tl - t) * 18)) % 10];
     if (c !== '.' && c !== ' ') {
       ctx.save(); ctx.shadowColor = 'rgba(0,0,0,.6)'; ctx.shadowBlur = 20; ctx.shadowOffsetY = 8;
       ctx.fillStyle = bg; roundRect(ctx, cx, y - ch / 2, cw, ch, 10); ctx.fill(); ctx.restore();

@@ -13,13 +13,15 @@ const ITALY_ = () => window.KL.ITALY;
 // a case folder drops onto a desk under a swaying lamp (slam) → "1997 · 관리인 조사" header, the year is highlighted (당시)
 // → the cover swings open (thunk) → a neutral profile card slides in and is clipped on (관리인)
 // → the form fills with typed lines (조사도) → a loupe swoops onto the evidence field (whoosh, 증거): the box is empty, "없음" is typed (없이)
-// → a rubber stamp comes down with anticipation and lands "종결" (stamp, 끝났다) → approved chip "증거 불충분 → 종결"
+// → a rubber stamp comes down with anticipation and lands "종결" on the record, clear of the profile card (stamp, 끝났다)
+//   → approved chip "증거 불충분 → 종결"
 // → the cover starts to close as the scene hands over.
 // ---------------------------------------------------------------------------
 const PG = { x: 300, y: 560, w: 500, h: 660 };                 // the form page (world coords; camera centred near 560,960)
 const CARD = { x: 28, y: 100, w: 170, h: 210 };                  // profile card slot (page coords)
 const EVB = { x: 28, y: 476, w: 444, h: 150 };                   // evidence box (page coords)
-const STP = { x: 322, y: 256, r: -.16 };                         // where the stamp lands (page coords)
+const STP = { x: 318, y: 404, r: -.16 };                         // where the stamp lands (page coords): below/right of the profile card,
+                                                                 // over the lower lines and the top of the evidence box; no red touches the card
 let S = null;
 
 // ---------- sprites ----------
@@ -41,8 +43,8 @@ function makeDesk() {
   // coffee cup (top view), right
   px.fillStyle = '#4a423a'; px.beginPath(); px.arc(1010, 470, 92, 0, 7); px.fill(); px.fillStyle = '#1a100a'; px.beginPath(); px.arc(1010, 470, 72, 0, 7); px.fill();
   px.fillStyle = 'rgba(255,240,220,.25)'; px.beginPath(); px.ellipse(990, 448, 30, 12, -.5, 0, 7); px.fill(); px.strokeStyle = '#4a423a'; px.lineWidth = 22; px.beginPath(); px.arc(1112, 470, 30, -1.2, 1.2); px.stroke();
-  // loose papers bottom-right, a pen bottom-left, paper clips
-  px.save(); px.translate(1030, 1350); px.rotate(.22); px.fillStyle = '#d8cfbd'; px.fillRect(-180, -230, 360, 460); px.fillStyle = 'rgba(40,30,20,.25)'; for (let i = 0; i < 9; i++) px.fillRect(-150, -190 + i * 40, 260 - R() * 80, 8); px.restore();
+  // loose papers bottom-right (low, dim paper so nothing bright sits in the subtitle band), a pen bottom-left, paper clips
+  px.save(); px.translate(1040, 1640); px.rotate(.22); px.fillStyle = '#8d8778'; px.fillRect(-180, -230, 360, 460); px.fillStyle = 'rgba(40,30,20,.3)'; for (let i = 0; i < 9; i++) px.fillRect(-150, -190 + i * 40, 260 - R() * 80, 8); px.restore();
   px.save(); px.translate(150, 1390); px.rotate(-.6); px.fillStyle = '#121212'; roundRect(px, -170, -11, 340, 22, 11); px.fill(); px.fillStyle = '#b08d47'; px.fillRect(110, -11, 26, 22); px.fillStyle = 'rgba(255,255,255,.25)'; px.fillRect(-150, -7, 240, 3); px.restore();
   px.strokeStyle = '#9aa0a6'; px.lineWidth = 4; for (const [X, Y, r] of [[200, 1080, .4], [930, 820, -.8]]) { px.save(); px.translate(X, Y); px.rotate(r); roundRect(px, -24, -8, 48, 16, 8); px.stroke(); roundRect(px, -16, -4, 34, 9, 5); px.stroke(); px.restore(); }
   x.save(); x.filter = 'blur(5px)'; x.drawImage(pc, -210, -240); x.restore();
@@ -310,7 +312,7 @@ window.KL.scenes.staff = function (ctx, t, d, info) {
     stampTool(ctx, sxw + ox, syw + oy, STP.r + fRot + (t < tStamp ? .08 * (1 - sIn) : -.1 * sUp), hgt, (t < tStamp ? clamp(sIn * 2) : 1 - P(sUp, .6, 1)));
   }
   // ink flash at impact
-  if (stampK > .01) { const px0 = PG.x + STP.x, py0 = PG.y + STP.y; glow(ctx, px0, py0, 360, '#ff4a3a', .22 * stampK); }
+  if (stampK > .01) { const px0 = PG.x + STP.x + 40, py0 = PG.y + STP.y + 30; glow(ctx, px0, py0, 240, '#ffb48a', .2 * stampK); }   // warm, not red, and kept off the card
 
   ctx.restore(); // camera
 

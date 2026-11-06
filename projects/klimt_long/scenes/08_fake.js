@@ -10,24 +10,23 @@ const ITALY_ = () => window.KL.ITALY;
 // ---------------------------------------------------------------------------
 // "4월에 찾았다 싶던 그림은 정교한 가짜."  (3.0 s, top-down on an evidence desk under a swinging lamp)
 // Beats (anchored to narration words):
-//  push-in   the wrapped bundle lies on the desk (continues staff's desk), lamp swaying, dust in the beam
-//  4월에      approved chip "1997.4 · 벤티밀리아(이탈리아-프랑스 국경)" drops in; scissors slide in
-//  (snip)    twine is cut, the knot springs apart
-//  찾았다     paper flaps unfold one after another; the portrait appears, warm gold "hope" glow + sheen sweep
+//  push-in   an unwrapped canvas lies on the desk under a loose linen dust cloth (continues staff's desk), lamp swaying
+//  4월에      approved chip "1997.4 · 벤티밀리아(이탈리아-프랑스 국경)" drops in; the cloth starts to slide off (rustle)
+//  찾았다     the cloth slides away out of frame; the portrait appears, warm gold "hope" glow + sheen sweep
 //  싶던       gold lock-on brackets; the lamp hesitates (flicker)
 //  그림은     an inspector's shadow falls over the desk; a gloved hand brings a loupe in; camera pushes in
 //  정교한     the loupe glides over eye → earring; red check-rings mark the details one by one
 //  (antic.)  hand pulls away, camera eases back
 //  가짜       stamp slams: shake, red flash, ink specks, shock ring; the painting drains to grey,
 //            brackets turn red, the lamp goes cold, approved label "위작 판명" pops
-// Nothing here depicts a seizure or a theft; it is only the found bundle being examined.
+// Nothing here depicts a seizure, a parcel or a theft (sources disagree on how the copy turned up): the canvas is simply on
+// the desk being examined.
 // ---------------------------------------------------------------------------
 
 let S = null;
 const PX = 540, PY = 790, PS = .7;                 // painting (600x700 texture) world centre + scale
 const PW = 600 * PS, PH = 700 * PS;                // 420 x 490
-const M = 14;                                       // paper margin around the stretcher
-const BX = PX - PW / 2 - M, BY = PY - PH / 2 - M, BW = PW + 2 * M, BH = PH + 2 * M;
+const CL = { w: 600, h: 690, pad: 40 };            // linen dust cloth lying over the canvas (world px)
 const DX0 = -340, DY0 = -260, DW = 1760, DH = 2420; // desk sprite world rect
 const MARKS = [[293, 279, 34], [368, 352, 30], [438, 640, 40]]; // eye, earring, shawl (portrait texture coords, radius)
 
@@ -90,17 +89,40 @@ function makeDesk() {
   const [h, hx] = mk(DW / 2, DH / 2); hx.imageSmoothingQuality = 'high'; hx.drawImage(c, 0, 0, DW / 2, DH / 2);
   return h;
 }
-function makeKraft(seed, base, light) {
-  const [c, x] = mk(512, 512); const R = rng(seed);
-  x.fillStyle = base; x.fillRect(0, 0, 512, 512);
-  for (let i = 0; i < 26000; i++) { x.fillStyle = `rgba(${R() < .5 ? '255,235,200' : '50,30,10'},${R() * .07})`; x.fillRect(R() * 512, R() * 512, 1 + R() * 2, 1); }
-  x.lineCap = 'round';
-  for (let i = 0; i < 260; i++) { x.strokeStyle = `rgba(${R() < .5 ? '255,230,190' : '40,24,8'},${R() * .12})`; x.lineWidth = .6 + R(); const X = R() * 512, Y = R() * 512, a = R() * 6.28, l = 6 + R() * 22; x.beginPath(); x.moveTo(X, Y); x.lineTo(X + Math.cos(a) * l, Y + Math.sin(a) * l); x.stroke(); }
-  for (let i = 0; i < 9; i++) { // soft crinkle creases
-    const X = R() * 512, Y = R() * 512, a = R() * 6.28, l = 80 + R() * 200;
-    x.strokeStyle = `rgba(255,240,210,${light})`; x.lineWidth = 2; x.beginPath(); x.moveTo(X, Y); x.lineTo(X + Math.cos(a) * l, Y + Math.sin(a) * l); x.stroke();
-    x.strokeStyle = 'rgba(30,16,4,.16)'; x.lineWidth = 2; x.beginPath(); x.moveTo(X + 2, Y + 2); x.lineTo(X + 2 + Math.cos(a) * l, Y + 2 + Math.sin(a) * l); x.stroke();
+// linen dust cloth: draped = lying over the stretcher (raised, lit middle, drape shadows off its edges); flat = being dragged
+function makeCloth(draped) {
+  const { w, h, pad } = CL, [c, x] = mk(w + pad * 2, h + pad * 2); x.translate(pad, pad); const R = rng(612);
+  const pts = [], N = 16;
+  const edge = (ax, ay, bx, by, nx, ny) => { for (let i = 0; i < N; i++) { const k = i / N, o = (R() - .5) * 12 + Math.sin(k * 9.4 + ax * .01) * 7; pts.push([lerp(ax, bx, k) + nx * o, lerp(ay, by, k) + ny * o]); } };
+  edge(0, 0, w, 0, 0, -1); edge(w, 0, w, h, 1, 0); edge(w, h, 0, h, 0, 1); edge(0, h, 0, 0, -1, 0);
+  x.beginPath(); pts.forEach(([px, py], i) => i ? x.lineTo(px, py) : x.moveTo(px, py)); x.closePath(); x.save(); x.clip();
+  let g = x.createLinearGradient(0, 0, w, h); g.addColorStop(0, '#9c927d'); g.addColorStop(1, '#6f6656'); x.fillStyle = g; x.fillRect(-10, -10, w + 20, h + 20);
+  for (let y = 0; y < h; y += 3) { x.fillStyle = `rgba(${R() < .5 ? '255,245,225' : '40,30,20'},${.025 + R() * .04})`; x.fillRect(0, y, w, 1); }
+  for (let X = 0; X < w; X += 3) { x.fillStyle = `rgba(${R() < .5 ? '255,245,225' : '40,30,20'},${.02 + R() * .03})`; x.fillRect(X, 0, 1, h); }
+  const sx0 = (w - PW) / 2 - 6, sy0 = (h - PH) / 2 - 6, sw = PW + 12, sh = PH + 12;   // the stretcher underneath
+  x.filter = 'blur(7px)';
+  for (let i = 0; i < 7; i++) { // soft wrinkles all over (reads as fabric, not paper)
+    const X0 = R() * w, Y0 = R() * h, a = R() * 6.28, l = 120 + R() * 220, bx = X0 + Math.cos(a) * l, by = Y0 + Math.sin(a) * l, mx = (X0 + bx) / 2 + (R() - .5) * 80, my = (Y0 + by) / 2 + (R() - .5) * 80;
+    x.strokeStyle = 'rgba(30,22,12,.22)'; x.lineWidth = 10 + R() * 8; x.beginPath(); x.moveTo(X0, Y0); x.quadraticCurveTo(mx, my, bx, by); x.stroke();
+    x.strokeStyle = 'rgba(255,244,222,.13)'; x.lineWidth = 6; x.beginPath(); x.moveTo(X0 - 7, Y0 - 7); x.quadraticCurveTo(mx - 7, my - 7, bx - 7, by - 7); x.stroke(); }
+  x.filter = 'blur(9px)';
+  if (draped) {
+    x.fillStyle = 'rgba(0,0,0,.3)'; x.beginPath(); x.rect(-20, -20, w + 40, h + 40); x.rect(sx0 + 14, sy0 + 14, sw - 28, sh - 28); x.fill('evenodd');
+    x.fillStyle = 'rgba(255,240,215,.12)'; x.fillRect(sx0 + 10, sy0 + 10, sw - 20, sh - 20);
+    x.strokeStyle = 'rgba(255,244,222,.3)'; x.lineWidth = 7; x.strokeRect(sx0 + 4, sy0 + 4, sw - 8, sh - 8);       // cloth catching the stretcher edge
+    // loose folds falling off the corners
+    for (const [ax, ay, bx, by] of [[sx0, sy0, -10, -30], [sx0 + sw, sy0, w + 10, -20], [sx0 + sw, sy0 + sh, w + 20, h + 10], [sx0, sy0 + sh, -20, h + 20]]) {
+      x.strokeStyle = 'rgba(30,22,12,.3)'; x.lineWidth = 16; x.beginPath(); x.moveTo(ax, ay); x.lineTo(bx, by); x.stroke();
+      x.strokeStyle = 'rgba(255,244,222,.16)'; x.lineWidth = 8; x.beginPath(); x.moveTo(ax + 10, ay + 6); x.lineTo(bx + 10, by + 6); x.stroke(); }
+    for (let i = 0; i < 4; i++) { const y0 = sy0 + 60 + R() * (sh - 120); x.strokeStyle = 'rgba(30,22,12,.12)'; x.lineWidth = 10; x.beginPath(); x.moveTo(sx0 + 30, y0); x.quadraticCurveTo(w / 2, y0 + (R() - .5) * 60, sx0 + sw - 30, y0 + (R() - .5) * 40); x.stroke(); }
+  } else {
+    for (let i = 0; i < 9; i++) { // diagonal drag folds toward the pulled (lower-right) corner
+      const ox = R() * w * .9, oy = R() * h * .6; x.strokeStyle = 'rgba(30,22,12,.24)'; x.lineWidth = 12 + R() * 10; x.beginPath(); x.moveTo(ox, oy); x.quadraticCurveTo(lerp(ox, w, .5) + (R() - .5) * 60, lerp(oy, h, .5), w - 10, h - 10); x.stroke();
+      x.strokeStyle = 'rgba(255,244,222,.14)'; x.lineWidth = 7; x.beginPath(); x.moveTo(ox + 12, oy + 4); x.quadraticCurveTo(lerp(ox, w, .5) + 12, lerp(oy, h, .5) + 4, w - 4, h - 16); x.stroke(); }
   }
+  x.filter = 'none';
+  x.restore();
+  x.beginPath(); pts.forEach(([px, py], i) => i ? x.lineTo(px, py) : x.moveTo(px, py)); x.closePath(); x.strokeStyle = 'rgba(60,46,30,.5)'; x.lineWidth = 3; x.stroke();   // hem
   return c;
 }
 function makePaint(filter) {
@@ -145,7 +167,7 @@ function stampCached(ctx, x, y, p, rot) {
 function makeSoftDot() { const [c, x] = mk(64, 64); const g = x.createRadialGradient(32, 32, 0, 32, 32, 32); g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(.35, 'rgba(255,255,255,.35)'); g.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = g; x.fillRect(0, 0, 64, 64); return c; }
 function build() {
   S = {
-    desk: makeDesk(), kOut: makeKraft(61, '#7a5a36', .10), kIn: makeKraft(62, '#8e6c45', .14),
+    desk: makeDesk(), clothOn: makeCloth(true), clothOff: makeCloth(false),
     paint: makePaint('hue-rotate(-14deg) saturate(.82) contrast(.94)'),
     shadow: makeShadowMan(), dot: makeSoftDot(), soft: makeSoft(),
   };
@@ -154,68 +176,15 @@ function build() {
 }
 
 // ---------- pieces ----------
-// one paper flap hinged on segment p0-p1, folding toward unit normal n (inward) with length Lf; th = 0 folded on top, PI = flat outside
-function drawFlap(ctx, p0, p1, n, Lf, th) {
-  const c = Math.cos(th), s = Math.sin(th);
-  const ex = p1[0] - p0[0], ey = p1[1] - p0[1], el = Math.hypot(ex, ey), ux = ex / el, uy = ey / el;
-  const k = s * 34, fx = n[0] * Lf * c, fy = n[1] * Lf * c;
-  const q = [p0, p1, [p1[0] + fx + ux * k, p1[1] + fy + uy * k], [p0[0] + fx - ux * k, p0[1] + fy - uy * k]];
-  ctx.save();
-  { const xs = q.map(p => p[0]), ys = q.map(p => p[1]), x0 = Math.min(...xs), y0 = Math.min(...ys), x1 = Math.max(...xs), y1 = Math.max(...ys);
-    softRect(ctx, x0 + 6 + 30 * s, y0 + 10 + 46 * s, Math.max(4, x1 - x0), Math.max(4, y1 - y0), .45 + .35 * s, .25 + .6 * s); }
-  const pat = ctx.createPattern(c >= 0 ? S.kOut : S.kIn, 'repeat'); pat.setTransform(new DOMMatrix().translate(p0[0] * .7, p0[1] * .3));
-  poly(ctx, q, pat);
-  // shading: darker as it stands up, crease at the hinge, light catching the far edge
-  const g = ctx.createLinearGradient(p0[0], p0[1], p0[0] + fx, p0[1] + fy + .01);
-  const dark = .5 * s;
-  g.addColorStop(0, `rgba(0,0,0,${.18 + dark * .6})`); g.addColorStop(1, `rgba(0,0,0,${dark})`);
-  poly(ctx, q, g);
-  if (c < 0) poly(ctx, q, `rgba(8,4,0,${.3 * -c})`); // lying open outside the lamp's hot spot
-  for (const f of [.34, .72]) { // soft fold creases parallel to the hinge
-    const ax = lerp(p0[0], q[3][0], f), ay = lerp(p0[1], q[3][1], f), bx = lerp(p1[0], q[2][0], f), by = lerp(p1[1], q[2][1], f);
-    ctx.strokeStyle = 'rgba(255,235,200,.10)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by); ctx.stroke();
-    ctx.strokeStyle = 'rgba(0,0,0,.18)'; ctx.beginPath(); ctx.moveTo(ax + 2, ay + 2); ctx.lineTo(bx + 2, by + 2); ctx.stroke();
-  }
-  ctx.strokeStyle = 'rgba(255,230,190,.22)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(q[3][0], q[3][1]); ctx.lineTo(q[2][0], q[2][1]); ctx.stroke();
-  ctx.strokeStyle = 'rgba(20,10,2,.45)'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(p0[0], p0[1]); ctx.lineTo(p1[0], p1[1]); ctx.stroke();
-  ctx.restore();
-}
-const FLAPS = [
-  { p0: [BX, BY + 8], p1: [BX, BY + BH - 8], n: [1, 0], L: PW * .36 + M },              // left tuck
-  { p0: [BX + BW, BY + 8], p1: [BX + BW, BY + BH - 8], n: [-1, 0], L: PW * .36 + M },   // right tuck
-  { p0: [BX + 4, BY], p1: [BX + BW - 4, BY], n: [0, 1], L: PH * .56 + M },              // top
-  { p0: [BX + 4, BY + BH], p1: [BX + BW - 4, BY + BH], n: [0, -1], L: PH * .56 + M },   // bottom
-];
-function drawBase(ctx) { // paper base sheet under the stretcher
-  softRect(ctx, BX + 8, BY + 20, BW, BH, .75, .5);
-  const pt = ctx.createPattern(S.kIn, 'repeat'); poly(ctx, [[BX - 6, BY - 6], [BX + BW + 6, BY - 6], [BX + BW + 6, BY + BH + 6], [BX - 6, BY + BH + 6]], pt);
-}
-function makeOpenBundle() {
-  const ox = BX - 240, oy = BY - 340, [c, x] = mk(BW + 560, BH + 740); x.translate(-ox, -oy);
-  drawBase(x); for (const f of FLAPS) drawFlap(x, f.p0, f.p1, f.n, f.L, Math.PI - .07);
-  return { c, ox, oy };
-}
-function drawTwine(ctx, t, tCut) {
-  const k = P(t, tCut, tCut + .32, E.outC), a = 1 - P(t, tCut + .18, tCut + .5);
-  if (a <= 0) return;
-  ctx.save(); ctx.globalAlpha *= a; ctx.lineCap = 'round';
-  const ends = [[BX - 6, PY], [BX + BW + 6, PY], [PX, BY - 6], [PX, BY + BH + 6]];
-  for (let i = 0; i < 4; i++) {
-    const [ex, ey] = ends[i];
-    const L = 1 - k * (.75 + .2 * hash(i * 3)); // the cut halves spring back toward their edge
-    const sx = lerp(ex, PX, L), sy = lerp(ey, PY, L);
-    const wob = Math.sin((t - tCut) * 30 + i) * 14 * k * (1 - k);
-    const mx = (sx + ex) / 2 + (i < 2 ? 0 : wob), my = (sy + ey) / 2 + (i < 2 ? wob : 0) + 10 * k;
-    for (const [col, lw, o] of [['rgba(0,0,0,.45)', 9, 5], ['#b99d6a', 6, 0], ['rgba(255,240,200,.5)', 2, -1]]) {
-      ctx.strokeStyle = col; ctx.lineWidth = lw; ctx.beginPath(); ctx.moveTo(ex + o, ey + o); ctx.quadraticCurveTo(mx + o, my + o, sx + o, sy + o); ctx.stroke();
-    }
-  }
-  const ka = 1 - k; // knot
-  if (ka > 0) {
-    ctx.globalAlpha *= ka; ctx.fillStyle = '#a88c5a'; ctx.strokeStyle = '#6e5630'; ctx.lineWidth = 3;
-    for (const s of [-1, 1]) { ctx.beginPath(); ctx.ellipse(PX + s * 22, PY - 4, 24, 12, s * .5, 0, 7); ctx.fill(); ctx.stroke(); }
-    ctx.beginPath(); ctx.arc(PX, PY, 10, 0, 7); ctx.fill(); ctx.stroke();
-  }
+// the dust cloth: lies over the canvas (k = 0), then is pulled off toward the lower right and out of frame (k = 1)
+function drawCloth(ctx, k) {
+  if (k >= 1) return;
+  const e = E.inOutC(k), dx = 980 * e, dy = 700 * e, rot = .03 + .3 * e * e, tug = Math.sin(Math.PI * Math.min(1, k * 1.3));
+  const cw = CL.w + CL.pad * 2, ch = CL.h + CL.pad * 2;
+  ctx.save(); ctx.translate(PX + 6 + dx, PY + 6 + dy); ctx.rotate(rot); ctx.scale(1 - .08 * tug, 1 + .03 * tug);
+  softRect(ctx, -CL.w / 2 + 10, -CL.h / 2 + 16, CL.w, CL.h, .55, .35);
+  ctx.drawImage(S.clothOff, -cw / 2, -ch / 2);
+  const on = 1 - P(k, 0, .3); if (on > 0) { ctx.save(); ctx.globalAlpha *= on; ctx.drawImage(S.clothOn, -cw / 2, -ch / 2); ctx.restore(); }
   ctx.restore();
 }
 function drawLoupe(ctx, t, lx, ly, r, mag, drawInside) {
@@ -286,10 +255,8 @@ function drawMarks(ctx, t, times, a = 1, red = K.red, lw = 1) {
 window.KL.scenes.fake = function (ctx, t, d, info) {
   if (!S) build();
   const tA = at(info, '4월에', .05), tP = at(info, '찾았다', .2), tS = at(info, '싶던', .35), tG = at(info, '그림은', .45), tJ = at(info, '정교한', .62), tF = at(info, '가짜', .8);
-  const tCut = tA + .2, hit = tF + .1;
-  // flap opening times (bottom-most paper layer opens last)
-  const fo = [tA + .24, tA + .33, tP - .1, tP - .02];
-  const flapTh = (i) => P(t, fo[i], fo[i] + .32, E.inOutC) * (Math.PI - .07);
+  const hit = tF + .1;
+  const clothK = P(t, tA + .14, tP + .04);      // dust cloth slides off between "4월에" and "찾았다" (the rustle sfx)
 
   // ---------------- camera ----------------
   const [cx, cy, cz] = camAt([
@@ -310,19 +277,7 @@ window.KL.scenes.fake = function (ctx, t, d, info) {
   glow(ctx, lx, ly, 400, '#ffd9a0', (.24 - .14 * cold) * fl);
   if (fl < .97) { ctx.save(); ctx.fillStyle = `rgba(0,0,0,${(1 - fl) * .9})`; ctx.fillRect(-W, -H, 3 * W, 3 * H); ctx.restore(); }
 
-  // ---------------- the bundle ----------------
-  // paper base sheet under the stretcher
-  const flaps = FLAPS, order = [3, 2, 1, 0]; // opening order index -> flap (bottom, top, right, left)
-  const thOf = fi => flapTh(order.indexOf(fi));
-  if (t >= fo[3] + .34) { // fully unwrapped: the flat paper is static, use the pre-rendered sprite
-    if (!S.open) S.open = makeOpenBundle();
-    ctx.drawImage(S.open.c, S.open.ox, S.open.oy);
-  } else {
-    drawBase(ctx);
-    // flaps already folded open lie flat outside the bundle (under everything)
-    for (const fi of [0, 1, 2, 3]) { const th = thOf(fi); if (th > Math.PI / 2) drawFlap(ctx, flaps[fi].p0, flaps[fi].p1, flaps[fi].n, flaps[fi].L, th); }
-  }
-  // the painting
+  // ---------------- the canvas on the desk ----------------
   const gray = P(t, hit, hit + .45, E.outC);
   softRect(ctx, PX - 310 * PS + 6, PY - 360 * PS + 10, 620 * PS, 720 * PS, .6, .25);
   ctx.drawImage(S.paint, PX - 320 * PS, PY - 370 * PS, 640 * PS, 740 * PS);
@@ -340,18 +295,8 @@ window.KL.scenes.fake = function (ctx, t, d, info) {
     }
   }
   if (hope > 0) motes(ctx, t, { n: 26, color: '#ffd98a', a: .55 * hope, area: [PX - 300, PY - 340, 600, 680], size: 3, speed: 40, seed: 17 });
-  // flaps still standing / folded over the painting, in paper layer order
-  for (const fi of [0, 1, 2, 3]) { const th = thOf(fi); if (th <= Math.PI / 2) drawFlap(ctx, flaps[fi].p0, flaps[fi].p1, flaps[fi].n, flaps[fi].L, th); }
-  drawTwine(ctx, t, tCut);
-
-  // scissors snip the twine (right edge)
-  const sIn = P(t, -.3, tCut - .02, E.outC), sOut = P(t, tCut + .08, tCut + .45, E.inQ);
-  if (sOut < 1) {
-    const sx = lerp(1260, BX + BW + 120, sIn) + sOut * 520, sy = lerp(980, PY + 6, sIn) + sOut * 120;
-    const openA = t < tCut ? .5 - .1 * Math.sin(t * 8) : lerp(.04, .45, P(t, tCut + .05, tCut + .25));
-    shears(ctx, sx, sy, .06 - sOut * .3, openA, .55);
-  }
-  const snip = pulse(t, tCut, 14); if (snip > 0 && t > tCut) glow(ctx, BX + BW + 6, PY, 120, '#fff2d0', .8 * snip);
+  // the loose dust cloth over it, sliding off
+  drawCloth(ctx, clothK);
 
   // gold lock-on brackets (hope) → red after the stamp
   const bp = P(t, tS - .12, tS + .12);
@@ -435,6 +380,5 @@ window.KL.scenes.fake = function (ctx, t, d, info) {
     ctx.restore();
   }
   if (t > hit) { const fa = pulse(t, hit, 12); if (fa > .01) glow(ctx, 560, 900, 640, '#ff4030', .5 * fa); }
-  if (t > tCut) flash(ctx, .06 * pulse(t, tCut, 16), '#fff3d6');
 };
 })();

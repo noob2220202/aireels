@@ -14,8 +14,9 @@ const ITALY_ = () => window.KL.ITALY;
 //  훗날       year odometer rolls 1997 → 2014 under the title
 //  액자에     room lights drop, a technician (silhouette, lab coat) clicks on a UV torch; the beam starts sweeping the frame
 //  남은       glowing traces bloom on the gilt wherever the beam passes; glasses glint
-//  DNA로      the beam settles on one trace: lock-on brackets, odometer ticks 2014 → 2016; the trace lifts off as
-//            particles that stream right — the camera follows them to the analysis monitor, where a double helix assembles
+//  DNA로      (on the word) the beam has settled on one trace: lock-on brackets, odometer ticks 2014 → 2016; the trace lifts
+//            off as particles that stream right — the camera follows them to the analysis monitor, where a double helix
+//            assembles (helix drawing from the word onset, complete ~0.4 s in)
 //  재수사했지만 approved chip "2014 재수사 · 2016 액자 DNA 흔적"; the sample profile is analysed (scrolling band columns, scan line)
 //  소득은      the comparison stops dead: monitor glitch, helix greys out and unzips, camera pulls back to the whole room;
 //            approved result card "결정적 단서 없음"
@@ -247,7 +248,9 @@ window.KL.scenes.dna = function (ctx, t, d, info) {
   const roomDim = P(t, tF - .12, tF + .1, E.outQ) * (1 - .45 * P(t, tE, tE + .45));
   const lowered = P(t, tX + .1, tE + .25, E.inOutQ);
   // beam target path across the frame, ending on the sampled trace
-  const BEAM = [[tF - .1, ...rel(-.55, -.42)], [tF + .1, ...rel(-.42, -.3)], [tN + .05, ...rel(.36, -.45)], [tN + .25, ...rel(-.36, .36)], [tD - .12, ...rel(.42, .06)], [tD + .05, TR[MAIN][0], TR[MAIN][1]], [tX + 2, TR[MAIN][0], TR[MAIN][1]]];
+  // one sweep around the gilt (keys strictly increasing in time), settling on the sampled trace just before 'DNA로'
+  const BEAM = [[tF - .1, ...rel(.4, -.56)], [tF + .02, ...rel(.12, -.47)], [tF + .13, ...rel(-.28, -.44)], [tN - .06, ...rel(-.47, -.06)], [tN + .06, ...rel(-.3, .42)],
+    [tN + .17, ...rel(.18, .43)], [tD - .1, ...rel(.45, .08)], [tD - .02, TR[MAIN][0], TR[MAIN][1]], [tX + 2, TR[MAIN][0], TR[MAIN][1]]];
   const tgt = camAt(BEAM, t);
   tgt[0] += noise1(t * 3, 4) * 6 + lowered * 60; tgt[1] += noise1(t * 3, 5) * 6 + lowered * 280;
   const reveal = TR.map(([x, y]) => { // first moment the beam passed close to each trace
@@ -256,7 +259,7 @@ window.KL.scenes.dna = function (ctx, t, d, info) {
   });
   const dead = P(t, tX - .02, tX + .2);
   const tm = {
-    boot: P(t, tD - .3, tD), helix: P(t, tD + .32, tD + .85), sample: P(t, tD + .55, tD + .9, E.outC),
+    boot: P(t, tD - .45, tD - .15), helix: P(t, tD - .05, tD + .4), sample: P(t, tD + .3, tD + .65, E.outC),
     db: P(t, tR - .1, tR + .1), scroll: 0,
     dead, unzip: P(t, tX + .05, tE + .4, E.inOutQ),
   };
@@ -264,8 +267,8 @@ window.KL.scenes.dna = function (ctx, t, d, info) {
 
   // ---------------- camera ----------------
   const [cx, cy, cz] = camAt([
-    [-.4, 520, 866, 1.1], [tH, 520, 860, 1.09], [tF, 526, 848, 1.1], [tN, 540, 836, 1.13], [tD, 600, 822, 1.15], // opens matched to fake's painting (match dissolve)
-    [tD + .48, 955, 806, 1.1], [tR, 985, 806, 1.12], [tX - .05, 1010, 810, 1.17], [tX + .45, 770, 862, .9], [d + .4, 760, 868, .86],
+    [-.4, 520, 866, 1.1], [tH, 520, 860, 1.09], [tF, 526, 848, 1.1], [tN, 540, 836, 1.13], [tD - .08, 600, 822, 1.15], // opens matched to fake's painting (match dissolve)
+    [tD + .2, 955, 806, 1.1], [tR, 985, 806, 1.12], [tX - .05, 1010, 810, 1.17], [tX + .45, 770, 862, .9], [d + .4, 760, 868, .86],
   ], t);
   const dr = drift(t, .8, 37);
   const shk = (t > tX ? pulse(t, tX, 9) : 0);
@@ -297,7 +300,7 @@ window.KL.scenes.dna = function (ctx, t, d, info) {
     const raise = P(t, tH - .05, tF - .06, E.inOutQ); // lifts the torch on 훗날, clicks it on at 액자에
     a1 = lerp(lerp(.2, aimA1, raise), restA1, lowered); a2 = lerp(lerp(-.1, aimA2, raise), restA2, lowered); }
   const glint = uvOn * (.25 + .4 * Math.max(0, Math.sin(t * 2.2))) * (1 - lowered);
-  const fo = { face: 1, coat: true, coatLen: 2.7, glasses: true, glint, shadow: false, lean, armR: [a1, a2], armL: [.18 - .1 * lowered, -.55 + .25 * lowered], headTurn: .4 * P(t, tD, tD + .3) - .6 * lowered, fill: '#06060b' };
+  const fo = { face: 1, coat: true, coatLen: 2.7, glasses: true, glint, shadow: false, lean, armR: [a1, a2], armL: [.18 - .1 * lowered, -.55 + .25 * lowered], headTurn: .4 * P(t, tD - .1, tD + .2) - .6 * lowered, fill: '#06060b' };
   glow(ctx, TECH.x + 40, TECH.y - TECH.h * .82, 420, '#5a4aa8', .22 + .12 * uvOn);
   F.figure(ctx, TECH.x + 6, TECH.y - 4, TECH.h, Object.assign({}, fo, { fill: rgba('#b49cff', .7 * uvOn + .3), glint: 0 }));
   F.figure(ctx, TECH.x - 4, TECH.y - 2, TECH.h, Object.assign({}, fo, { fill: rgba('#8fa6d8', .35 * (1 - roomDim * .7)), glint: 0 }));
@@ -331,7 +334,7 @@ window.KL.scenes.dna = function (ctx, t, d, info) {
     const rv = P(t, reveal[i], reveal[i] + .18, E.outC); if (rv <= 0) return;
     const near = Math.exp(-Math.pow(Math.hypot(tgt[0] - x, tgt[1] - y) / 110, 2));
     const fade = 1 - P(t, tE + .05 + i * .07, tE + .4 + i * .07);
-    const lift = i === MAIN ? 1 - .6 * P(t, tD + .05, tD + .45) : 1;
+    const lift = i === MAIN ? 1 - .6 * P(t, tD - .05, tD + .3) : 1;
     const a = rv * (.45 + .55 * near) * Math.max(uvOn, .25) * fade * lift;
     if (a <= 0) return;
     const sc = s * (.9 + .25 * pulse(t, reveal[i], 6)) * (1 + .05 * Math.sin(t * 4 + i));
@@ -340,12 +343,12 @@ window.KL.scenes.dna = function (ctx, t, d, info) {
   ctx.restore();
   // lock-on bracket + trace → monitor particle stream
   const [mx, my] = TR[MAIN];
-  const bk = P(t, tD - .12, tD + .1) * (1 - P(t, tD + .7, tD + 1));
+  const bk = P(t, tD - .14, tD + .04) * (1 - P(t, tD + .6, tD + .9));
   if (bk > 0) brackets(ctx, mx - 44, my - 44, 88, 88, bk, '#cbb8ff', 22, 4);
   const hx0 = MON.x - SW / 2 + 92, hy0 = MON.y - 20;
   ctx.save(); ctx.globalCompositeOperation = 'lighter';
   for (let i = 0; i < 34; i++) {
-    const st = tD + .02 + i * .011, dur = .5 + hash(i * 3) * .12;
+    const st = tD - .06 + i * .008, dur = .34 + hash(i * 3) * .1;
     const k0 = (t - st) / dur; if (k0 <= 0 || k0 >= 1.05) continue;
     for (let tr = 0; tr < 4; tr++) {
       const k = E.inOutQ(clamp(k0 - tr * .035)); if (k <= 0) continue;
@@ -361,7 +364,7 @@ window.KL.scenes.dna = function (ctx, t, d, info) {
   if (t > tX) { const fl = pulse(t, tX, 6); glow(ctx, MON.x, MON.y, 360, '#ff3b46', .35 * fl); }
 
   // cold, low-key falloff that tightens at the end
-  const fx = lerp(lerp(FR.x + 60, MON.x - 120, P(t, tD, tD + .5, E.inOutQ)), 760, P(t, tX, tX + .5, E.inOutQ));
+  const fx = lerp(lerp(FR.x + 60, MON.x - 120, P(t, tD - .1, tD + .3, E.inOutQ)), 760, P(t, tX, tX + .5, E.inOutQ));
   darkness(ctx, fx, 820, lerp(1050, 900, P(t, tE, d)), .85, .3);
   ctx.restore();
 

@@ -16,11 +16,11 @@ const { K, T, mk, poly, canvasPiece, at } = window.KL;
 //  액자   a ghost of the ornate gold frame draws itself around the canvas
 //  없는   the ghost frame breaks into four bars and gold dust that fall away; caption adds "· 액자 없는 캔버스"
 //  그     anticipation: the camera eases back, the cavity dims, a gold rim builds behind the canvas (reverse cymbal)
-//  그림   REVEAL (braam + shimmer): flash, the painting straightens and rises to centre, the bag drops away,
+//  그림   REVEAL (braam + shimmer): warm bloom around the painting, the painting straightens and rises to centre, the bag drops away,
 //         gold rays + mosaic sparks, a varnish sheen sweeps across; it settles at (540,850) scale .9,
 //         exactly where the next scene ("verdict") starts, so the crossfade is seamless.
 // ---------------------------------------------------------------------------
-const BAG = { x: 540, y: 1075, w: 660, h: 600 };
+const BAG = { x: 540, y: 990, w: 600, h: 500 };     // body bottom at y ≈ 1250 (keeps the bag out of the subtitle band)
 const END = { x: 540, y: 850, s: .9 };          // = verdict's canvasPiece(540, 850, .9)
 let S = null;
 
@@ -65,11 +65,6 @@ function makeCavity() {
   for (let i = 0; i < 30; i++) { const fx = 120 + R() * 840, fy = BW.b + 40 + R() * 860, r = (4 + R() * 12) * (1 + (fy - BW.b) / 700); x.fillStyle = `rgb(${34 + R() * 20},${30 + R() * 16},${26 + R() * 14})`; x.beginPath(); x.ellipse(fx, fy, r, r * .6, R(), 0, 7); x.fill(); x.fillStyle = 'rgba(255,240,220,.08)'; x.beginPath(); x.ellipse(fx - r * .3, fy - r * .25, r * .4, r * .2, 0, 0, 7); x.fill(); }
   // dust lying on the floor + edges
   const fg = x.createLinearGradient(0, BW.b, 0, BW.b + 300); fg.addColorStop(0, 'rgba(160,150,135,.10)'); fg.addColorStop(1, 'rgba(160,150,135,0)'); poly(x, [[BW.l, BW.b], [BW.r, BW.b], [X0 + CW, Y0 + CH], [X0, Y0 + CH]], null); x.fillStyle = fg; x.fill();
-  // cobweb, top-left corner of the back wall
-  x.strokeStyle = 'rgba(210,215,225,.16)'; x.lineWidth = 1.4;
-  const cx0 = BW.l, cy0 = BW.t;
-  for (let k = 0; k < 7; k++) { const a = .1 + k * .2; x.beginPath(); x.moveTo(cx0, cy0); x.lineTo(cx0 + Math.cos(a) * 170, cy0 + Math.sin(a) * 170); x.stroke(); }
-  for (let r = 30; r < 170; r += 26) { x.beginPath(); for (let k = 0; k < 7; k++) { const a = .1 + k * .2, rr = r + (k % 2) * 6; const px = cx0 + Math.cos(a) * rr, py = cy0 + Math.sin(a) * rr; k ? x.quadraticCurveTo(cx0 + Math.cos(a - .1) * (rr - 8), cy0 + Math.sin(a - .1) * (rr - 8), px, py) : x.moveTo(px, py); } x.stroke(); }
   // daylight falling in from the opening behind the camera
   x.save(); x.globalCompositeOperation = 'screen'; const dg = x.createRadialGradient(540, 1230, 60, 540, 1120, 820); dg.addColorStop(0, 'rgba(150,170,200,.22)'); dg.addColorStop(1, 'rgba(150,170,200,0)'); x.fillStyle = dg; x.fillRect(X0, 200, CW, 1900); x.restore();
   // edge darkening
@@ -132,21 +127,26 @@ function frontPath(ctx, b, m, t) { trace(ctx, outline(b, m, t, true)); }
 // crumpled-plastic shading, baked once: a crease heightfield lit from three directions (left / centre / right);
 // the light sweep and the crinkle crossfade between them.
 function makePlastic() {
-  const TW = 360, TH = 290, R = rng(9071), hf = new Float32Array(TW * TH), lines = [];
-  for (let i = 0; i < 72; i++) {
-    let x0, y0, ang, len;
-    if (i < 16) { x0 = TW * (.28 + R() * .44); y0 = TH * R() * .06; ang = Math.PI / 2 + (R() - .5) * 1.7; len = 90 + R() * 150; }   // gathered from the mouth
-    else { x0 = R() * TW; y0 = R() * TH; ang = R() * Math.PI; len = 30 + R() * 120; }
-    lines.push({ x0, y0, dx: Math.cos(ang), dy: Math.sin(ang), len, w: 2.5 + R() * (i < 16 ? 10 : 7), a: (R() < .65 ? 1 : -1) * (.5 + R()) });
+  // folds are rasterised as soft, curved, tapered strokes (ridges on one layer, valleys on another) so the
+  // specular reads as glossy plastic folds rather than straight sticks
+  const TW = 360, TH = 290, R = rng(9071), hf = new Float32Array(TW * TH);
+  const layer = () => { const [c, x] = mk(TW, TH); x.fillStyle = '#000'; x.fillRect(0, 0, TW, TH); x.globalCompositeOperation = 'lighter'; x.lineCap = 'butt'; return x; };
+  const ridge = layer(), valley = layer();
+  for (let i = 0; i < 46; i++) {
+    let x0, y0, ang, len, w, bend;
+    if (i < 14) { x0 = TW * (.3 + R() * .4); y0 = TH * R() * .05; ang = Math.PI / 2 + (x0 / TW - .5) * 1.6 + (R() - .5) * .4; len = 120 + R() * 150; w = 7 + R() * 9; bend = (R() - .5) * .8; }   // long folds fanning from the gathered mouth
+    else { x0 = R() * TW; y0 = R() * TH; ang = Math.PI / 2 + (R() - .5) * 2.6; len = 50 + R() * 100; w = 5 + R() * 8; bend = (R() < .5 ? -1 : 1) * (.3 + R() * .5); }   // sagging wrinkles, curved
+    const x1 = x0 + Math.cos(ang) * len, y1 = y0 + Math.sin(ang) * len;
+    const qx = (x0 + x1) / 2 - Math.sin(ang) * len * bend * .5, qy = (y0 + y1) / 2 + Math.cos(ang) * len * bend * .5;
+    const x = R() < .6 ? ridge : valley, a = .45 + R() * .5;
+    const g = x.createLinearGradient(x0, y0, x1, y1); g.addColorStop(0, 'rgba(255,255,255,0)'); g.addColorStop(.5, `rgba(255,255,255,${a.toFixed(3)})`); g.addColorStop(1, 'rgba(255,255,255,0)');
+    x.filter = `blur(${(w * .42).toFixed(1)}px)`; x.strokeStyle = g; x.lineWidth = w;
+    x.beginPath(); x.moveTo(x0, y0); x.quadraticCurveTo(qx, qy, x1, y1); x.stroke();
   }
+  const rd = ridge.getImageData(0, 0, TW, TH).data, vd = valley.getImageData(0, 0, TW, TH).data;
   for (let y = 0; y < TH; y++) for (let x = 0; x < TW; x++) {
-    let h = 9 * Math.sin(x * .021 + 1) * Math.sin(y * .026 + .5) + 5 * Math.sin(x * .05 + y * .03);
-    for (const L0 of lines) {
-      const px = x - L0.x0, py = y - L0.y0, tt = px * L0.dx + py * L0.dy; if (tt < 0 || tt > L0.len) continue;
-      const dd = Math.abs(px * L0.dy - py * L0.dx); if (dd > L0.w) continue;
-      h += L0.a * (1 - dd / L0.w) * L0.w * Math.sin(Math.PI * tt / L0.len);
-    }
-    hf[y * TW + x] = h;
+    const i = y * TW + x;
+    hf[i] = 9 * Math.sin(x * .021 + 1) * Math.sin(y * .026 + .5) + 5 * Math.sin(x * .05 + y * .03) + 16 * (rd[i * 4] - vd[i * 4]) / 255;
   }
   return [[-.75, -.55, .5], [0, -.75, .62], [.7, -.5, .5]].map(([lx, ly, lz]) => {
     const ln = Math.hypot(lx, ly, lz), Lx = lx / ln, Ly = ly / ln, Lz = lz / ln;
@@ -162,16 +162,16 @@ function makePlastic() {
   });
 }
 function bagFront(ctx, b, m, t, o) {
-  const { w, h } = b, lit = o.lit;
+  const { w, h } = b, lit = o.lit, ga = ctx.globalAlpha;
   ctx.save(); frontPath(ctx, b, m, t); ctx.fillStyle = '#060607'; ctx.fill(); ctx.clip();
   // crossfade the three lighting bakes: the sweep moves the light left→right; crinkle makes it flicker
   const k = clamp((o.sweep + 1) / 2) * 2 + o.crinkle * .35 * noise1(t * 9, 7);
   const wts = [Math.max(0, 1 - Math.abs(k - 0)), Math.max(0, 1 - Math.abs(k - 1)), Math.max(0, 1 - Math.abs(k - 2))];
   const jx = o.crinkle * noise1(t * 11, 3) * 5, jy = o.crinkle * noise1(t * 11, 4) * 4;
-  ctx.globalAlpha = 1; ctx.drawImage(S.plastic[1], -.56 * w + jx, -.56 * h + jy, 1.12 * w, 1.12 * h);
+  ctx.globalAlpha = ga; ctx.drawImage(S.plastic[1], -.56 * w + jx, -.56 * h + jy, 1.12 * w, 1.12 * h);
   ctx.globalCompositeOperation = 'lighter';
-  for (const i of [0, 2]) if (wts[i] > 0) { ctx.globalAlpha = wts[i] * .9; ctx.drawImage(S.plastic[i], -.56 * w + jx, -.56 * h + jy, 1.12 * w, 1.12 * h); }
-  ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
+  for (const i of [0, 2]) if (wts[i] > 0) { ctx.globalAlpha = ga * wts[i] * .9; ctx.drawImage(S.plastic[i], -.56 * w + jx, -.56 * h + jy, 1.12 * w, 1.12 * h); }
+  ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = ga;
   // overall form: top-left catches the daylight, bottom/right fall into shadow; lit dims everything
   const g = ctx.createLinearGradient(-.4 * w, -.5 * h, .35 * w, .55 * h); g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(.55, 'rgba(0,0,0,.35)'); g.addColorStop(1, 'rgba(0,0,0,.85)');
   ctx.fillStyle = g; ctx.fillRect(-w, -h, 2 * w, 2 * h);
@@ -182,11 +182,15 @@ function bagFront(ctx, b, m, t, o) {
   ctx.beginPath(); ctx.moveTo(-.3 * w, -.25 * h); ctx.lineTo(-.27 * w, .36 * h); ctx.stroke();
   ctx.strokeStyle = `rgba(200,212,235,${.06 * lit + .2 * Math.exp(-Math.pow((.7 - o.sweep) * 2, 2))})`;
   ctx.beginPath(); ctx.moveTo(.3 * w, -.27 * h); ctx.lineTo(.26 * w, .36 * h); ctx.stroke();
+  // the plastic falls into shadow toward the subtitle band (screen space, so it holds while the camera moves / the bag drops)
+  const m0 = ctx.getTransform(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalCompositeOperation = 'source-over';
+  const bg = ctx.createLinearGradient(0, 1130, 0, 1250); bg.addColorStop(0, 'rgba(5,5,6,0)'); bg.addColorStop(1, 'rgba(5,5,6,.95)');
+  ctx.fillStyle = bg; ctx.fillRect(0, 1130, W, H - 1130); ctx.setTransform(m0);
   ctx.restore();
   // rim light on the left contour, lip edge
   ctx.save(); ctx.globalCompositeOperation = 'screen';
   ctx.strokeStyle = `rgba(190,205,232,${.3 * lit + .3 * Math.exp(-Math.pow((-.9 - o.sweep) * 3, 2))})`; ctx.lineWidth = 3;
-  const op = outline(b, m, t, true); ctx.beginPath(); ctx.moveTo(op[8][0], op[8][1]); for (let i = 9; i <= 13; i++) ctx.lineTo(op[i][0], op[i][1]); ctx.stroke();
+  const op = outline(b, m, t, true); ctx.beginPath(); ctx.moveTo(op[9][0], op[9][1]); for (let i = 10; i <= 13; i++) ctx.lineTo(op[i][0], op[i][1]); ctx.stroke();
   ctx.strokeStyle = `rgba(205,218,240,${.22 + .3 * lit * m})`; ctx.lineWidth = 2.5; ctx.beginPath();
   for (let i = 0; i <= 16; i++) { const u = -1 + i / 8; const px = lipX(u, b), py = lipY(u, m, true, t, b); i ? ctx.lineTo(px, py) : ctx.moveTo(px, py); } ctx.stroke();
   ctx.restore();
@@ -278,7 +282,7 @@ window.KL.scenes.bag = function (ctx, t, d, info) {
   // canvas state: hidden in the bag → slides out → hero
   const em = P(t, tA + .2, tF + .38, k => E.outBack(k, 1.1));
   const sink = 12 * E.inOutQ(P(t, tG - .15, tP)) * (1 - rvE);
-  const cxp = 540, cyEm = lerp(1250, 800, em) + sink, rotEm = lerp(-.085, .018, em) + Math.sin(t * 2.2) * .006 * (1 - rvE);
+  const cxp = 540, cyEm = lerp(1160, 790, em) + sink, rotEm = lerp(-.085, .018, em) + Math.sin(t * 2.2) * .006 * (1 - rvE);
   const settle = P(t, tP + .45, d, E.inOutQ);
   const cs = lerp(.6, .86, rvE) + .04 * settle, cyc = lerp(cyEm, END.y, rvE), crot = lerp(rotEm, 0, rvE);
 
@@ -309,7 +313,7 @@ window.KL.scenes.bag = function (ctx, t, d, info) {
     ctx.save(); ctx.globalCompositeOperation = 'lighter';
     for (let i = 0; i < 46; i++) {
       const dz = .35 + hash(i * 3) * .65, f = t - tP;
-      const x = 80 + hash(i * 7) * 920 + Math.sin(t * .7 + i) * 18, y = 1350 - ((hash(i * 5) * 1100 + f * 90 * dz) % 1100);
+      const x = 80 + hash(i * 7) * 920 + Math.sin(t * .7 + i) * 18, y = 1240 - ((hash(i * 5) * 990 + f * 90 * dz) % 990);
       if (Math.abs(x - 540) < 260 && Math.abs(y - 850) < 300) continue;
       const a = rv * dz * (.35 + .35 * Math.sin(t * 2 + i)), s = 4 + 9 * dz;
       ctx.globalAlpha = clamp(a);
@@ -370,20 +374,27 @@ window.KL.scenes.bag = function (ctx, t, d, info) {
     const f = t - tP; ctx.save(); ctx.globalCompositeOperation = 'lighter';
     for (let i = 0; i < 90; i++) {
       const a = hash(i * 13) * 6.283, sp = 380 + hash(i * 7) * 1000, k = 1 - Math.exp(-f * 3.2), r = 120 + k * sp * .55;
-      const x = 540 + Math.cos(a) * r * 1.0, y = 860 + Math.sin(a) * r * 1.15 + f * f * 60, al = (1 - clamp(f / 1.1)) * (.6 + .4 * hash(i)), s = 4 + hash(i * 3) * 9;
+      const x = 540 + Math.cos(a) * r * 1.0, y = 860 + Math.sin(a) * r * 1.15 + f * f * 60, al = (1 - clamp(f / 1.1)) * (.6 + .4 * hash(i)) * (1 - .75 * clamp((y - 1180) / 90)), s = 4 + hash(i * 3) * 9;
       ctx.globalAlpha = al; ctx.drawImage(S.spark, x - s * 2, y - s * 2, s * 4, s * 4);
     }
     // expanding gold ring
     const rr = 300 + 700 * E.outC(clamp(f / .7)); ctx.globalAlpha = .5 * (1 - clamp(f / .7)); ctx.strokeStyle = '#ffd98a'; ctx.lineWidth = 10 * (1 - clamp(f / .7)) + 2; ctx.beginPath(); ctx.ellipse(540, 860, rr, rr * 1.12, 0, 0, 7); ctx.stroke();
     ctx.restore();
   }
+  // reveal bloom: warm light bursting around the painting (ring-shaped so the portrait stays readable on '그림',
+  // and it fades out before the subtitle band)
+  const fl = t > tP - .05 ? Math.exp(-Math.max(0, t - tP) * 7) * P(t, tP - .05, tP, E.inQ) : 0;
+  if (fl > 0) {
+    const br = 420 * cs / .6, bg = ctx.createRadialGradient(cxp, cyc, 0, cxp, cyc, br);
+    bg.addColorStop(0, rgba('#ffe2a0', .14 * fl)); bg.addColorStop(.58, rgba('#ffd98a', .5 * fl)); bg.addColorStop(1, 'rgba(255,217,138,0)');
+    ctx.save(); ctx.globalCompositeOperation = 'screen'; ctx.fillStyle = bg; ctx.fillRect(cxp - br, cyc - br, 2 * br, 2 * br); ctx.restore();
+  }
   ctx.restore();
   // dim the cavity edges toward the climax (focus), lift after
   const dimA = .35 * P(t, tG - .2, tP, E.inQ) * (1 - rv);
   if (dimA > 0 && rv < .5) { const g = ctx.createRadialGradient(540, 860, 200, 540, 900, 900); g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, `rgba(0,0,0,${dimA * 2})`); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H); }
   caption(ctx, t, tm);
-  // flash on the reveal (warm), short
-  const fl = t > tP - .05 ? Math.exp(-Math.max(0, t - tP) * 7) * P(t, tP - .05, tP, E.inQ) : 0;
-  flash(ctx, fl * .85, '#fff1cf');
+  // light full-frame lift on the reveal (capped so the subtitle band stays dark)
+  flash(ctx, fl * .15, '#fff1cf');
 };
 })();

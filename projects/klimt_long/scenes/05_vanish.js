@@ -9,16 +9,17 @@ const ITALY_ = () => window.KL.ITALY;
 
 // ---------------------------------------------------------------------------
 // "그런데 특별전을 준비하던 1997년 2월, 그림이 사라졌다."
-// Daylight gallery under renovation (no night, no thief).
+// Daylight gallery under renovation (no night, no thief): pale overcast sky in the skylight, daylight shafts,
+// the work lamp hangs switched off. The crew is gone well before the loss and never looks at the painting.
 //  opening   match cut from xray: the same canvas, now framed on the gallery wall; camera dollies back
-//  그런데      gallery revealed: skylight rays, scaffolding with a plasterer at work, swinging work lamp, plastic sheet
+//  그런데      gallery revealed: skylight rays, scaffolding with a plasterer at work, unlit work lamp swaying, plastic sheet
 //  특별전을    a worker on a ladder lets the rolled "특별전" banner drop; it unfurls and settles
 //  준비하던    approved chip "보수공사 중 · 특별전 준비"; crates, dust, lamp sway keep the room alive
-//  1997년     split-flap date board drops in under the title: 1997.02
+//  1997년     split-flap date board drops in under the title: 1997.02; the crew has faded out (empty room from here on)
 //  2월        the month locks with a gold underline + pulse
 //  그림이      camera pushes in, room dims, gold brackets lock on the painting (anticipation)
 //  사라졌다    glitch-stutter, the framed painting is gone: pale patch, bare hook, swinging wire, dust;
-//             red outline draws on the impact; approved label "1997.2.22 아침 도난 확인"
+//             red outline draws on the impact; approved label "1997.2.22 아침 도난 확인" lands right on "사라졌다"
 //  end       camera drifts down into the push transition to the roof scene
 // ---------------------------------------------------------------------------
 
@@ -50,7 +51,7 @@ function makeGallery() {
   const [c, x] = mk(GW, GH); x.translate(-GX0, -GY0); const R = rng(97);
   // ceiling + skylight well
   let g = x.createLinearGradient(0, GY0, 0, RAIL); g.addColorStop(0, '#0c1016'); g.addColorStop(1, '#141a22'); x.fillStyle = g; x.fillRect(GX0, GY0, GW, RAIL - GY0);
-  g = x.createLinearGradient(0, -120, 0, 150); g.addColorStop(0, '#c7d6e6'); g.addColorStop(1, '#7d8fa3'); x.fillStyle = g; x.fillRect(290, -120, 500, 250);
+  g = x.createLinearGradient(0, -120, 0, 150); g.addColorStop(0, '#dde8f2'); g.addColorStop(1, '#c9d8e6'); x.fillStyle = g; x.fillRect(290, -120, 500, 250);
   x.fillStyle = '#0c1016'; for (let k = 1; k < 4; k++) x.fillRect(290 + k * 125 - 5, -120, 10, 250); x.fillRect(290, 0, 500, 10);
   x.fillStyle = 'rgba(0,0,0,.4)'; x.fillRect(270, 130, 540, 30);
   { const rg = x.createRadialGradient(540, 60, 0, 540, 60, 520); rg.addColorStop(0, 'rgba(207,224,244,.15)'); rg.addColorStop(.4, 'rgba(207,224,244,.05)'); rg.addColorStop(1, 'rgba(207,224,244,0)');
@@ -100,6 +101,12 @@ function makeGallery() {
   x.fillRect(SC.x0 - 40, 300, SC.x1 - SC.x0 + 80, 3);
   // paint bucket on the plank
   x.fillStyle = '#12161b'; x.fillRect(40, SC.plank - 46, 44, 42); x.fillStyle = 'rgba(200,205,200,.25)'; x.fillRect(40, SC.plank - 46, 44, 4);
+  // daylight from the skylight: cool wash on the upper wall + a pale pool on the floor
+  x.save(); x.globalCompositeOperation = 'lighter';
+  g = x.createLinearGradient(0, RAIL - 40, 0, FLOOR); g.addColorStop(0, 'rgba(205,220,238,.14)'); g.addColorStop(.6, 'rgba(205,220,238,.045)'); g.addColorStop(1, 'rgba(205,220,238,0)');
+  x.fillStyle = g; x.fillRect(GX0, RAIL - 40, GW, FLOOR - RAIL + 40);
+  x.translate(540, FLOOR + 150); x.scale(1, .28); g = x.createRadialGradient(0, 0, 0, 0, 0, 640); g.addColorStop(0, 'rgba(214,228,244,.17)'); g.addColorStop(1, 'rgba(214,228,244,0)');
+  x.fillStyle = g; x.fillRect(-640, -640, 1280, 1280); x.restore();
   return c;
 }
 function makeBanner() {
@@ -137,8 +144,17 @@ function makeRays(spread, len, color, a, n, seed) { // pre-rendered additive lig
   return { c, w: w / k, h: h / k };
 }
 function drawRays(ctx, R, x, y, a) { if (a <= 0) return; ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha *= a; ctx.drawImage(R.c, x - R.w / 2, y, R.w, R.h); ctx.restore(); }
+function makeSky() { // pale overcast daylight seen through the skylight; 500 px tile, wraps horizontally
+  const [c, x] = mk(500, 250); const R = rng(41);
+  const g = x.createLinearGradient(0, 0, 0, 250); g.addColorStop(0, '#e8f0f7'); g.addColorStop(.55, '#d6e2ee'); g.addColorStop(1, '#c9d8e6'); x.fillStyle = g; x.fillRect(0, 0, 500, 250);
+  x.filter = 'blur(10px)';
+  for (let i = 0; i < 16; i++) { const X = R() * 500, Y = 20 + R() * 210, rx = 50 + R() * 90, ry = 14 + R() * 22, a = .25 + R() * .3, col = R() < .6 ? `rgba(250,252,255,${a})` : `rgba(168,184,202,${a * .7})`;
+    for (const dx of [-500, 0, 500]) { x.fillStyle = col; x.beginPath(); x.ellipse(X + dx, Y, rx, ry, 0, 0, 7); x.fill(); } }
+  x.filter = 'none';
+  return c;
+}
 function initV() {
-  V = { bg: makeGallery(), ban: makeBanner(), fore: makeFore(), rays: [makeRays(.78, 1700, '#d6e4f4', 1, 8, 2), makeRays(.78, 1700, '#d6e4f4', 1, 8, 9)] };
+  V = { bg: makeGallery(), ban: makeBanner(), fore: makeFore(), sky: makeSky(), rays: [makeRays(.78, 1700, '#d6e4f4', 1, 8, 2), makeRays(.78, 1700, '#d6e4f4', 1, 8, 9)] };
   { const [c, x] = mk(256, 256); x.filter = 'blur(20px)'; x.fillStyle = '#000'; x.fillRect(48, 48, 160, 160); V.soft = c; }
 }
 
@@ -206,7 +222,7 @@ window.KL.scenes.vanish = function (ctx, t, d, info) {
   const layer = (f) => { const zf = 1 + (z - 1) * f; ctx.translate(W / 2, H / 2); ctx.scale(zf, zf); ctx.translate(-(540 + (cx - 540) * f) - dr.x * f, -(960 + (cy - 960) * f) - dr.y * f); };
   const toS = (f, x, y) => { const zf = 1 + (z - 1) * f; return [W / 2 + (x - (540 + (cx - 540) * f) - dr.x * f) * zf, H / 2 + (y - (960 + (cy - 960) * f) - dr.y * f) * zf]; };
 
-  const cloud = .78 + .22 * fbm(t * .5, 21);            // daylight drifting through the skylight
+  const cloud = 1 + .12 * (.5 + .5 * fbm(t * .5, 21)); // daylight drifting through the skylight (never below 1)
   const focus = P(t, tP - .15, tP + .35, E.inOutQ);    // anticipation: room dims, painting holds the light
   const cold = P(t, out, out + .6);                     // after the loss: colder grade
 
@@ -215,16 +231,15 @@ window.KL.scenes.vanish = function (ctx, t, d, info) {
   // ===== wall layer =====
   ctx.save(); layer(1);
   ctx.drawImage(V.bg, GX0, GY0);
-  { const rk = .5 + .5 * Math.sin(t * .8), ra = (.085 - .03 * focus) * cloud; drawRays(ctx, V.rays[0], 540, 120, ra * rk); drawRays(ctx, V.rays[1], 540, 120, ra * (1 - rk)); }
+  { // daylight shafts from the skylight (the cool wall wash and floor pool are baked into the gallery sprite)
+    const rk = .5 + .5 * Math.sin(t * .8), ra = (.16 - .05 * focus) * cloud; drawRays(ctx, V.rays[0], 540, 120, ra * rk); drawRays(ctx, V.rays[1], 540, 120, ra * (1 - rk)); }
 
-  // work lamp hanging from the scaffold: swings, warm pool on the wall
+  // work lamp hanging from the scaffold: switched off in daylight, just swaying a little
   const la = .07 * Math.sin(t * 1.9) + .025 * Math.sin(t * 3.3 + 1), lx0 = SC.x1 + 20, ly0 = 300, lL = 230;
-  const lbx = lx0 + Math.sin(la) * lL, lby = ly0 + Math.cos(la) * lL, lfl = L.flicker(t, .06, 3);
-  glow(ctx, lbx + 30, lby + 60, 300, '#ffc27a', .22 * lfl * (1 - .5 * focus));
+  const lbx = lx0 + Math.sin(la) * lL, lby = ly0 + Math.cos(la) * lL;
   ctx.strokeStyle = '#06080b'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(lx0, ly0); ctx.lineTo(lbx, lby); ctx.stroke();
   ctx.save(); ctx.translate(lbx, lby); ctx.rotate(-la); ctx.fillStyle = '#0b0d10'; ctx.beginPath(); ctx.moveTo(-10, -4); ctx.lineTo(10, -4); ctx.lineTo(22, 26); ctx.lineTo(-22, 26); ctx.closePath(); ctx.fill();
-  ctx.fillStyle = rgba('#fff0c8', .95 * lfl); ctx.beginPath(); ctx.arc(0, 30, 9, 0, 7); ctx.fill(); ctx.restore();
-  glow(ctx, lbx, lby + 30, 90, '#ffd9a0', .7 * lfl);
+  ctx.fillStyle = '#3b4148'; ctx.beginPath(); ctx.arc(0, 30, 9, 0, 7); ctx.fill(); ctx.fillStyle = 'rgba(220,232,245,.45)'; ctx.beginPath(); ctx.arc(-3, 27, 3, 0, 7); ctx.fill(); ctx.restore();
 
   // painting: picture light + frame, then the loss
   const lampOn = .8 + .2 * focus;
@@ -278,8 +293,8 @@ window.KL.scenes.vanish = function (ctx, t, d, info) {
     const pg = ctx.createLinearGradient(sx - 30, 0, sx + 70, 0); pg.addColorStop(0, 'rgba(200,215,230,.04)'); pg.addColorStop(.6, 'rgba(210,225,240,.14)'); pg.addColorStop(1, 'rgba(230,240,250,.22)');
     ctx.fillStyle = pg; ctx.fill(); ctx.strokeStyle = 'rgba(230,240,250,.18)'; ctx.lineWidth = 2; ctx.stroke(); ctx.restore(); }
 
-  // workers belong to the busy days only: they fade into the dimming room on "그림이" (nobody near the frame at the loss)
-  const crew = 1 - P(t, tP - .1, tP + .3, E.inOutQ);
+  // workers belong to the busy days only: they are gone by "1997년", long before "그림이" (nobody near the frame at the loss)
+  const crew = 1 - P(t, tY - .3, tY + .1, E.inOutQ);
   // plasterer on the scaffold plank
   if (crew > 0) {
     ctx.save(); ctx.globalAlpha *= crew;
@@ -301,7 +316,7 @@ window.KL.scenes.vanish = function (ctx, t, d, info) {
   drawLadder(ctx);
   if (crew > 0) {
     ctx.save(); ctx.globalAlpha *= crew;
-    const rel = E.inOutQ(P(t, tE - .1, tE + .2)), down = E.inOutQ(P(t, tE + .5, tJ + .6)), look = P(t, tJ + .3, tY, E.inOutQ);
+    const rel = E.inOutQ(P(t, tE - .1, tE + .2)), down = E.inOutQ(P(t, tE + .5, tJ + .6)), look = 0;   // never turns toward the painting
     const armHold = [2.75, .05], armRel = [1.25, .55], armRest = [.25, .35];
     const armR = poseLerp(poseLerp(armHold, armRel, rel), armRest, down), armL = poseLerp(poseLerp([2.6, .12], [1.0, .7], rel), [-.15, .4], down);
     armR[0] += .04 * Math.sin(t * 2.1); armL[0] += .04 * Math.sin(t * 2.4 + 1);
@@ -337,14 +352,23 @@ window.KL.scenes.vanish = function (ctx, t, d, info) {
 
   // ===== grade =====
   const [pcx, pcy] = toS(1, PX, PY);
-  darkness(ctx, pcx, pcy + 40, lerp(1150, 760, focus) + 60 * Math.sin(t * 1.05), lerp(.55, .78, focus), .3);
+  darkness(ctx, pcx, pcy + 40, lerp(1150, 760, focus) + 60 * Math.sin(t * 1.05), lerp(.42, .7, focus), .3);
+  { // daylight: the skylight panes keep their pale sky above the falloff, with a soft bloom around the well
+    ctx.save(); layer(1);
+    ctx.save(); ctx.beginPath(); ctx.rect(290, -120, 500, 250); ctx.clip();
+    const off = (t * 7) % 500; ctx.drawImage(V.sky, 290 - off, -120); ctx.drawImage(V.sky, 790 - off, -120);
+    ctx.fillStyle = '#0c1016'; for (let k = 1; k < 4; k++) ctx.fillRect(290 + k * 125 - 5, -120, 10, 250); ctx.fillRect(290, 0, 500, 10);
+    ctx.restore();
+    ctx.globalCompositeOperation = 'lighter'; ctx.translate(540, 70); ctx.scale(1, .5); const bl = ctx.createRadialGradient(0, 0, 180, 0, 0, 500); bl.addColorStop(0, `rgba(214,228,244,${.16 * cloud})`); bl.addColorStop(1, 'rgba(214,228,244,0)');
+    ctx.fillStyle = bl; ctx.fillRect(-500, -500, 1000, 1000);
+    ctx.restore(); }
   if (cold > 0) { ctx.save(); ctx.fillStyle = rgba('#0c1a2e', .2 * cold); ctx.fillRect(0, 0, W, H); ctx.restore(); }
   // loss: cool flash on the vanish + subtle screen glitch bands
   if (t >= gone && t < out + .3) {
     flash(ctx, .2 * (1 - P(t, out, out + .3)) * (t >= out ? 1 : .4), '#cfe0ff');
     const f = Math.floor(t * 30);
     ctx.save(); ctx.globalCompositeOperation = 'lighter';
-    for (let i = 0; i < 4; i++) { const y = 460 + hash(f * 7 + i) * 800, h = 6 + hash(f * 3 + i) * 26; ctx.fillStyle = rgba(i % 2 ? '#ff2740' : '#30e0ff', .12); ctx.fillRect(0, y, W, h); }
+    for (let i = 0; i < 4; i++) { const y = 460 + hash(f * 7 + i) * 760, h = 6 + hash(f * 3 + i) * 26; /* stays above the subtitle band */ ctx.fillStyle = rgba(i % 2 ? '#ff2740' : '#30e0ff', .12); ctx.fillRect(0, y, W, h); }
     ctx.restore();
   }
 
@@ -369,9 +393,12 @@ window.KL.scenes.vanish = function (ctx, t, d, info) {
     ctx.restore();
   }
   // discovery label after the loss
-  const lA = P(t, out + .05, out + .33, E.outBack);
+  // it lands right on "사라졌다"; during a push into the next scene it is held at the same screen y (the push lifts this frame by
+  // up to .3 H), and the roof scene draws the same label pinned at the same spot, so it reads as one label staying on screen
+  const lA = P(t, tGo + .08, tGo + .3, E.outBack);
   if (lA > 0) {
-    ctx.save(); ctx.translate(540, 1196); const s = lerp(.65, 1, clamp(lA)); ctx.scale(s, s);
+    let pinY = 0; { const sc = info.TL.scenes, nx = sc[sc.indexOf(info.sc) + 1], tr = nx && nx.trans; if (tr && tr.type === 'push') { const dd = tr.dur || .4; pinY = E.inOutQ(clamp((t - (d - dd / 2)) / dd)) * H * .3; } }
+    ctx.save(); ctx.translate(540, 1196 + pinY); const s = lerp(.65, 1, clamp(lA)); ctx.scale(s, s);
     label(ctx, '1997.2.22 아침 도난 확인', 0, 0, { size: 42, color: '#fff', bg: 'rgba(120,10,16,.92)', border: '#ff5a62', a: clamp(lA * 1.6), padX: 28, padY: 14 });
     ctx.restore();
   }

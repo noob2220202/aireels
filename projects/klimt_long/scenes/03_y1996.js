@@ -143,7 +143,8 @@ function drawMap(ctx, t, tDive, a) {
   const IT = italy(); const mp = project(); const [pzx, pzy] = mp(9.69, 45.05);
   const push = E.inOutQ(P(t, .55, tDive + .05)), dive = E.inExpo(P(t, tDive, tDive + .33));
   const mz = (1 + .02 * t + .85 * push) * (1 + 13 * dive);
-  const mcx = lerp(540, pzx, push), mcy = lerp(930, pzy + 30 / mz, push); // marker converges to (540,930) and stays there through the dive
+  // marker converges to (540,930) and stays there through the dive; the opening framing sits higher so the boot ends above the subtitle band
+  const mcx = lerp(540, pzx, push), mcy = lerp(1010, pzy + 30 / mz, push);
   ctx.save(); ctx.globalAlpha *= a;
   gradBG(ctx, [[0, '#05070c'], [.6, '#0a0f19'], [1, '#05070b']]);
   ctx.save(); ctx.translate(540, 960); ctx.scale(mz, mz); ctx.translate(-mcx, -mcy);
@@ -155,21 +156,29 @@ function drawMap(ctx, t, tDive, a) {
   const mpP = P(t, .1, .95, E.inOutQ), dim = lerp(.45, 1, P(t, .45, .7));
   if (mpP > 0 && IT) {
     ctx.save(); ctx.globalAlpha *= dim;
+    // the outline glow (shadowBlur) is the expensive part at dive zoom; ease it out as the camera dives in
+    const gA = .7 * (1 - P(mz, 2.2, 3.2)), glowC = gA > .01 ? `rgba(255,200,90,${gA.toFixed(3)})` : null;
     IT.forEach((ring, i) => {
       const pts = ring.map(([lo, la]) => mp(lo, la));
       ctx.save(); ctx.beginPath(); pts.forEach(([x, y], k) => k ? ctx.lineTo(x, y) : ctx.moveTo(x, y)); ctx.closePath();
       ctx.fillStyle = `rgba(217,169,58,${.09 * mpP})`; ctx.fill(); ctx.restore();
-      pathReveal(ctx, pts, mpP, { color: K.gold, w: 3.5 * lw, glowC: 'rgba(255,200,90,.7)', head: i === 0 });
+      pathReveal(ctx, pts, mpP, { color: K.gold, w: 3.5 * lw, glowC, head: i === 0 });
     });
     ctx.restore();
     // cities for orientation
     const cp = P(t, .7, .95);
-    for (const [nm, lo, la, dx, dy] of [['Milano', 9.19, 45.46, -70, -4], ['Parma', 10.33, 44.80, 92, 56]]) {
-      const [x, y] = mp(lo, la); ctx.save(); ctx.globalAlpha *= cp * .9 * (1 - dive); ctx.fillStyle = '#cfd6e2'; ctx.beginPath(); ctx.arc(x, y, 6 * lw, 0, 7); ctx.fill(); ctx.restore();
-      text(ctx, nm, x + dx * lw, y + (-26 + dy) * lw, { size: 40 * lw, color: '#dfe6f0', weight: 800, alpha: cp * (1 - dive), stroke: '#000', strokeW: 6 * lw });
+    // city names leave early in the dive so they never collide with the museum tag (Parma sits right under it)
+    const ca = cp * (1 - clamp(dive * 10));
+    if (ca > 0) for (const [nm, lo, la, dx, dy] of [['밀라노', 9.19, 45.46, -70, -4], ['파르마', 10.33, 44.80, 92, 26]]) {
+      const [x, y] = mp(lo, la); ctx.save(); ctx.globalAlpha *= ca * .9; ctx.fillStyle = '#cfd6e2'; ctx.beginPath(); ctx.arc(x, y, 6 * lw, 0, 7); ctx.fill(); ctx.restore();
+      text(ctx, nm, x + dx * lw, y + (-26 + dy) * lw, { size: 40 * lw, color: '#dfe6f0', weight: 800, alpha: ca, stroke: '#000', strokeW: 6 * lw });
     }
   }
   ctx.restore();
+  // keep the subtitle band calm: the map fades into the background below y≈1170 (Calabria/Sicily and, mid-push, the
+  // central coasts would otherwise run bright gold lines right behind the yellow '1996년' subtitle). Colours follow gradBG.
+  { const g = ctx.createLinearGradient(0, 1170, 0, H); g.addColorStop(0, 'rgba(10,15,25,0)'); g.addColorStop(.16, 'rgba(10,14,24,.94)'); g.addColorStop(1, 'rgba(5,7,11,.94)');
+    ctx.fillStyle = g; ctx.fillRect(0, 1170, W, H - 1170); }
   // Piacenza pin (screen space so it stays crisp), drops in on the thunk
   const sx = 540 + (pzx - mcx) * mz, sy = 960 + (pzy - mcy) * mz;
   const drop = P(t, .5, .68, E.inQ), mk2 = P(t, .62, .9);
@@ -178,7 +187,7 @@ function drawMap(ctx, t, tDive, a) {
     if (drop < 1) { ctx.save(); ctx.strokeStyle = rgba(K.red, .5); ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(sx, yy - 90); ctx.lineTo(sx, yy - 10); ctx.stroke(); ctx.restore(); }
     if (drop >= 1) { const q = P(t, .68, 1.1, E.outC); ctx.save(); ctx.strokeStyle = rgba(K.red, (1 - q) * .9); ctx.lineWidth = 6 * (1 - q) + 1; ctx.beginPath(); ctx.ellipse(sx, sy, 20 + 150 * q, (20 + 150 * q) * .55, 0, 0, 7); ctx.stroke(); ctx.restore(); }
     ctx.save(); ctx.globalAlpha *= 1 - P(dive, .2, .6); marker(ctx, sx, yy, t, 1, K.red); ctx.restore();
-    ctx.save(); ctx.globalAlpha *= 1 - dive * 1.6; tag(ctx, '피아첸차 · 리치오디 미술관', sx, sy, mk2, { size: 42, dx: 150, dy: 130 }); ctx.restore();
+    ctx.save(); ctx.globalAlpha *= 1 - dive * 1.6; tag(ctx, '피아첸차 · 리치 오디 미술관', sx, sy, mk2, { size: 42, dx: 150, dy: 130 }); ctx.restore();
   }
   // speed lines while diving
   if (dive > 0) {
@@ -204,7 +213,8 @@ window.KL.scenes.y1996 = function (ctx, t, d, info) {
   const tLand = tDive + .3;                                 // gallery appears under the flash
 
   // ---- phase A: year flap + map ----
-  if (t < tLand + .2) drawMap(ctx, t, tDive, 1);
+  // the gallery phase starts with an opaque fill (z < 1.02 at tLand), so the map is invisible from tLand on: don't draw it
+  if (t < tLand) drawMap(ctx, t, tDive, 1);
   // ---- phase B: gallery ----
   if (t >= tLand) {
     const arrive = P(t, tLand, tLand + .55, E.outExpo);
@@ -367,8 +377,9 @@ window.KL.scenes.y1996 = function (ctx, t, d, info) {
   const fl = tri(t, tLand - .1, tLand + .17);
   if (fl > 0) { // luminous burst through the pin rather than a flat white-out
     const f2 = Math.pow(fl, 1.4); ctx.save(); ctx.globalCompositeOperation = 'lighter';
-    const rg = ctx.createRadialGradient(540, 930, 0, 540, 930, 1250); rg.addColorStop(0, `rgba(255,250,235,${.95 * f2})`); rg.addColorStop(.35, `rgba(214,228,255,${.55 * f2})`); rg.addColorStop(1, 'rgba(120,150,210,0)');
-    ctx.fillStyle = rg; ctx.fillRect(0, 0, W, H); ctx.restore(); flash(ctx, f2 * .18, '#ffffff'); }
+    // centred above the pin and kept compact so the subtitle band (y 1280-1410) does not white out
+    const rg = ctx.createRadialGradient(540, 760, 0, 540, 760, 900); rg.addColorStop(0, `rgba(255,250,235,${.55 * f2})`); rg.addColorStop(.35, `rgba(214,228,255,${.32 * f2})`); rg.addColorStop(1, 'rgba(120,150,210,0)');
+    ctx.fillStyle = rg; ctx.fillRect(0, 0, W, H); ctx.restore(); flash(ctx, f2 * .08, '#ffffff'); }
   // ---- year flap: big, then docks as a header (on the thunk), leaves with the dive ----
   const dock = E.outBack(P(t, .52, .8), 1.2), fa = 1 - P(t, tDive + .05, tDive + .3);
   if (fa > 0) {

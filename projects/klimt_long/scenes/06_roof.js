@@ -13,17 +13,23 @@ const ITALY_ = () => window.KL.ITALY;
 // Beats: close on the empty gold frame lying on the roof, glint + "빈 액자" (빈 액자는)
 // → thunk: pull back and crane up to reveal the rooftop, pigeons flush, ring + "지붕 위" (지붕 위에)
 // → two police silhouettes walk in from both sides (경찰은); one points at the frame (그림을), the other at the skylight (천장)
-// → hypothesis diagram: a ghost of the painting is hoisted up through the skylight on a line along a dotted route (창으로/빼냈다고)
-// → the route greys out and the camera turns to the frame (봤지만); the officer kneels and tapes the frame (액자가, tick)
-// → whip to the skylight, the second officer tapes the opening (tick); a gold ghost of the frame flies over and settles on it (창보다)
+// → hypothesis diagram: a ghost of the framed painting is hoisted up through the skylight on a line along a dotted route (창으로);
+//   on "빼냈다고" the canvas is lifted away up the line and out of frame, while the empty ghost frame carries on down the route
+//   and sinks into the real frame on the roof (gold glint): "canvas taken, frame left here"
+// → the route greys out and the camera turns to the frame (봤지만); the officer by the frame points at it, a gold dimension line
+//   pops along it (액자가, tick)
+// → whip to the skylight, a white dimension line spans the opening (tick); the second officer points at it; a gold ghost of the
+//   frame flies over and settles on it (창보다). Nobody kneels or measures: only overlays show the size comparison.
 // → it overhangs on every side: red overhang, jolt, X slash, approved label "액자 > 천장 창" (컸다).
+// The camera always stands over the roof (the slab runs off the bottom of the frame), so no roof edge crosses the subtitles.
+// The theft-date label from the vanish scene carries over through the push for a longer read.
 // Everything is a pure function of t.
 // ---------------------------------------------------------------------------
 
 // ---- world (metres; y up; the camera looks roughly toward -z) ----
 const SK = { x: -1.05, z: -.35, ow: .44, od: .35, h: .28, iw: .36, id: .27, rh: .1 };           // skylight: curb outer half-sizes, opening half-sizes, glass ridge rise
 const FR = { x: 1.15, z: .38, yaw: -.32, w: .5, d: .565, b: .11, th: .045 };                     // the empty frame lying on the roof (half sizes, border, thickness)
-const ROOF = { x0: -9, x1: 9, z0: -4.6, z1: 2.6 };
+const ROOF = { x0: -9, x1: 9, z0: -4.6, z1: 8 };   // z1 lies behind every camera key: the roof always runs off the bottom of the frame
 const NEAR = .25;
 let RS = null;
 
@@ -341,24 +347,6 @@ function drawBird(ctx, Cm, b, t, tFlush) {
   ctx.restore();
 }
 
-// ---------- measuring tape on a horizontal plane ----------
-function tape(ctx, Cm, a, b, y, p, col, side) {
-  if (p <= .002) return null;
-  const L0 = Math.hypot(b[0] - a[0], b[1] - a[1]), dx = (b[0] - a[0]) / L0, dz = (b[1] - a[1]) / L0, nx = -dz * side, nz = dx * side, ww = .028;
-  const e = lerp(0, L0, clamp(p)); const ex = a[0] + dx * e, ez = a[1] + dz * e;
-  ctx.save();
-  const s = quad(ctx, Cm, [[a[0], y, a[1]], [ex, y, ez], [ex + nx * ww, y, ez + nz * ww], [a[0] + nx * ww, y, a[1] + nz * ww]], col);
-  if (s) { ctx.strokeStyle = 'rgba(0,0,0,.35)'; ctx.lineWidth = 1; ctx.stroke(); }
-  ctx.strokeStyle = 'rgba(20,16,4,.85)'; ctx.lineWidth = 1.4;
-  for (let m = .05; m < e; m += .05) { const long = Math.round(m * 100) % 10 === 0, l = long ? ww * .9 : ww * .5; const sg = seg(Cm, [a[0] + dx * m, y, a[1] + dz * m], [a[0] + dx * m + nx * l, y, a[1] + dz * m + nz * l]); if (sg) { ctx.beginPath(); ctx.moveTo(sg[0][0], sg[0][1]); ctx.lineTo(sg[1][0], sg[1][1]); ctx.stroke(); } }
-  // tape case at the start, hook at the end
-  const cs = .05; const cb = [[a[0] - dx * cs * 1.6, y, a[1] - dz * cs * 1.6], [a[0], y, a[1]], [a[0] + nx * cs * 1.4, y, a[1] + nz * cs * 1.4], [a[0] - dx * cs * 1.6 + nx * cs * 1.4, y, a[1] - dz * cs * 1.6 + nz * cs * 1.4]];
-  quad(ctx, Cm, cb.map(q => [q[0], q[1] + .045, q[2]]), '#d9b21c'); ctx.strokeStyle = '#3a2f06'; ctx.lineWidth = 1.5; ctx.stroke();
-  const hp = Cm.p(ex, y, ez); ctx.fillStyle = '#2a2a2a'; ctx.fillRect(hp[0] - 3, hp[1] - 5, 6, 10);
-  ctx.restore();
-  return [Cm.p(a[0], y, a[1]), hp];
-}
-
 // glowing dimension line with extension ticks and arrowheads, offset from a measured edge
 function dimLine(ctx, Cm, a, b, y, o, p, col) {
   if (p <= .002) return;
@@ -462,28 +450,25 @@ window.KL.scenes.roof = function (ctx, t, d, info) {
     const dist = Math.hypot(X1 - X0, Z1 - Z0), T = dist / v * 1.22, p = clamp((t - t0) / T), e = 1 - Math.pow(1 - p, 1.4);
     return { x: lerp(X0, X1, e), z: lerp(Z0, Z1, e), moving: p > 0 && p < 1, walk: e * dist / .6 * Math.PI, stride: .42 * clamp((1 - p) * 3.5), p };
   };
-  const copA = (() => { // enters from the right, stops by the frame, points at it, kneels and tapes it
+  // both officers only stand and point (the narration attributes the theory to the police; no measuring is staged)
+  const copA = (() => { // enters from the right, stops by the frame, points at it on "그림을" and again on "액자가"
     const w = walker(tRoof + .2, 3.35, .05, 1.98, -.42, 1.6);
-    const pt = P(t, tPic - .1, tPic + .15, E.outBack) * (1 - P(t, tOut - .1, tOut + .15, E.inOutQ));
-    const kn = P(t, tBut - .12, tBut + .22, E.inOutQ);
-    const reach = P(t, tMeasF - .12, tMeasF + .06, E.outQ);
+    const pt = Math.max(P(t, tPic - .1, tPic + .15, E.outBack) * (1 - P(t, tOut - .1, tOut + .15, E.inOutQ)),
+      P(t, tF - .32, tF - .08, E.outBack) * (1 - P(t, tX + .2, tX + .5, E.inOutQ)));
     const look = P(t, tX + .15, tX + .45, E.inOutQ);
     const stand = w.p >= 1;
-    const armR = stand ? [lerp(lerp(-.08, 1.0, pt), lerp(.35, .5, reach), kn), lerp(lerp(.15, -.05, pt), lerp(.45, .15, reach), kn)] : null;
-    const armL = stand ? [lerp(.08, .3, kn), lerp(-.15, .55, kn)] : null;
-    return { x: w.x, z: w.z, face: -1, walk: stand ? null : w.walk, stride: w.stride, kneel: kn, lean: kn * lerp(.3, .45, reach) - look * .15, armR, armL, nod: kn * .45 * (1 - look), headTurn: -look * 1.4 };
+    const armR = stand ? [lerp(-.08, 1.0, pt), lerp(.15, -.05, pt)] : null;
+    return { x: w.x, z: w.z, face: -1, walk: stand ? null : w.walk, stride: w.stride, lean: .04 * pt - look * .1, armR, armL: null, nod: .2 * pt * (1 - look), headTurn: -look * 1.4 };
   })();
-  const copB = (() => { // enters from the left, stops by the skylight, points at it, kneels and tapes the opening
+  const copB = (() => { // enters from the left, stops by the skylight, points at it on "천장" and again on "창보다"
     const w0 = walker(tRoof + .3, -3.2, -1.55, -1.92, -.98, 1.55), w1 = walker(tBut + .08, -1.92, -.98, -2.05, -.38, 2.2);
     const w = t < tBut + .08 ? w0 : Object.assign(w1, { walk: w0.walk + w1.walk });
-    const pt = P(t, tCeil - .12, tCeil + .14, E.outBack) * (1 - P(t, tBut - .1, tBut + .2, E.inOutQ));
-    const kn = P(t, tF - .02, tF + .3, E.inOutQ);
-    const reach = P(t, tMeasS - .1, tMeasS + .08, E.outQ);
+    const pt = Math.max(P(t, tCeil - .12, tCeil + .14, E.outBack) * (1 - P(t, tBut - .1, tBut + .2, E.inOutQ)),
+      P(t, tCmp - .3, tCmp - .05, E.outBack) * (1 - P(t, tX + .35, tX + .65, E.inOutQ)));
     const look = P(t, tX + .3, tX + .6, E.inOutQ);
     const stand = w.p >= 1;
-    const armR = stand ? [lerp(lerp(-.08, .95, pt), lerp(.4, .55, reach), kn), lerp(lerp(.15, .05, pt), lerp(.45, .15, reach), kn)] : null;
-    const armL = stand ? [lerp(.08, .3, kn), lerp(-.15, .55, kn)] : null;
-    return { x: w.x, z: w.z, face: 1, walk: stand ? null : w.walk, stride: w.stride, kneel: kn, lean: kn * lerp(.28, .42, reach) - look * .12, armR, armL, nod: kn * .35 * (1 - look) - look * .25, headTurn: look * .8 };
+    const armR = stand ? [lerp(-.08, .95, pt), lerp(.15, .05, pt)] : null;
+    return { x: w.x, z: w.z, face: 1, walk: stand ? null : w.walk, stride: w.stride, lean: .04 * pt - look * .08, armR, armL: null, nod: .2 * pt * (1 - look) - look * .25, headTurn: look * .8 };
   })();
 
   // ---- roof objects, far → near ----
@@ -493,7 +478,7 @@ window.KL.scenes.roof = function (ctx, t, d, info) {
   items.push([zc(SK.x, 0, SK.z + SK.od), () => drawSkylight(ctx, Cm, t, { inner: P(t, tPic - .05, tCeil + .2) * (1 - P(t, tBut, tBut + .4)) })]);
   items.push([zc(FR.x, 0, FR.z + .3), () => {
     blobShadow(ctx, Cm, FR.x + .03, 0, FR.z + .05, .78, .8, .55);
-    drawFrame(ctx, Cm, FR, 0, { glint: P(t, tAc - .25, tAc + .45, E.inOutQ) });
+    drawFrame(ctx, Cm, FR, 0, { glint: t < tPol ? P(t, tAc - .25, tAc + .45, E.inOutQ) : P(t, tOut + .26, tOut + .62, E.inOutQ) });
     // "empty" — where the canvas should be
     const ea = P(t, tAc - .05, tAc + .15) * (1 - P(t, tRoof + .25, tRoof + .6));
     if (ea > 0) { const s = clipPts(Cm, rectAt(FR, FR.w - FR.b - .03, FR.d - FR.b - .03, FR.th)); ctx.save(); ctx.globalAlpha *= ea * (.65 + .35 * Math.sin(t * 9)); ctx.setLineDash([10, 9]); ctx.lineDashOffset = -t * 40; ctx.strokeStyle = '#eef3f8'; ctx.lineWidth = 3; pathS(ctx, s); ctx.stroke(); ctx.restore(); }
@@ -508,9 +493,11 @@ window.KL.scenes.roof = function (ctx, t, d, info) {
 
   // ---- hypothesis: ghost of the painting hoisted up through the skylight along a dotted route ----
   const rP = P(t, tCeil + .02, tOut + .35, E.inOutQ), grey = P(t, tBut - .05, tBut + .2), routeA = 1 - P(t, tBut + .08, tBut + .38);
-  const route = (() => { const pts = []; const A = [SK.x, SK.h + SK.rh + .05, SK.z], B = [SK.x, 1.35, SK.z], Cc = [SK.x + .85, 1.85, SK.z + .2], D = [FR.x - .05, .42, FR.z];
+  const route = (() => { const pts = []; const A = [SK.x, SK.h + SK.rh + .05, SK.z], B = [SK.x, 1.35, SK.z], Cc = [SK.x + .85, 1.85, SK.z + .2], D = [FR.x - .05, .1, FR.z];
     for (let i = 0; i <= 50; i++) { const k = i / 50, uu = 1 - k; pts.push([uu * uu * uu * A[0] + 3 * uu * uu * k * B[0] + 3 * uu * k * k * Cc[0] + k * k * k * D[0], uu * uu * uu * A[1] + 3 * uu * uu * k * B[1] + 3 * uu * k * k * Cc[1] + k * k * k * D[1], uu * uu * uu * A[2] + 3 * uu * uu * k * B[2] + 3 * uu * k * k * Cc[2] + k * k * k * D[2]]); }
     return pts; })();
+  // the canvas follows the route only up to 70 %, then is lifted straight up and away on the line; the frame carries on
+  const canvasAt = (r) => ({ k: Math.min(r, .7), up: 2.5 * P(r, .7, 1, E.inQ) });
   if (rP > 0 && routeA > 0) {
     const col = grey > 0 ? `rgba(${Math.round(lerp(245, 150, grey))},${Math.round(lerp(248, 156, grey))},${Math.round(lerp(252, 166, grey))},${.92 * routeA})` : 'rgba(245,248,252,.92)';
     const sp = route.map(p => Cm.p(p[0], p[1], p[2]));
@@ -523,10 +510,10 @@ window.KL.scenes.roof = function (ctx, t, d, info) {
     ctx.restore();
   }
   { // the fishing line drops into the skylight before the ghost painting is hoisted
-    const dn = P(t, tPic - .22, tPic + .14, E.outC), lineA = dn * (1 - P(t, tOut + .2, tBut + .1));
+    const dn = P(t, tPic - .22, tPic + .14, E.outC), lineA = dn * (1 - P(rP, .8, 1));
     if (lineA > 0) {
-      const rise = P(t, tPic + .12, tCeil + .02, E.inOutQ), gk = rP * 50, gi = Math.min(49, Math.floor(gk)), gf = gk - gi;
-      const gp = rP <= 0 ? [SK.x, lerp(-.6, SK.h + SK.rh + .05, rise), SK.z] : [lerp(route[gi][0], route[gi + 1][0], gf), lerp(route[gi][1], route[gi + 1][1], gf), lerp(route[gi][2], route[gi + 1][2], gf)];
+      const rise = P(t, tPic + .12, tCeil + .02, E.inOutQ), cp = canvasAt(rP), gk = cp.k * 50, gi = Math.min(49, Math.floor(gk)), gf = gk - gi;
+      const gp = rP <= 0 ? [SK.x, lerp(-.6, SK.h + SK.rh + .05, rise), SK.z] : [lerp(route[gi][0], route[gi + 1][0], gf), lerp(route[gi][1], route[gi + 1][1], gf) + cp.up, lerp(route[gi][2], route[gi + 1][2], gf)];
       const topY = gp[1] + .54, hookY = rise > 0 || rP > 0 ? topY : lerp(6, SK.h - .25, dn);
       const sway = .04 * Math.sin(t * 2.3);
       const a3 = Cm.p(gp[0] + sway + .6 * rP, 7, gp[2]), b3 = Cm.p(gp[0], hookY, gp[2]);
@@ -539,23 +526,35 @@ window.KL.scenes.roof = function (ctx, t, d, info) {
       ctx.restore();
     }
   }
-  { // ghost painting: rises inside the skylight, then rides the head of the route (upright billboard)
+  { // ghost painting: rises inside the skylight and rides the head of the route (upright billboard). From 70 % of the route the
+    // canvas is lifted away up the line (fading, out of frame) while the empty ghost frame carries on and sinks into the real frame.
     const rise = P(t, tPic + .12, tCeil + .02, E.inOutQ);
-    const gk = rP * 50, gi = Math.min(49, Math.floor(gk)), gf = gk - gi;
-    const gp = rP <= 0 ? [SK.x, lerp(-.6, SK.h + SK.rh + .05, rise), SK.z] : [lerp(route[gi][0], route[gi + 1][0], gf), lerp(route[gi][1], route[gi + 1][1], gf), lerp(route[gi][2], route[gi + 1][2], gf)];
-    const ga = P(t, tPic + .1, tPic + .25) * (1 - P(t, tOut + .2, tBut + .1));
-    if (ga > 0) {
-      const open = clipPts(Cm, [[SK.x - SK.iw, SK.h, SK.z - SK.id], [SK.x + SK.iw, SK.h, SK.z - SK.id], [SK.x + SK.iw, SK.h, SK.z + SK.id], [SK.x - SK.iw, SK.h, SK.z + SK.id]]);
-      const pc = Cm.p(gp[0], gp[1] + .27, gp[2]), pu = Cm.p(gp[0], gp[1] + .77, gp[2]); const hpx = Math.hypot(pu[0] - pc[0], pu[1] - pc[1]), wpx = hpx * .44 / .5;
+    const onRoute = (k) => { const gk = k * 50, gi = Math.min(49, Math.floor(gk)), gf = gk - gi; return [lerp(route[gi][0], route[gi + 1][0], gf), lerp(route[gi][1], route[gi + 1][1], gf), lerp(route[gi][2], route[gi + 1][2], gf)]; };
+    const cp = canvasAt(rP);
+    const gpF = rP <= 0 ? [SK.x, lerp(-.6, SK.h + SK.rh + .05, rise), SK.z] : onRoute(rP);                           // frame ghost
+    const gpC = rP <= 0 ? gpF : (p => [p[0], p[1] + cp.up, p[2]])(onRoute(cp.k));                                       // canvas ghost
+    const ga = P(t, tPic + .1, tPic + .25);
+    const cA = ga * (1 - P(rP, .7, .95));                                   // canvas leaves
+    const fA = ga * (1 - P(t, tOut + .3, tOut + .55));                      // frame ghost dissolves into the real frame on arrival
+    const open = clipPts(Cm, [[SK.x - SK.iw, SK.h, SK.z - SK.id], [SK.x + SK.iw, SK.h, SK.z - SK.id], [SK.x + SK.iw, SK.h, SK.z + SK.id], [SK.x - SK.iw, SK.h, SK.z + SK.id]]);
+    const billboard = (gp, a, fn) => {
+      if (a <= 0) return;
+      const pc = Cm.p(gp[0], gp[1] + .27, gp[2]), pu = Cm.p(gp[0], gp[1] + .77, gp[2]); if (pc[2] < NEAR) return;
+      const hpx = Math.hypot(pu[0] - pc[0], pu[1] - pc[1]), wpx = hpx * .44 / .5;
       ctx.save();
-      if (gp[1] < SK.h + SK.rh + .02) { // below the glass: visible only through the opening (and above the skylight's far edge)
+      if (gp[1] < SK.h + SK.rh + .02 && rP <= 0) { // below the glass: visible only through the opening (and above the skylight's far edge)
         const yBack = Math.min(...open.map(q => q[1])); ctx.beginPath(); ctx.rect(-50, -2000, W + 100, yBack + 2000); open.forEach(([px, py], i) => i ? ctx.lineTo(px, py) : ctx.moveTo(px, py)); ctx.closePath(); ctx.clip(); }
       ctx.translate(pc[0], pc[1]); ctx.rotate(Math.atan2(pu[0] - pc[0], pc[1] - pu[1]) + .06 * Math.sin(t * 5));
-      // the framed painting as the theory imagines it (a translucent, symbolic ghost)
-      ctx.globalAlpha *= ga; ctx.save(); ctx.globalAlpha *= .55; ctx.drawImage(T.portrait, -wpx * .39, -hpx * .4, wpx * .78, hpx * .8); ctx.globalAlpha /= .55; ctx.globalAlpha *= .6; ctx.drawImage(T.frame, -wpx / 2, -hpx / 2, wpx, hpx); ctx.restore();
-      ctx.setLineDash([8, 6]); ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2.5; ctx.shadowColor = '#cfe3ff'; ctx.shadowBlur = 14; ctx.strokeRect(-wpx / 2 - 4, -hpx / 2 - 4, wpx + 8, hpx + 8);
-      ctx.restore();
-    }
+      ctx.globalAlpha *= a; fn(wpx, hpx); ctx.restore();
+    };
+    // the canvas as the theory imagines it (a translucent, symbolic ghost)
+    billboard(gpC, cA, (wpx, hpx) => { ctx.globalAlpha *= .55; ctx.drawImage(T.portrait, -wpx * .39, -hpx * .4, wpx * .78, hpx * .8); });
+    // the frame around it, then on its own
+    billboard(gpF, fA, (wpx, hpx) => { ctx.save(); ctx.globalAlpha *= .6; ctx.drawImage(T.frame, -wpx / 2, -hpx / 2, wpx, hpx); ctx.restore();
+      ctx.setLineDash([8, 6]); ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2.5; ctx.shadowColor = '#cfe3ff'; ctx.shadowBlur = 14; ctx.strokeRect(-wpx / 2 - 4, -hpx / 2 - 4, wpx + 8, hpx + 8); });
+    // gold pulse on the real frame as the ghost frame lands in it
+    const land = P(t, tOut + .3, tOut + .9, E.outC);
+    if (land > 0 && land < 1) { const m = planeXf(Cm, FR.x, .01, FR.z); ctx.save(); ctx.transform(m[0], m[1], m[2], m[3], m[4], m[5]); ctx.strokeStyle = rgba(K.goldHi, (1 - land) * .85); ctx.lineWidth = .025 * (1 - land) + .008; ctx.beginPath(); ctx.ellipse(0, 0, .62 + .5 * land, .68 + .5 * land, FR.yaw, 0, 7); ctx.stroke(); ctx.restore(); }
   }
   if (rP > 0 && routeA > 0) {
     const grey = P(t, tBut - .05, tBut + .2); const sp = route.map(p => Cm.p(p[0], p[1], p[2]));
@@ -570,26 +569,23 @@ window.KL.scenes.roof = function (ctx, t, d, info) {
     ctx.restore();
   }
 
-  // ---- measuring: tape across the frame (tick), then across the skylight opening (tick) ----
-  const mA = P(t, tMeasF, tMeasF + .18, E.outBack), mFade = 1 - P(t, tWhip1 + .4, tWhip1 + .7);
-  if (mA > 0 && mFade > 0) {
+  // ---- size overlays: a gold dimension line along the frame (tick), then a white one across the skylight opening (tick) ----
+  const mFade = 1 - P(t, tWhip1 + .4, tWhip1 + .7);
+  if (t > tMeasF && mFade > 0) {
     ctx.save(); ctx.globalAlpha *= mFade;
-    const a3 = frameAt(FR, FR.w + .045, -FR.d, 0), b3 = frameAt(FR, FR.w + .045, FR.d, 0);
-    const ends = tape(ctx, Cm, [a3[0], a3[2]], [b3[0], b3[2]], .012, mA, '#f2cf3a', 1);
     const ou = [Math.cos(FR.yaw) * .17, Math.sin(FR.yaw) * .17], a4 = frameAt(FR, FR.w, -FR.d, 0), b4 = frameAt(FR, FR.w, FR.d, 0);
-    dimLine(ctx, Cm, [a4[0], a4[2]], [b4[0], b4[2]], .015, ou, P(t, tMeasF + .02, tMeasF + .2, E.outC), K.goldHi);
-    if (ends) { const mx = (ends[0][0] + ends[1][0]) / 2, my = (ends[0][1] + ends[1][1]) / 2; const la = P(t, tMeasF + .05, tMeasF + .25, E.outBack);
-      ctx.save(); ctx.translate(mx + 128, my + 6); ctx.scale(la, la); label(ctx, '액자', 0, 0, { size: 40, color: '#1a1408', bg: K.goldHi, a: clamp(la * 2) }); ctx.restore(); }
+    dimLine(ctx, Cm, [a4[0], a4[2]], [b4[0], b4[2]], .015, ou, P(t, tMeasF, tMeasF + .18, E.outC), K.goldHi);
+    const mid = Cm.p((a4[0] + b4[0]) / 2 + ou[0], .015, (a4[2] + b4[2]) / 2 + ou[1]); const la = P(t, tMeasF + .05, tMeasF + .25, E.outBack);
+    if (la > 0 && mid[2] > NEAR) { ctx.save(); ctx.translate(mid[0] + 84, mid[1] + 6); ctx.scale(la, la); label(ctx, '액자', 0, 0, { size: 40, color: '#1a1408', bg: K.goldHi, a: clamp(la * 2) }); ctx.restore(); }
     ctx.restore();
   }
-  const mB = P(t, tMeasS, tMeasS + .18, E.outBack);
-  if (mB > 0) {
+  if (t > tMeasS) {
     const fadeB = 1 - P(t, tCmp - .25, tCmp + .05);
     ctx.save(); ctx.globalAlpha *= fadeB;
-    const ends = tape(ctx, Cm, [SK.x - SK.iw, SK.z + SK.id + .025], [SK.x + SK.iw, SK.z + SK.id + .025], SK.h + .012, mB, '#f2cf3a', -1);
-    dimLine(ctx, Cm, [SK.x - SK.iw, SK.z + SK.od], [SK.x + SK.iw, SK.z + SK.od], .01, [0, .14], P(t, tMeasS + .02, tMeasS + .2, E.outC), '#eef4fb');
-    if (ends) { const mx = (ends[0][0] + ends[1][0]) / 2, my = (ends[0][1] + ends[1][1]) / 2; const la = P(t, tMeasS + .05, tMeasS + .25, E.outBack);
-      ctx.save(); ctx.translate(mx, my + 56); ctx.scale(la, la); label(ctx, '천장 창', 0, 0, { size: 40, color: '#10141a', bg: '#e8edf3', a: clamp(la * 2) }); ctx.restore(); }
+    const yD = SK.h + .005, oz = SK.od - SK.id + .16;   // spans the opening, drawn just in front of the curb
+    dimLine(ctx, Cm, [SK.x - SK.iw, SK.z + SK.id], [SK.x + SK.iw, SK.z + SK.id], yD, [0, oz], P(t, tMeasS, tMeasS + .18, E.outC), '#eef4fb');
+    const mid = Cm.p(SK.x, yD, SK.z + SK.id + oz); const la = P(t, tMeasS + .05, tMeasS + .25, E.outBack);
+    if (la > 0 && mid[2] > NEAR) { ctx.save(); ctx.translate(mid[0], mid[1] + 52); ctx.scale(la, la); label(ctx, '천장 창', 0, 0, { size: 40, color: '#10141a', bg: '#e8edf3', a: clamp(la * 2) }); ctx.restore(); }
     ctx.restore();
   }
 
@@ -624,12 +620,7 @@ window.KL.scenes.roof = function (ctx, t, d, info) {
     if (over > 0 && fr2) { ctx.save(); ctx.globalAlpha *= over; ctx.strokeStyle = K.red; ctx.shadowColor = K.red; ctx.shadowBlur = 20; ctx.lineWidth = 5; pathS(ctx, fr2.so); ctx.stroke(); ctx.restore(); }
   }
 
-  // ---- foreground parapet (out of focus, dark) ----
-  { const z1 = ROOF.z1; const s = quad(ctx, Cm, [[ROOF.x0, 0, z1], [ROOF.x1, 0, z1], [ROOF.x1, .7, z1], [ROOF.x0, .7, z1]], null);
-    if (s) { ctx.fillStyle = '#121519'; ctx.fill(); }
-    quad(ctx, Cm, [[ROOF.x0, .7, z1], [ROOF.x1, .7, z1], [ROOF.x1, .74, z1 + .28], [ROOF.x0, .74, z1 + .28]], '#30363e');
-    quad(ctx, Cm, [[ROOF.x0, -3, z1 + .28], [ROOF.x1, -3, z1 + .28], [ROOF.x1, .74, z1 + .28], [ROOF.x0, .74, z1 + .28]], '#0d0f12');
-  }
+  // (no foreground parapet: ROOF.z1 lies behind the camera, so the roof surface simply continues out of the bottom of the frame)
 
   // ---- atmosphere: soft daylight shafts, wind-blown motes, fog wisps ----
   godrays(ctx, 120, -260, 1.05, .5, 1900, '#dfe7f1', .05, t, 4);
@@ -651,6 +642,12 @@ window.KL.scenes.roof = function (ctx, t, d, info) {
   if (tagR > 0) { marker(ctx, fc[0], fc[1], t, tagR, K.goldHi); tag(ctx, '지붕 위', fc[0], fc[1], tagR, { size: 42, dx: -40, dy: -170, border: K.goldHi }); }
   const tagP = P(t, tPol - .05, tPol + .2) * (1 - P(t, tPic + .2, tPic + .45));
   if (tagP > 0) { const hp = Cm.p(copA.x, 1.9, copA.z), hb = Cm.p(copB.x, 1.9, copB.z); tag(ctx, '경찰', clamp(hp[0], 0, 1000), hp[1], tagP, { size: 36, dx: -110, dy: -60, border: 'rgba(220,230,245,.7)' }); }
+
+  // carry-over from the vanish scene: the approved theft-date label stays put through the push, then clears before "빈 액자"
+  // (while this scene pushes in from below it is drawn offset so the label stays at the same screen y as the outgoing one)
+  const dl = t < tAc ? 1 - P(t, tAc - .22, tAc - .04) : 0;
+  if (dl > 0) { let pinY = 0; { const tr = info.sc.trans; if (tr && tr.type === 'push') { const dd = tr.dur || .4; pinY = -(1 - E.inOutQ(clamp((t + dd / 2) / dd))) * H; } }
+    ctx.save(); ctx.translate(540, 1196 + pinY); label(ctx, '1997.2.22 아침 도난 확인', 0, 0, { size: 42, color: '#fff', bg: 'rgba(120,10,16,.92)', border: '#ff5a62', a: dl, padX: 28, padY: 14 }); ctx.restore(); }
 
   // red slash on "컸다" + verdict chip
   const xs = P(t, tX + .02, tX + .2, E.outQ);

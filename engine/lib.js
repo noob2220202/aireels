@@ -309,17 +309,18 @@ const TRANS = {
     ctx.save(); ctx.filter = `blur(${blur}px)`; ctx.drawImage(A, 0, -e * H); ctx.drawImage(B, 0, H - e * H); ctx.restore();
   },
   zoom(ctx, A, B, p) {
-    const e = E.inExpo(clamp(p * 2)), f = E.outExpo(clamp(p * 2 - 1)); ctx.save();
-    if (p < .5) { const s = 1 + e * 1.5; ctx.filter = `blur(${e * 18}px)`; ctx.translate(W / 2, H / 2); ctx.scale(s, s); ctx.drawImage(A, -W / 2, -H / 2); }
-    else { const s = 1.6 - f * .6; ctx.filter = `blur(${(1 - f) * 18}px)`; ctx.translate(W / 2, H / 2); ctx.scale(s, s); ctx.drawImage(B, -W / 2, -H / 2); }
-    ctx.restore(); flash(ctx, (1 - Math.abs(p - .5) * 2) * .35);
+    // soft push-through: outgoing scales up a little and blurs while the incoming settles from 1.12x
+    const e = E.inOutQ(p);
+    ctx.save(); ctx.translate(W / 2, H / 2); ctx.scale(1 + e * .25, 1 + e * .25); ctx.filter = `blur(${e * 6}px)`; ctx.drawImage(A, -W / 2, -H / 2); ctx.restore();
+    ctx.save(); ctx.globalAlpha = E.inOutQ(clamp((p - .15) / .7)); ctx.translate(W / 2, H / 2); ctx.scale(1.12 - e * .12, 1.12 - e * .12); ctx.filter = `blur(${(1 - e) * 6}px)`; ctx.drawImage(B, -W / 2, -H / 2); ctx.restore();
+    flash(ctx, Math.sin(p * Math.PI) * .08);
   },
   glitch(ctx, A, B, p) {
     const src = p < .5 ? A : B; ctx.drawImage(src, 0, 0); const f = Math.floor(p * 20); const amt = Math.sin(p * Math.PI);
     for (let i = 0; i < 14; i++) { const y = hash(f * 31 + i) * H, h = 20 + hash(f * 17 + i) * 140, off = (hash(f * 7 + i) - .5) * 260 * amt; ctx.drawImage(hash(i + f) > .5 ? A : B, 0, y, W, h, off, y, W, h); }
     ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = .35 * amt; ctx.drawImage(src, 12 * amt, 0); ctx.restore();
   },
-  push(ctx, A, B, p) { const e = E.inOutQ(p); ctx.save(); ctx.filter = `brightness(${1 - e * .6})`; ctx.drawImage(A, 0, -e * H * .3); ctx.restore(); ctx.save(); ctx.shadowColor = 'rgba(0,0,0,.7)'; ctx.shadowBlur = 60; ctx.drawImage(B, 0, H - e * H); ctx.restore(); },
+  push(ctx, A, B, p) { const e = E.inOutC(p); ctx.save(); ctx.filter = `brightness(${1 - e * .5})`; ctx.drawImage(A, 0, -e * H * .05); ctx.restore(); ctx.save(); ctx.globalAlpha = E.inOutQ(clamp(p * 1.25)); ctx.drawImage(B, 0, H * .12 * (1 - e)); ctx.restore(); },
 };
 
 window.L = { W, H, clamp, lerp, E, P, env, hash, rng, noise1, fbm, C, rgba, buf, TEX, initTextures, grain, dust, vignette, flicker, flash, scanlines, tint, camera, drift, gradBG, glow, godrays, rain, motes, snow, fogLayer, FONT, setFont, text, measure, richLine, glitchText, typeSub, countUp, roundRect, paper, tape, pin, stringLine, stamp, pathReveal, bezierPts, marker, tag, redact, hline, subtitles, poly, ellipse, rimmed, TRANS };
