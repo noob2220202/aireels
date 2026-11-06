@@ -481,6 +481,100 @@ def piano(f=146.83, dur=3.0):
     return reverb(y * .6, rt=3.2, mix=.45)
 
 
+# ---------------- underwater / confined-space sound design ----------------
+def underwater_amb(dur):
+    """muffled underwater bed: low rumble + slow swells + distant creaks."""
+    n = int(dur * SR)
+    t = np.arange(n) / SR
+    rum = filt(noise(n, 'brown'), 'lowpass', 140) * 2.0
+    sw = filt(noise(n, 'pink'), 'bandpass', [80, 420]) * (.6 + .4 * np.sin(2 * np.pi * t / 7.3))
+    y = rum + sw * .5
+    return stereo(y * .5, 0)
+
+
+def regulator_breath(dur=4.0, rate=.28, fast=0.0):
+    """scuba-style breathing: inhale hiss, exhale bubble rush; rate=breaths/sec (fast adds panic)."""
+    n = int(dur * SR)
+    t = np.arange(n) / SR
+    out = np.zeros(n)
+    period = 1 / (rate + fast)
+    k = 0
+    while k * period < dur:
+        t0 = k * period
+        i0 = int(t0 * SR)
+        L = int(period * .42 * SR)
+        if i0 + L > n:
+            break
+        tt = np.arange(L) / SR
+        inh = filt(noise(L), 'bandpass', [900, 4200]) * np.sin(np.pi * tt / (L / SR)) ** 1.5 * .45
+        out[i0:i0 + L] += inh
+        e0 = i0 + int(period * .5 * SR)
+        L2 = min(int(period * .45 * SR), n - e0)
+        if L2 > 100:
+            tt2 = np.arange(L2) / SR
+            bub = np.zeros(L2)
+            idx = RNG.integers(0, L2, size=int(L2 / SR * 160))
+            bub[idx] = RNG.random(len(idx))
+            bub = filt(bub, 'bandpass', [250, 1600]) * 3.0
+            exh = filt(noise(L2), 'lowpass', 700) * .35
+            out[e0:e0 + L2] += (bub + exh) * np.sin(np.pi * tt2 / (L2 / SR)) ** .8
+        k += 1
+    return reverb(out, rt=.5, mix=.15)
+
+
+def suction_roar(dur=2.5):
+    """violent intake of water: rising roar + low thump + turbulence."""
+    t = secs(dur)
+    x = noise(len(t), 'pink')
+    y = sweep_filter(x, 120, 1800, 'bandpass', q=.9, blocks=40) * 1.6
+    rumble = filt(noise(len(t), 'brown'), 'lowpass', 90) * 3
+    e = np.minimum(1, t / .18) * np.exp(-np.maximum(0, t - .6) * 1.4)
+    thump = np.sin(2 * np.pi * (55 * np.exp(-t * 4) + 28) * t) * np.exp(-t * 3) * 1.2
+    return reverb(np.tanh((y + rumble) * e + thump), rt=1.8, mix=.3)
+
+
+def pipe_groan(dur=2.2):
+    """metal pipe groaning under pressure."""
+    t = secs(dur)
+    f = 55 + 25 * np.sin(2 * np.pi * t / dur) + 8 * np.sin(2 * np.pi * 3.1 * t)
+    ph = 2 * np.pi * np.cumsum(f) / SR
+    y = sum(np.sin(ph * h) / h for h in (1, 2, 3, 5, 7)) * .5
+    y = filt(y * (1 + .6 * filt(noise(len(t)), 'lowpass', 12)), 'bandpass', [60, 1500])
+    e = np.sin(np.pi * t / dur) ** 1.3
+    return reverb(y * e, rt=2.2, mix=.45, bright=2500)
+
+
+def pipe_knock(n_knocks=3, gap=.32):
+    """knocking on a steel pipe (metallic ring)."""
+    dur = n_knocks * gap + 1.2
+    out = np.zeros(int(dur * SR))
+    for k in range(n_knocks):
+        i0 = int(k * gap * SR)
+        L = int(1.0 * SR)
+        tt = np.arange(L) / SR
+        ring = sum(np.sin(2 * np.pi * f * tt) * a * np.exp(-tt * d) for f, a, d in ((410, 1, 6), (1130, .6, 9), (2270, .35, 14), (3600, .2, 20)))
+        hit = filt(noise(L), 'bandpass', [300, 3000]) * np.exp(-tt * 80)
+        out[i0:i0 + L] += (ring * .5 + hit) * (.9 - .1 * k)
+    return reverb(out, rt=1.6, mix=.35)
+
+
+def radio_static(dur=1.2):
+    t = secs(dur)
+    y = filt(noise(len(t)), 'bandpass', [1200, 5200]) * .5
+    y *= (RNG.random(len(t) // 600 + 1).repeat(600)[:len(t)] > .25)
+    beep = np.sin(2 * np.pi * 1450 * t) * (t < .12) * .25
+    return y * np.minimum(1, (dur - t) / .1) + beep
+
+
+def gurgle(dur=1.5):
+    n = int(dur * SR)
+    y = np.zeros(n)
+    idx = RNG.integers(0, n, size=int(dur * 60))
+    y[idx] = RNG.random(len(idx))
+    y = filt(y, 'bandpass', [150, 900]) * 4
+    return reverb(y * np.sin(np.pi * np.arange(n) / n), rt=.9, mix=.3)
+
+
 SFX = {
     'impact': lambda o: impact(o.get('size', 1.0)),
     'braam': lambda o: braam(o.get('root', 36.71), o.get('dur', 2.6)),
@@ -509,6 +603,13 @@ SFX = {
     'slash': lambda o: slash(),
     'thunk': lambda o: thunk(),
     'piano': lambda o: piano(o.get('f', 146.83), o.get('dur', 3.0)),
+    'underwater': lambda o: underwater_amb(o.get('dur', 6.0)),
+    'breath': lambda o: regulator_breath(o.get('dur', 4.0), o.get('rate', .28), o.get('fast', 0.0)),
+    'suction': lambda o: suction_roar(o.get('dur', 2.5)) / 1.9,
+    'groan': lambda o: pipe_groan(o.get('dur', 2.2)) / 2.4,
+    'knock': lambda o: pipe_knock(o.get('n', 3), o.get('gap', .32)),
+    'static': lambda o: radio_static(o.get('dur', 1.2)) / 1.4,
+    'gurgle': lambda o: gurgle(o.get('dur', 1.5)) * 6,
 }
 
 
@@ -739,7 +840,19 @@ def mix(project):
     vr = rms(voice[:, np.abs(voice).max(axis=0) > 1e-4]) if np.any(voice) else .1
     music = music * (vr * db(M.get('rel_db', -8)) / rms(music))
     sfx = sfx * (vr * db(TL.get('sfx_rel_db', 12)) / (np.abs(sfx).max() + 1e-9)) if np.any(sfx) else sfx
-    out = voice * db(TL.get('voice_db', 0)) + music * duck + sfx
+    mf = TL.get('muffle')  # [[t, cutoff_hz], ...] -> underwater/inside-pipe feel on music+sfx
+    if mf:
+        tt = np.arange(n) / SR
+        cut = np.interp(tt, [k[0] for k in mf], [k[1] for k in mf])
+        bed = music * duck + sfx
+        lo = np.stack([filt(c, 'lowpass', 500) for c in bed])
+        mid = np.stack([filt(c, 'lowpass', 1500) for c in bed])
+        w_lo = np.clip((1500 - cut) / 1000, 0, 1)
+        w_mid = np.clip((6000 - cut) / 4500, 0, 1) * (1 - w_lo)
+        bed = bed * (1 - w_lo - w_mid) + mid * w_mid + lo * w_lo
+        out = voice * db(TL.get('voice_db', 0)) + bed
+    else:
+        out = voice * db(TL.get('voice_db', 0)) + music * duck + sfx
     # stems for diagnostics
     for nm, x in (('stem_voice', voice), ('stem_music', music * duck), ('stem_sfx', sfx)):
         sf.write(B / f'{nm}.wav', x.T, SR, subtype='PCM_16')

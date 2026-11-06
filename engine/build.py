@@ -503,7 +503,7 @@ def step_tts(P):
                             '--ref', str(ref), '--steps', str(steps), *(['--f0'] if f0 else []), *todo], check=True)
     TL = {'duration': round(cursor, 3), 'fps': S.get('fps', 30), 'scenes': scenes, 'subs': subs, 'voice': voice,
           'sfx': sfx + [dict(c) for c in S.get('global_sfx', [])], 'music': S.get('music', {}), 'title': S.get('title', {}),
-          'voice_db': S.get('voice_db', 0), 'voice_match': S.get('voice_match'), 'sfx_rel_db': S.get('sfx_rel_db', 12), 'meta': S.get('meta', {})}
+          'voice_db': S.get('voice_db', 0), 'voice_match': S.get('voice_match'), 'muffle': S.get('muffle'), 'sfx_rel_db': S.get('sfx_rel_db', 12), 'meta': S.get('meta', {})}
     # global music keyframes may reference scene ids: ["@scene_id", value] or ["@scene_id+0.5", v]
     def resolve(tk):
         # "@scene", "@scene+0.3", "@scene:word-0.1", "@scene:end" (voice end)
@@ -529,6 +529,8 @@ def step_tts(P):
         M['gain'] = sorted([[resolve(a), b] for a, b in M['gain']])
     if 'pulse_stops' in M:
         M['pulse_stops'] = [[resolve(a), resolve(b)] for a, b in M['pulse_stops']]
+    if TL.get('muffle'):
+        TL['muffle'] = sorted([[resolve(a), b] for a, b in TL['muffle']])
     for c in TL['sfx']:
         if 'abs' in c:
             c['t'] = resolve(c['abs'])
