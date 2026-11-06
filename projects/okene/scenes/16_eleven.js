@@ -136,7 +136,7 @@ function hullSprites() {
   x.setTransform(1, 0, 0, 1, 0, 0);
   // as found: dark, cold, the colours almost gone
   x.globalCompositeOperation = 'source-atop';
-  const g = x.createLinearGradient(0, 0, 0, HSP.h); g.addColorStop(0, 'rgba(4,14,20,.42)'); g.addColorStop(.35, 'rgba(2,8,12,.62)'); g.addColorStop(1, 'rgba(1,3,5,.86)');
+  const g = x.createLinearGradient(0, 0, 0, HSP.h); g.addColorStop(0, 'rgba(4,14,20,.5)'); g.addColorStop(.3, 'rgba(2,8,12,.72)'); g.addColorStop(1, 'rgba(1,3,5,.9)');
   x.fillStyle = g; x.fillRect(0, 0, HSP.w, HSP.h);
   // warm version: the upturned bottom catching light from above
   const warm = mk(), y = warm.getContext('2d');
@@ -211,7 +211,7 @@ window.PK.scenes.eleven = function (ctx, t, d, info) {
   // the hull
   const HSPR = hullSprites(), k = HS;
   ctx.drawImage(HSPR.base, HX - HSP.ox * k, HY - HSP.oy * k, HSP.w * k, HSP.h * k);
-  if (warmSum > 0) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = .9 * warmSum; ctx.drawImage(HSPR.add, HX - HSP.ox * k, HY - HSP.oy * k, HSP.w * k, HSP.h * k); ctx.restore(); }
+  if (warmSum > 0) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = .42 * warmSum; ctx.drawImage(HSPR.add, HX - HSP.ox * k, HY - HSP.oy * k, HSP.w * k, HSP.h * k); ctx.restore(); }
   // each light lays a faint warm touch on the upturned bottom below it
   ctx.save(); ctx.globalCompositeOperation = 'lighter';
   for (let i = 0; i < ROW.n; i++) {
@@ -225,12 +225,13 @@ window.PK.scenes.eleven = function (ctx, t, d, info) {
   L.motes(ctx, t * .7, { n: 26, color: '#c8dde4', a: .14, size: 3.4, speed: 4, seed: 67, area: [-60, 420, W + 120, 760] });
 
   // ---- the row ----
+  if (warmSum > 0) { ctx.save(); ctx.translate(540, ROW.y); ctx.scale(3.2, .5); glow(ctx, 0, 0, 200, '#ff9a3c', .07 * warmSum); ctx.restore(); }
   for (let i = 0; i < ROW.n; i++) {
     const x = ROW.x(i), y = ROW.y + Math.sin(t * .6 + i * 1.3) * 2.2;
     if (i === ROW.empty) {
       const p = P(t, t11 - .02, t11 + .55, E.inOutQ);
       const lift = P(t, tOne - .05, tOne + .5, E.outQ);
-      crewRing(ctx, t, x, y, (.62 + .3 * lift) * P(t, t11 - .05, t11 + .1), 1.05, p);
+      crewRing(ctx, t, x, y, (.62 + .3 * lift) * P(t, t11 - .05, t11 + .1), 1.25, p);
       // '1명은': one faint cold ring, once
       const u = t - tOne;
       if (u > 0 && u < 2.4) { const q = u / 2.4; ctx.save(); ctx.strokeStyle = rgba('#cfe8ff', .3 * (1 - q) * (1 - q)); ctx.lineWidth = 1.6; ctx.beginPath(); ctx.arc(x, y, 18 + E.outC(q) * 120, 0, 7); ctx.stroke(); ctx.restore(); }
@@ -238,7 +239,7 @@ window.PK.scenes.eleven = function (ctx, t, d, info) {
     }
     const a = lit[i], u = t - lightAt(i), boost = u > 0 ? .5 * Math.exp(-u * 3) : 0;
     const sh = 1 + .045 * Math.sin(t * 1.05 + i * 1.7) + .025 * nz(t * 2.1, 40 + i);
-    crewLight(ctx, x, y, a * (.92 + boost) * sh, .62 + .1 * boost);
+    crewLight(ctx, x, y, a * (.95 + boost) * sh, .84 + .12 * boost);
     // the moment it comes up: a small warm ring, very faint
     if (u > 0 && u < 1.3) { const q = u / 1.3; ctx.save(); ctx.strokeStyle = rgba('#ffcf9a', .22 * (1 - q)); ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(x, y, 14 + E.outC(q) * 46, 0, 7); ctx.stroke(); ctx.restore(); }
   }
