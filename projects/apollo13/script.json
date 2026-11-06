@@ -1,0 +1,988 @@
+{
+ "name": "apollo13_odyssey",
+ "voice": {
+  "name": "ko-KR-HyunsuMultilingualNeural",
+  "rate": "+18%",
+  "pitch": "+0Hz",
+  "clone_ref": "assets/voices/my_voice_ref15.wav",
+  "clone_steps": 30,
+  "clone_f0": true
+ },
+ "voice_match": "assets/voices/my_voice_full.mp3",
+ "narration": "blocks",
+ "max_pause": 0.45,
+ "block_gap": 0.3,
+ "start_pad": 0.15,
+ "end_pad": 1.8,
+ "maxu": 10.5,
+ "sfx_rel_db": 7,
+ "title": {
+  "l1": "우주에서 터진 산소 탱크",
+  "l2": "2인용 구명정에 3명"
+ },
+ "meta": {
+  "warning": "※ 실제 NASA 교신 음성 포함 (1970)"
+ },
+ "music": {
+  "style": "dark",
+  "root": 49.0,
+  "rel_db": -12,
+  "duck": 0.42,
+  "ticks": false,
+  "intensity": [
+   [
+    0,
+    0.6
+   ],
+   [
+    "@where",
+    0.3
+   ],
+   [
+    "@tank",
+    0.6
+   ],
+   [
+    "@fuelcells",
+    0.8
+   ],
+   [
+    "@aquarius",
+    0.55
+   ],
+   [
+    "@moon",
+    0.45
+   ],
+   [
+    "@co2",
+    0.75
+   ],
+   [
+    "@fix",
+    0.6
+   ],
+   [
+    "@cold",
+    0.45
+   ],
+   [
+    "@smsep",
+    0.55
+   ],
+   [
+    "@blackout",
+    0.85
+   ],
+   [
+    "@splash",
+    0.4
+   ]
+  ],
+  "pulse_start": 0.3,
+  "pulse_end": "@splash",
+  "pulse_db": -4,
+  "gain": [
+   [
+    0,
+    0
+   ],
+   [
+    "@where",
+    -2
+   ],
+   [
+    "@tank",
+    0
+   ],
+   [
+    "@blackout",
+    -3
+   ],
+   [
+    "@okjoe",
+    -8
+   ]
+  ],
+  "coda": "@splash",
+  "coda_fade": 2.0,
+  "coda_db": -1,
+  "coda_music": {
+   "bpm": 72,
+   "intensity": [
+    [
+     0,
+     0.45
+    ]
+   ]
+  }
+ },
+ "scenes": [
+  {
+   "id": "hook",
+   "say": "달로 가던 아폴로 13호에서, 쾅 소리가 났습니다.",
+   "tts": "달로 가던 아폴로 십삼호에서, 쾅 소리가 났습니다.",
+   "hl": [
+    "쾅"
+   ],
+   "sfx": [
+    {
+     "type": "static",
+     "at": 0,
+     "dur": 1.0,
+     "db": -20
+    },
+    {
+     "type": "engine",
+     "at": 0,
+     "dur": 3.0,
+     "db": -22
+    },
+    {
+     "type": "impact",
+     "word": "쾅",
+     "off": 0,
+     "size": 0.8,
+     "db": -3
+    },
+    {
+     "type": "braam",
+     "word": "쾅",
+     "off": 0.02,
+     "dur": 2.4,
+     "db": -9
+    },
+    {
+     "type": "alarm",
+     "word": "났습니다.",
+     "off": 0.2,
+     "dur": 1.4,
+     "f1": 1000,
+     "f2": 1250,
+     "rate": 3,
+     "db": -16
+    }
+   ],
+   "data": {
+    "warning": "※ 실제 NASA 교신 음성 포함 (1970)",
+    "tag": "실화 · 1970 아폴로 13호"
+   }
+  },
+  {
+   "id": "problem",
+   "say": "",
+   "trans": {
+    "type": "cut",
+    "dur": 0.02
+   },
+   "clip": {
+    "file": "../../assets/apollo13_media/a13_01_problem_GET055-55-04_414AAA-T5.wav",
+    "segs": [
+     [
+      30.7,
+      32.05
+     ]
+    ],
+    "fade": [
+     0.03,
+     0.06
+    ],
+    "lead": 0.25,
+    "tail": 0.5,
+    "subs": [
+     {
+      "src0": 30.7,
+      "src1": 32.05,
+      "text": "휴스턴, 문제가 생겼습니다.",
+      "en": "Houston, we've had a problem."
+     }
+    ]
+   },
+   "data": {
+    "who": "짐 러벨 선장",
+    "where": "NASA 교신 음성 · 1970.4.13 (휴스턴 시각)",
+    "note": "※ 영화(1995) 속 'we have a problem'은 실제 교신과 다른 표현"
+   }
+  },
+  {
+   "id": "where",
+   "say": "1970년 4월, 지구에서 약 33만 km.",
+   "tts": "천구백칠십년 사월, 지구에서 약 삼십삼만 킬로미터.",
+   "hl": [
+    "33만",
+    "km."
+   ],
+   "trans": {
+    "type": "dip",
+    "dur": 0.4
+   },
+   "sfx": [
+    {
+     "type": "whoosh",
+     "at": 0,
+     "dur": 0.8,
+     "up": false,
+     "db": -14
+    },
+    {
+     "type": "shimmer",
+     "word": "지구에서",
+     "off": -0.2,
+     "dur": 2.0,
+     "db": -18
+    }
+   ],
+   "data": {
+    "date": "1970.4.13 밤 (휴스턴 시각)",
+    "dist": "지구에서 약 33만 km",
+    "mission": "APOLLO 13",
+    "crew": "짐 러벨 (선장) · 잭 스와이거트 · 프레드 헤이즈",
+    "note": "달 착륙을 위해 가던 길"
+   }
+  },
+  {
+   "id": "tank",
+   "say": "산소 탱크를 휘저은 지 1분 반 만에, 그중 하나가 터졌습니다.",
+   "tts": "산소 탱크를 휘저은 지 일분 반 만에, 그중 하나가 터졌습니다.",
+   "hl": [
+    "1분",
+    "반",
+    "터졌습니다."
+   ],
+   "trans": {
+    "type": "push",
+    "dur": 0.4
+   },
+   "sfx": [
+    {
+     "type": "engine",
+     "at": 0,
+     "dur": 3.0,
+     "db": -16
+    },
+    {
+     "type": "tick",
+     "word": "1분",
+     "off": 0,
+     "db": -14
+    },
+    {
+     "type": "creak",
+     "word": "하나가",
+     "off": -0.1,
+     "dur": 0.6,
+     "db": -12
+    },
+    {
+     "type": "impact",
+     "word": "터졌습니다.",
+     "off": 0,
+     "size": 0.9,
+     "db": -4
+    },
+    {
+     "type": "glitch",
+     "word": "터졌습니다.",
+     "off": 0.05,
+     "dur": 0.4,
+     "db": -12
+    }
+   ],
+   "data": {
+    "t1": "산소 탱크 1",
+    "t2": "산소 탱크 2",
+    "stir": "탱크 휘젓기 (지상 요청 · 늘 하던 작업)",
+    "bay": "기계선",
+    "cause": "원인: 발사 전 손상된 탱크 안 전선 (조사위원회 보고서)"
+   }
+  },
+  {
+   "id": "venting",
+   "say": "",
+   "trans": {
+    "type": "cut",
+    "dur": 0.02
+   },
+   "clip": {
+    "file": "../../assets/apollo13_media/a13_02b_venting_GET056-09-07_A13-Problem-ogg.wav",
+    "segs": [
+     [
+      5.95,
+      9.7
+     ]
+    ],
+    "fade": [
+     0.03,
+     0.06
+    ],
+    "lead": 0.3,
+    "tail": 0.35,
+    "subs": [
+     {
+      "src0": 5.95,
+      "src1": 7.6,
+      "text": "뭔가… 뭔가가 새어 나가고 있어요.",
+      "en": "We are - we are venting something"
+     },
+     {
+      "src0": 7.6,
+      "src1": 9.7,
+      "text": "밖으로… 우주로요.",
+      "en": "out into the - into space."
+     }
+    ]
+   },
+   "data": {
+    "who": "짐 러벨 선장",
+    "where": "NASA 교신 음성 · 폭발 약 14분 뒤",
+    "note": "※ 가스 분출 장면은 사진·영상 없음 (그림으로 재현)"
+   }
+  },
+  {
+   "id": "fuelcells",
+   "say": "새어 나간 건 숨 쉴 산소이자, 전기와 물의 원료였습니다.",
+   "hl": [
+    "숨",
+    "전기와",
+    "물의"
+   ],
+   "trans": {
+    "type": "dip",
+    "dur": 0.4
+   },
+   "sfx": [
+    {
+     "type": "static",
+     "at": 0,
+     "dur": 0.6,
+     "db": -20
+    },
+    {
+     "type": "glitch",
+     "word": "전기와",
+     "off": 0,
+     "dur": 0.35,
+     "db": -12
+    },
+    {
+     "type": "glitch",
+     "word": "원료였습니다.",
+     "off": 0.1,
+     "dur": 0.35,
+     "db": -12
+    },
+    {
+     "type": "braam",
+     "word": "원료였습니다.",
+     "off": 0.3,
+     "dur": 2.2,
+     "db": -12
+    }
+   ],
+   "data": {
+    "fc": "연료전지 1 · 2 · 3",
+    "o2": "산소 탱크 1 압력",
+    "icons": "숨 · 전기 · 물",
+    "note": "연료전지 1·3은 곧바로, 2는 약 2시간 뒤 멈춤"
+   }
+  },
+  {
+   "id": "lifeboat",
+   "say": "",
+   "trans": {
+    "type": "cut",
+    "dur": 0.02
+   },
+   "clip": {
+    "file": "../../assets/apollo13_media/a13_03_lifeboat_GET057-24-01_414AAA-T5.wav",
+    "segs": [
+     [
+      10.42,
+      15.6
+     ]
+    ],
+    "fade": [
+     0.03,
+     0.06
+    ],
+    "lead": 0.3,
+    "tail": 0.35,
+    "subs": [
+     {
+      "src0": 10.42,
+      "src1": 12.4,
+      "text": "(산소 압력이) 천천히 0으로,",
+      "en": "It's slowly going to zero, and"
+     },
+     {
+      "src0": 12.4,
+      "src1": 14.2,
+      "text": "이제 착륙선을 구명정으로",
+      "en": "we're starting to think"
+     },
+     {
+      "src0": 14.2,
+      "src1": 15.6,
+      "text": "쓰는 걸 생각하기 시작했습니다.",
+      "en": "about the LM lifeboat."
+     }
+    ]
+   },
+   "data": {
+    "who": "잭 루스마 · 휴스턴 교신 담당 (CAPCOM)",
+    "where": "NASA 교신 음성 · 폭발 약 1시간 반 뒤"
+   }
+  },
+  {
+   "id": "aquarius",
+   "say": "두 사람이 이틀 쓰도록 만든 달 착륙선에서, 세 사람이 나흘 가까이 버텨야 했습니다.",
+   "tts": "두 사람이 이틀 쓰도록 만든 달 착륙선에서, 세 사람이 나흘 가까이 버텨야 했습니다.",
+   "new_block": true,
+   "hl": [
+    "세",
+    "사람이",
+    "나흘"
+   ],
+   "trans": {
+    "type": "push",
+    "dur": 0.4
+   },
+   "sfx": [
+    {
+     "type": "thunk",
+     "word": "달",
+     "off": 0,
+     "db": -10
+    },
+    {
+     "type": "engine",
+     "word": "세",
+     "off": -0.2,
+     "dur": 3.5,
+     "db": -20
+    }
+   ],
+   "data": {
+    "cm": "오디세이 (사령선)",
+    "lm": "아쿠아리우스 (달 착륙선)",
+    "design": "설계: 2명 · 약 45시간",
+    "actual": "실제: 3명 · 약 84시간",
+    "why": "사령선 배터리는 재진입 때 쓰려고 꺼 둠"
+   }
+  },
+  {
+   "id": "moon",
+   "say": "달 착륙은 포기하고, 달 뒤편을 돌아 지구로 향했습니다.",
+   "hl": [
+    "포기하고,",
+    "달",
+    "뒤편을"
+   ],
+   "trans": {
+    "type": "dip",
+    "dur": 0.4
+   },
+   "sfx": [
+    {
+     "type": "whoosh",
+     "word": "뒤편을",
+     "off": -0.2,
+     "dur": 1.0,
+     "db": -12
+    },
+    {
+     "type": "engine",
+     "word": "지구로",
+     "off": -0.3,
+     "dur": 2.0,
+     "db": -14
+    }
+   ],
+   "data": {
+    "land": "착륙 취소",
+    "burn": "착륙선 엔진 점화 → 귀환 궤도로",
+    "manual": "항법 컴퓨터 끈 채, 창밖 지구로 수동 조준 (발사 105시간째)"
+   }
+  },
+  {
+   "id": "co2",
+   "say": "이산화탄소는 쌓여 가는데, 사령선 필터는 네모, 착륙선 구멍은 동그라미였습니다.",
+   "hl": [
+    "네모,",
+    "동그라미였습니다."
+   ],
+   "trans": {
+    "type": "push",
+    "dur": 0.4
+   },
+   "sfx": [
+    {
+     "type": "heartbeat",
+     "word": "쌓여",
+     "off": 0,
+     "db": -14
+    },
+    {
+     "type": "alarm",
+     "word": "가는데,",
+     "off": 0,
+     "dur": 1.2,
+     "f1": 740,
+     "f2": 740,
+     "rate": 2,
+     "db": -20
+    },
+    {
+     "type": "thunk",
+     "word": "네모,",
+     "off": 0.1,
+     "db": -8
+    },
+    {
+     "type": "thunk",
+     "word": "동그라미였습니다.",
+     "off": 0.3,
+     "db": -8
+    }
+   ],
+   "data": {
+    "gauge": "이산화탄소",
+    "caution": "경고 7.6 mmHg",
+    "cm": "사령선 필터 (네모)",
+    "lm": "착륙선 구멍 (동그라미)",
+    "note": "착륙선 흡수통만으로는 귀환까지 모자람"
+   }
+  },
+  {
+   "id": "mailbox",
+   "say": "",
+   "trans": {
+    "type": "cut",
+    "dur": 0.02
+   },
+   "clip": {
+    "file": "../../assets/apollo13_media/a13_05_mailbox_GET080-21-56_418AAA-T5.wav",
+    "segs": [
+     [
+      23.22,
+      28.5
+     ]
+    ],
+    "fade": [
+     0.03,
+     0.06
+    ],
+    "lead": 0.3,
+    "tail": 0.35,
+    "subs": [
+     {
+      "src0": 23.22,
+      "src1": 25.04,
+      "text": "실은 이 장치는",
+      "en": "As it turns out, this contraption"
+     },
+     {
+      "src0": 25.04,
+      "src1": 26.42,
+      "text": "우편함처럼 생길 겁니다,",
+      "en": "will look like a mailbox,"
+     },
+     {
+      "src0": 26.42,
+      "src1": 28.5,
+      "text": "다 조립하고 나면요.",
+      "en": "when you get it all put together."
+     }
+    ]
+   },
+   "data": {
+    "who": "밴스 브랜드 · 휴스턴 교신 담당 (CAPCOM)",
+    "where": "NASA 교신 음성 · 1970.4.14 (휴스턴 시각)"
+   }
+  },
+  {
+   "id": "fix",
+   "say": "비닐봉지, 판지, 테이프로 만들어 연결하자, 이산화탄소가 뚝 떨어졌습니다.",
+   "new_block": true,
+   "hl": [
+    "비닐봉지,",
+    "판지,",
+    "테이프로",
+    "뚝"
+   ],
+   "trans": {
+    "type": "cut",
+    "dur": 0.02
+   },
+   "sfx": [
+    {
+     "type": "crinkle",
+     "word": "비닐봉지,",
+     "off": 0,
+     "dur": 0.8,
+     "db": -10
+    },
+    {
+     "type": "rustle",
+     "word": "판지,",
+     "off": 0,
+     "dur": 0.6,
+     "db": -10
+    },
+    {
+     "type": "snip",
+     "word": "테이프로",
+     "off": 0.1,
+     "db": -10
+    },
+    {
+     "type": "thunk",
+     "word": "연결하자,",
+     "off": 0.1,
+     "db": -10
+    },
+    {
+     "type": "shimmer",
+     "word": "떨어졌습니다.",
+     "off": 0,
+     "dur": 1.6,
+     "db": -14
+    }
+   ],
+   "data": {
+    "ground": "지상에서 먼저 설계·시험 → 교신으로 단계별 안내",
+    "parts": "비닐봉지 · 판지 · 덕트 테이프 · 우주복 호스",
+    "read": "0.2 mmHg (발사 94시간째, 지상 판독)"
+   }
+  },
+  {
+   "id": "cold",
+   "say": "꺼 둔 사령선은 냉장고처럼 차가웠고, 물도 아껴 마셔야 했습니다.",
+   "hl": [
+    "냉장고처럼",
+    "물도"
+   ],
+   "trans": {
+    "type": "dip",
+    "dur": 0.5
+   },
+   "sfx": [
+    {
+     "type": "wind",
+     "at": 0,
+     "dur": 4.5,
+     "db": -24
+    },
+    {
+     "type": "creak",
+     "word": "차가웠고,",
+     "off": 0,
+     "dur": 0.7,
+     "db": -16
+    }
+   ],
+   "data": {
+    "temp": "사령선 약 3~6°C (기록·승무원 추정)",
+    "nick": "\"the refrigerator\" — 승무원이 부른 사령선 별명",
+    "water": "물: 1인당 하루 약 180mL (러벨 회고)"
+   }
+  },
+  {
+   "id": "toocold",
+   "say": "",
+   "trans": {
+    "type": "cut",
+    "dur": 0.02
+   },
+   "clip": {
+    "file": "../../assets/apollo13_media/a13_08_toocold_GET132-37-35_427AAA-T3.wav",
+    "segs": [
+     [
+      26.35,
+      30.95
+     ]
+    ],
+    "fade": [
+     0.03,
+     0.06
+    ],
+    "lead": 0.3,
+    "tail": 0.35,
+    "subs": [
+     {
+      "src0": 26.35,
+      "src1": 28.92,
+      "text": "다들 마찬가지예요.",
+      "en": "All of us have that same problem."
+     },
+     {
+      "src0": 28.92,
+      "src1": 30.95,
+      "text": "너무 추워서 잠을 못 자요.",
+      "en": "It's just too cold to sleep."
+     }
+    ]
+   },
+   "data": {
+    "who": "잭 스와이거트",
+    "where": "NASA 교신 음성 · 1970.4.17 새벽 (휴스턴 시각)"
+   }
+  },
+  {
+   "id": "smsep",
+   "say": "기계선을 떼어 내자, 처음으로 부서진 자리가 보였습니다.",
+   "new_block": true,
+   "hl": [
+    "부서진",
+    "자리가"
+   ],
+   "trans": {
+    "type": "dip",
+    "dur": 0.4
+   },
+   "sfx": [
+    {
+     "type": "thunk",
+     "word": "떼어",
+     "off": 0,
+     "db": -6
+    },
+    {
+     "type": "whoosh",
+     "word": "내자,",
+     "off": 0,
+     "dur": 1.0,
+     "up": false,
+     "db": -14
+    },
+    {
+     "type": "braam",
+     "word": "부서진",
+     "off": 0,
+     "dur": 2.4,
+     "db": -10
+    }
+   ],
+   "data": {
+    "sm": "기계선 (산소 탱크가 있던 곳)",
+    "time": "재진입 약 4시간 반 전"
+   }
+  },
+  {
+   "id": "missing",
+   "say": "",
+   "trans": {
+    "type": "cut",
+    "dur": 0.02
+   },
+   "clip": {
+    "file": "../../assets/apollo13_media/a13_09_smjettison_GET138-04-28_428AAA-T3.wav",
+    "segs": [
+     [
+      20.15,
+      23.15
+     ]
+    ],
+    "fade": [
+     0.03,
+     0.06
+    ],
+    "lead": 0.3,
+    "tail": 0.35,
+    "subs": [
+     {
+      "src0": 20.15,
+      "src1": 21.8,
+      "text": "그리고 우주선 한쪽 면이",
+      "en": "And there's one whole side"
+     },
+     {
+      "src0": 21.8,
+      "src1": 23.15,
+      "text": "통째로 없어졌어요.",
+      "en": "of that spacecraft missing."
+     }
+    ]
+   },
+   "data": {
+    "who": "짐 러벨 선장",
+    "where": "NASA 교신 음성 · 1970.4.17 (휴스턴 시각)"
+   }
+  },
+  {
+   "id": "blackout",
+   "say": "재진입 중 무전이 끊겼고, 예상보다 1분 넘게 조용했습니다.",
+   "tts": "재진입 중 무전이 끊겼고, 예상보다 일분 넘게 조용했습니다.",
+   "new_block": true,
+   "hl": [
+    "1분",
+    "넘게"
+   ],
+   "trans": {
+    "type": "dip",
+    "dur": 0.4
+   },
+   "sfx": [
+    {
+     "type": "wind",
+     "at": 0,
+     "dur": 2.5,
+     "db": -10
+    },
+    {
+     "type": "static",
+     "word": "끊겼고,",
+     "off": -0.1,
+     "dur": 0.8,
+     "db": -12
+    },
+    {
+     "type": "riser",
+     "word": "예상보다",
+     "off": 0,
+     "dur": 2.4,
+     "db": -16
+    }
+   ],
+   "data": {
+    "lm": "착륙선 분리 · 재진입 약 1시간 전",
+    "expect": "예상 통신 두절 약 3분 19초",
+    "over": "+1:44",
+    "why": "늦어진 이유는 공식 보고서에 없음"
+   }
+  },
+  {
+   "id": "okjoe",
+   "say": "",
+   "trans": {
+    "type": "cut",
+    "dur": 0.02
+   },
+   "clip": {
+    "file": "../../assets/apollo13_media/a13_10_reentry_GET142-45-53_428AAA-T3.wav",
+    "segs": [
+     [
+      9.95,
+      16.45
+     ]
+    ],
+    "fade": [
+     0.03,
+     0.06
+    ],
+    "lead": 0.3,
+    "tail": 0.35,
+    "subs": [
+     {
+      "src0": 9.95,
+      "src1": 12.45,
+      "text": "오디세이(사령선), 휴스턴 대기 중. 오버.",
+      "en": "Odyssey, Houston standing by. Over.",
+      "who": "조 커윈 · 휴스턴"
+     },
+     {
+      "src0": 15.05,
+      "src1": 16.45,
+      "text": "오케이, 조.",
+      "en": "Okay, Joe.",
+      "who": "잭 스와이거트 · 오디세이"
+     }
+    ]
+   },
+   "data": {
+    "who": "조 커윈 (휴스턴) · 잭 스와이거트 (오디세이)",
+    "where": "NASA 교신 음성 · 1970.4.17 (휴스턴 시각)"
+   }
+  },
+  {
+   "id": "splash",
+   "say": "폭발 약 87시간 만에, 남태평양에 내려앉았습니다.",
+   "tts": "폭발 약 팔십칠시간 만에, 남태평양에 내려앉았습니다.",
+   "new_block": true,
+   "hl": [
+    "87시간"
+   ],
+   "trans": {
+    "type": "dip",
+    "dur": 0.5
+   },
+   "sfx": [
+    {
+     "type": "whoosh",
+     "at": 0.1,
+     "dur": 1.2,
+     "db": -12
+    },
+    {
+     "type": "impact",
+     "word": "내려앉았습니다.",
+     "off": 0,
+     "size": 0.4,
+     "db": -12
+    }
+   ],
+   "data": {
+    "date": "1970.4.17 (휴스턴 시각) · 남태평양",
+    "cm": "오디세이"
+   }
+  },
+  {
+   "id": "alive",
+   "say": "세 사람 모두, 살아 돌아왔습니다.",
+   "hl": [
+    "세",
+    "사람",
+    "모두,"
+   ],
+   "trans": {
+    "type": "dip",
+    "dur": 0.4
+   },
+   "sfx": [
+    {
+     "type": "bell",
+     "word": "돌아왔습니다.",
+     "off": 0,
+     "f": 587.33,
+     "db": -14
+    }
+   ],
+   "data": {
+    "line": "3명 전원 생환",
+    "names": "짐 러벨 · 잭 스와이거트 · 프레드 헤이즈"
+   }
+  },
+  {
+   "id": "close",
+   "say": "재앙을 막은 건, 승무원과 지상 관제팀이었습니다.",
+   "new_block": true,
+   "voice": {
+    "rate": "+8%"
+   },
+   "max_pause": 0.8,
+   "hl": [
+    "승무원과",
+    "지상",
+    "관제팀이었습니다."
+   ],
+   "trans": {
+    "type": "dip",
+    "dur": 0.6
+   },
+   "sfx": [
+    {
+     "type": "bell",
+     "word": "관제팀이었습니다.",
+     "off": 0,
+     "f": 659.25,
+     "db": -14
+    }
+   ],
+   "data": {
+    "quote": "\"...a near disaster, averted only by outstanding performance on the part of the crew and the ground control team which supported them.\"",
+    "src": "— 아폴로 13호 조사위원회 보고서 (1970.6)",
+    "ko": "(번역) 승무원과 그들을 지원한 지상 관제팀의 뛰어난 활약으로 겨우 피한, 재앙에 가까운 사고"
+   }
+  }
+ ]
+}
