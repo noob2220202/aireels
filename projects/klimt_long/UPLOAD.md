@@ -1,6 +1,6 @@
 # 업로드 패키지 — 도둑맞은 클림트, 22년 뒤 그 미술관 벽 속에서 (전체 경위판)
 
-- 영상: `out/klimt_wall_long.mp4` (1080×1920, 30fps, 74.4초, -14 LUFS, 내 목소리 내레이션 + 잔잔한 피아노 배경음악)
+- 영상: `out/klimt_wall_long_upload.mp4` (1080×1920, 30fps, 76초, -14 LUFS, 약 57MB, 내 목소리 내레이션 + 잔잔한 피아노 배경음악)
 - 커버: `out/klimt_wall_long_cover.png`
 
 ## 제목
@@ -94,5 +94,5 @@ B. 누군가 나중에 몰래 돌려놓았다
 ```bash
 python3 projects/klimt_long/sfx_plan.py projects/klimt_long/script.json
 python3 engine/build.py projects/klimt_long all
-node engine/render.cjs projects/klimt_long --stills 3.6 --cover --outdir projects/klimt_long/build/cover
+node engine/render.cjs projects/klimt_long --stills 4.8 --cover --outdir projects/klimt_long/build/cover
 ```

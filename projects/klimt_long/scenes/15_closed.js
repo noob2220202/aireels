@@ -103,7 +103,7 @@ function flap2(ctx, s, x, y, t, t0, { size = 120, cell = .74, lock = .07, roll =
   const total = chars.length * (cw + gap) - gap; let cx = x - total / 2;
   chars.forEach((c, i) => {
     const tl = t0 + roll + i * lock, locked = t >= tl, f = Math.floor(t * 30) + i * 7;
-    const shown = locked ? c : '0123456789'[Math.floor(hash(f) * 10)];
+    const shown = locked || !/[0-9]/.test(c) ? c : '0123456789'[(+c + Math.ceil((tl - t) * 18)) % 10]; // odometer roll
     ctx.fillStyle = 'rgba(0,0,0,.35)'; roundRect(ctx, cx + 3, y - ch / 2 + 8, cw, ch, 10); ctx.fill();
     ctx.fillStyle = bg; roundRect(ctx, cx, y - ch / 2, cw, ch, 10); ctx.fill();
     const g = ctx.createLinearGradient(0, y - ch / 2, 0, y + ch / 2); g.addColorStop(0, 'rgba(255,255,255,.07)'); g.addColorStop(.5, 'rgba(255,255,255,0)'); g.addColorStop(.5, 'rgba(0,0,0,.25)'); g.addColorStop(1, 'rgba(0,0,0,0)');

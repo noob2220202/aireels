@@ -500,7 +500,7 @@ function flapDate(ctx, s, x, y, t, o) {
   chars.forEach((c, i) => {
     if (c === '.') { text(ctx, '.', cx + cw * .21, y + size * .32, { size, family: FONT.disp, color: '#f4f1ea', weight: 400 }); cx += adv(c); return; }
     const tl = o.lockAt(i), locked = t >= tl, rate = 22, k = Math.floor(t * rate), ph = t * rate - k;
-    const dig = n => String(Math.floor(hash(n * 13 + i * 71) * 10));
+    const dig = n => String(((+c - (Math.floor(tl * rate) - n)) % 10 + 10) % 10); // odometer roll into the target digit
     const cur = locked ? c : dig(k), prev = locked ? (t - tl < 1 / rate ? dig(Math.floor(tl * rate) - 1) : c) : dig(k - 1);
     const hl = o.hl(i), col = hl > 0 ? `rgb(${Math.round(lerp(244, 246, hl))},${Math.round(lerp(241, 215, hl))},${Math.round(lerp(234, 127, hl))})` : (locked ? '#f4f1ea' : '#9aa3b4');
     const pop = locked ? 1 + .14 * Math.exp(-(t - tl) * 14) * Math.sin((t - tl) * 30) : 1;
