@@ -6,8 +6,14 @@
 // on the second light; '고프로에' -> a generic action-camera icon rises from it: black screen, live audio line, label.
 // The camera then leans in on the black screen while the dark closes (hand-off to the transcript card).
 (function () {
-const { W, H, E, P, clamp, lerp, hash, noise1, fbm, rgba, glow, camera, drift, text, roundRect, flash } = L;
+const { W, H, E, P, clamp, lerp, fbm, rgba, glow, camera, text, roundRect, flash } = L;
 const { at, souls, beat, chip } = window.PK;
+// local integer hash / value noise (L.hash loses precision above ~1000, which flattens L.noise1/fbm for seeds >= 1)
+const hi = n => { n = Math.floor(n) | 0; n = Math.imul(n ^ (n >>> 16), 0x45d9f3b); n = Math.imul(n ^ (n >>> 16), 0x45d9f3b); return ((n ^ (n >>> 16)) >>> 0) / 4294967296; };
+const nz = (x, s = 0) => { const i = Math.floor(x), f = x - i, u = f * f * (3 - 2 * f); return lerp(hi(i + s * 7919), hi(i + 1 + s * 7919), u) * 2 - 1; };
+const fb = (x, s = 0, o = 3) => { let v = 0, a = .5, f = 1; for (let k = 0; k < o; k++) { v += a * nz(x * f, s + k * 7); a *= .5; f *= 2; } return v; };
+const drift2 = (t, amt, s) => ({ x: fb(t * .35, s) * 16 * amt, y: fb(t * .3, s + 9) * 16 * amt, r: fb(t * .25, s + 4) * .006 * amt });
+const shake2 = (t, k, s) => ({ x: k * nz(t * 22, s + 1) * 18, y: k * nz(t * 22, s + 2) * 18, r: k * nz(t * 15, s + 3) * .01 });
 
 // ---- cheaper variant of PK.dark (same oily sheen): composed at quarter resolution and blitted once ----
 function sheenTexLite() {
@@ -51,9 +57,9 @@ function wallTex() {
   const id = x.createImageData(512, 160);
   for (let j = 0; j < 160; j++) for (let i = 0; i < 512; i++) {
     const u = i / 512, v = j / 160;
-    const n = fbm(v * 9 + fbm(u * 2.5, 13) * .8, 17) * .6 + fbm(u * 14 + v * 3, 19) * .25 + (hash(i * 3 + j * 1013) - .5) * .12;
-    const val = clamp(.45 + n), o = (j * 512 + i) * 4;
-    id.data[o] = 190 * val; id.data[o + 1] = 160 * val; id.data[o + 2] = 130 * val; id.data[o + 3] = 255 * Math.pow(val, 1.6);
+    const n = fb(v * 14 + fb(u * 3, 13) * 1.2, 17, 4) * .9 + fb(u * 22 + v * 4, 19) * .35 + (hi(i * 3 + j * 1013) - .5) * .18;
+    const val = clamp(.42 + n * 1.3), o = (j * 512 + i) * 4;
+    id.data[o] = 205 * val; id.data[o + 1] = 172 * val; id.data[o + 2] = 140 * val; id.data[o + 3] = 255 * Math.pow(val, 1.3);
   }
   x.putImageData(id, 0, 0); window.PK._crawlWallTex = c; return c;
 }
@@ -68,7 +74,13 @@ function backWall(ctx, x0, x1, top, bot, cx, cy, rx, ry, a) {
   x.translate(cx, cy); x.scale(rx / ry, 1);
   const g = x.createRadialGradient(0, 0, 0, 0, 0, ry); g.addColorStop(0, 'rgba(0,0,0,1)'); g.addColorStop(.45, 'rgba(0,0,0,.45)'); g.addColorStop(1, 'rgba(0,0,0,0)');
   x.fillStyle = g; x.fillRect(-ry, -ry, ry * 2, ry * 2);
-  ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = a; ctx.drawImage(b, 0, 0, W, H); ctx.restore();
+  // blit only the lit ellipse's screen bounds
+  let bx0 = 1e9, by0 = 1e9, bx1 = -1e9, by1 = -1e9;
+  for (const [px, py] of [[cx - rx, cy - ry], [cx + rx, cy - ry], [cx - rx, cy + ry], [cx + rx, cy + ry]]) { const sx = m.a * px + m.c * py + m.e, sy = m.b * px + m.d * py + m.f; bx0 = Math.min(bx0, sx); bx1 = Math.max(bx1, sx); by0 = Math.min(by0, sy); by1 = Math.max(by1, sy); }
+  bx0 = Math.max(0, Math.floor(bx0 / 2) * 2); by0 = Math.max(0, Math.floor(by0 / 2) * 2); bx1 = Math.min(W, Math.ceil(bx1)); by1 = Math.min(H, Math.ceil(by1));
+  if (bx1 - bx0 < 4 || by1 - by0 < 4) return;
+  ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = a;
+  ctx.drawImage(b, bx0 / 2, by0 / 2, (bx1 - bx0) / 2, (by1 - by0) / 2, bx0, by0, bx1 - bx0, by1 - by0); ctx.restore();
 }
 function pipe(ctx, t, x0, x1, k, lights) {
   const { top, bot, fl, wall } = TB;
@@ -149,7 +161,7 @@ function actionCam(ctx, t, x, y, s, a, live) {
   for (let i = 0; i <= n; i++) {
     const u = i / n, xx = sx + 4 + u * (sw - 8);
     const env = Math.pow(Math.sin(u * Math.PI), .7);
-    const v = (noise1(t * 6 - u * 7, 5) * .7 + noise1(t * 17 - u * 23, 8) * .3) * env * (.2 + .8 * live);
+    const v = (nz(t * 6 - u * 7, 5) * .7 + nz(t * 17 - u * 23, 8) * .3) * env * (.2 + .8 * live);
     const yy = sy + sh / 2 + v * sh * .38; i ? ctx.lineTo(xx, yy) : ctx.moveTo(xx, yy);
   }
   ctx.stroke();
@@ -183,12 +195,12 @@ window.PK.scenes.crawl = function (ctx, t, d, info) {
   const L5 = [];
   for (let i = 0; i < 5; i++) {
     const m = moving(pl, i, t);
-    const x = xAt(pl, i, t), y = LY - 6 * m + noise1(t * .8, i + 2) * 2;
+    const x = xAt(pl, i, t), y = LY - 6 * m + nz(t * .8, i + 2) * 2;
     let a;
     if (i < 2) a = .86;
     else if (i < 4) a = lerp(.2, .82, P(t, .25 + (i - 2) * .25, 1.5 + (i - 2) * .2, E.inOutQ));
     else a = .24;                                             // the fifth: dim, apart, unchanged
-    if (i < 4) a *= (.9 + .1 * noise1(t * 7, i + 9)) * (hash(Math.floor(t * 14) + i * 97) > .95 ? .72 : 1) * (1 + .12 * m);
+    if (i < 4) a *= (.9 + .1 * nz(t * 7, i + 9)) * (hi(Math.floor(t * 14) + i * 97) > .95 ? .72 : 1) * (1 + .12 * m);
     L5.push({ x, y, a: clamp(a), s: i < 4 ? lerp(.62, 1, clamp((a - .2) / .6)) : .5, m });
   }
   // focus on the second light on '카짐'; others step back a little
@@ -202,19 +214,20 @@ window.PK.scenes.crawl = function (ctx, t, d, info) {
   const camIcon = L5[1].x;
   let camX = lerp(680, cc + 62, P(t, -.2, 1.6, E.inOutQ)); camX = lerp(camX, camIcon, push);
   const zoom = lerp(1.16, 1.33, P(t, .3, 2.4, E.inOutQ)) + .04 * P(t, 2.4, d - 1.2) + 1.0 * E.inQ(push);
-  const dr = drift(t, .85, 21);
-  let sh = 0; for (const p of pl.pulls) sh += .16 * Math.exp(-Math.pow((t - p - .12) / .1, 2));
-  sh += .35 * Math.exp(-Math.pow((t - tP + .1) / .09, 2));
+  const dr = drift2(t, 1, 21);
+  let sh = 0; for (const p of pl.pulls) sh += .18 * Math.exp(-Math.pow((t - p - .12) / .1, 2));
+  sh += .3 * Math.exp(-Math.pow((t - tP + .1) / .09, 2));
+  const sk = shake2(t, sh, 21);
   const camY = lerp(TB.cy + 150 / zoom, TB.top + 108 + 260 / zoom, push);
 
   darkFastC(ctx, t, { k: .3, seed: 8 });
   ctx.save();
-  camera(ctx, { x: camX + dr.x, y: camY + dr.y, zoom, rot: dr.r, shake: sh, t, seed: 21 });
+  camera(ctx, { x: camX + (dr.x + sk.x) / zoom, y: camY + (dr.y + sk.y) / zoom, zoom, rot: dr.r + sk.r, t });
   const x0 = camX - 760 / zoom - 60, x1 = camX + 760 / zoom + 60;
   pipe(ctx, t, x0, x1, 1, L5.slice(0, 4));
   { const xs = L5.slice(0, 4).map(l => l.x), cxw = (Math.min(...xs) + Math.max(...xs)) / 2, hw = (Math.max(...xs) - Math.min(...xs)) / 2;
     const la = (L5[0].a + L5[1].a + L5[2].a + L5[3].a) / 4;
-    backWall(ctx, x0, x1, TB.top, TB.fl + 4, cxw, LY + 10, hw + 230, 230, .17 * la * (.92 + .08 * beat(t, bpm))); }
+    backWall(ctx, x0, x1, TB.top, TB.fl + 4, cxw, LY + 10, hw + 240, 250, .45 * la * (.9 + .1 * beat(t, bpm))); }
 
   // ---- dimension labels (anchored to the frame's left edge, they ride with the camera) ----
   const la = P(t, .15, .55, E.outQ) * (1 - P(t, 3.75, 4.25, E.inQ));
@@ -238,8 +251,8 @@ window.PK.scenes.crawl = function (ctx, t, d, info) {
   // ---- drips from the pipe crown into the oil (something always moves in the dark) ----
   ctx.save(); ctx.globalCompositeOperation = 'lighter';
   for (let k = Math.floor((t + 2) / .95) - 2; k <= Math.floor((t + 2) / .95); k++) {
-    const t0 = k * .95 - 2 + hash(k * 7 + 1) * .4, u = t - t0; if (u < 0 || u > 1.9) continue;
-    const dx = camX + (hash(k * 13 + 5) * 2 - 1) * 430 / zoom;
+    const t0 = k * .95 - 2 + hi(k * 7 + 1) * .4, u = t - t0; if (u < 0 || u > 1.9) continue;
+    const dx = camX + (hi(k * 13 + 5) * 2 - 1) * 430 / zoom;
     if (u < .5) { const yy = TB.top + 4 + (TB.fl - TB.top - 4) * Math.pow(u / .5, 2); ctx.fillStyle = rgba('#bfe9ff', .3); ctx.beginPath(); ctx.ellipse(dx, yy, 2, 4.5, 0, 0, 7); ctx.fill(); }
     else { const q = (u - .5) / 1.4; ctx.strokeStyle = rgba('#8fd3e8', .2 * (1 - q)); ctx.lineWidth = 1.3; ctx.beginPath(); ctx.ellipse(dx, TB.fl + 1, 6 + q * 90, 1.5 + q * 5, 0, 0, 7); ctx.stroke(); }
   }
@@ -328,8 +341,8 @@ window.PK.scenes.crawl = function (ctx, t, d, info) {
     // dashed leader to the light
     ctx.save(); ctx.globalAlpha = ca * .7; ctx.strokeStyle = 'rgba(160,220,245,.6)'; ctx.lineWidth = 1.5; ctx.setLineDash([4, 6]);
     ctx.beginPath(); ctx.moveTo(ix, iy + 52 * cs); ctx.lineTo(ix, K1.y - 20); ctx.stroke(); ctx.restore();
-    const glit = t > tP - .15 && t < tP + .35 && hash(Math.floor(t * 30) * 5 + 2) > .55 ? (hash(Math.floor(t * 30)) - .5) * 14 : 0;
-    actionCam(ctx, t, ix + glit, iy, lerp(.25, 1, cs), ca, .6 + .4 * Math.abs(noise1(t * 3, 4)));
+    const glit = t > tP - .15 && t < tP + .35 && hi(Math.floor(t * 30) * 5 + 2) > .55 ? (hi(Math.floor(t * 30)) - .5) * 14 : 0;
+    actionCam(ctx, t, ix + glit, iy, lerp(.25, 1, cs), ca, .6 + .4 * Math.abs(nz(t * 3, 4)));
     const m = ctx.getTransform(); iconSX = m.a * ix + m.c * iy + m.e; iconSY = m.b * ix + m.d * iy + m.f;
   }
   ctx.restore();
@@ -338,14 +351,14 @@ window.PK.scenes.crawl = function (ctx, t, d, info) {
   const st = P(t, tP - .18, tP - .1) * (1 - P(t, tP + .2, tP + .45));
   if (st > 0) {
     const f = Math.floor(t * 30); ctx.save(); ctx.globalCompositeOperation = 'lighter';
-    for (let i = 0; i < 14; i++) { const yy = 540 + hash(f * 31 + i) * 520, hh = 1 + hash(f * 17 + i) * 2.5, xx = hash(f * 7 + i) * W * .75; ctx.fillStyle = rgba('#cfe8ff', st * (.04 + .08 * hash(i + f))); ctx.fillRect(xx, yy, 80 + hash(i * 3 + f) * 260, hh); }
+    for (let i = 0; i < 14; i++) { const yy = 540 + hi(f * 31 + i) * 520, hh = 1 + hi(f * 17 + i) * 2.5, xx = hi(f * 7 + i) * W * .75; ctx.fillStyle = rgba('#cfe8ff', st * (.04 + .08 * hi(i + f * 3))); ctx.fillRect(xx, yy, 80 + hi(i * 3 + f * 5) * 260, hh); }
     ctx.restore();
     flash(ctx, .05 * st, '#8fd3e8');
   }
 
   // ---- tunnel vision: breathing, then closing on the black screen ----
   const brth = .5 + .5 * Math.sin(t * Math.PI * 2 * .42);
-  const ik = lerp(.52, .62, P(t, 1.5, d - 1.4, E.inOutQ)) + .26 * push;
+  const ik = lerp(.52, .62, P(t, 1.5, d - 1.4, E.inOutQ)) + .3 * push;
   iris(ctx, ik, .6 * brth + .4 * beat(t, bpm), lerp(540, iconSX, push), lerp(840, iconSY + 40, push));
 
   // ---- label (screen space, under the pipe) ----

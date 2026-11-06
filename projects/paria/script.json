@@ -836,7 +836,13 @@
      "f": 392.0,
      "db": -12
     }
-   ]
+   ],
+   "new_block": true,
+   "voice": {
+    "rate": "+2%"
+   },
+   "max_pause": 1.0,
+   "lead": 0.5
   }
  ],
  "music": {

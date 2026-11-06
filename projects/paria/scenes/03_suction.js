@@ -17,7 +17,7 @@ const ORDER = [2, 1, 3, 0, 4];
 
 function quiet(ctx, k) {
   let g = ctx.createLinearGradient(0, 300, 0, 480); g.addColorStop(0, `rgba(1,2,3,${.7 * k})`); g.addColorStop(1, 'rgba(1,2,3,0)');
-  ctx.save(); ctx.fillStyle = g; ctx.fillRect(0, 300, W, 180);
+  ctx.save(); ctx.fillStyle = g; ctx.fillRect(0, 300, W, 180); ctx.fillStyle = `rgba(1,2,3,${.7 * k})`; ctx.fillRect(0, 0, W, 300);
   g = ctx.createLinearGradient(0, 1200, 0, 1300); g.addColorStop(0, 'rgba(1,2,3,0)'); g.addColorStop(1, `rgba(1,2,3,${.82 * k})`);
   ctx.fillStyle = g; ctx.fillRect(0, 1200, W, 100); ctx.fillStyle = `rgba(1,2,3,${.88 * k})`; ctx.fillRect(0, 1300, W, H - 1300); ctx.restore();
 }
@@ -151,8 +151,8 @@ window.PK.scenes.suction = function (ctx, t, d, info) {
   // ---------- outside sea ----------
   let g = ctx.createLinearGradient(0, 380, 0, 1300); g.addColorStop(0, '#062631'); g.addColorStop(.5, '#03141b'); g.addColorStop(1, '#010508');
   ctx.fillStyle = g;
-  if (habVis) { ctx.fillRect(-600, 380, 2300, G.top + 34 - 380); ctx.fillRect(-600, G.bot - 34, 2300, 1300 - G.bot + 34); ctx.fillRect(-600, G.top, G.L + 634, G.bot - G.top); ctx.fillRect(G.R - 34, G.top, 1700 - G.R, G.bot - G.top); }
-  else ctx.fillRect(-600, 380, 2300, 2400);
+  if (habVis) { ctx.fillRect(-600, -600, 2300, G.top + 634); ctx.fillRect(-600, G.bot - 34, 2300, 1300 - G.bot + 34); ctx.fillRect(-600, G.top, G.L + 634, G.bot - G.top); ctx.fillRect(G.R - 34, G.top, 1700 - G.R, G.bot - G.top); }
+  else ctx.fillRect(-600, -600, 2300, 3400);
   L.motes(ctx, t, { n: 50, color: '#9cc9d6', a: .25, size: 1.8, speed: 7 + 60 * vort, seed: 19, area: [-100, 880, 1280, 420] });
   // ---------- interior back wall ----------
   const inner = new Path2D(); inner.rect(G.ix0, G.iy0, G.ix1 - G.ix0, G.floor - G.iy0);
@@ -173,8 +173,8 @@ window.PK.scenes.suction = function (ctx, t, d, info) {
   }
   // caustic shimmer thrown onto the back wall by the pool + warm dust in the air
   ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.lineWidth = 2.5;
-  for (let k = 0; k < 7; k++) {
-    const yb = S.base - 26 - k * 22; ctx.strokeStyle = rgba('#9fe7ff', (.07 - k * .008) * (lamp * .7 + .3) * (1 + S.A * .06)); ctx.beginPath();
+  for (let k = 0; k < 4; k++) {
+    const yb = S.base - 22 - k * 20; ctx.strokeStyle = rgba('#9fe7ff', (.055 - k * .012) * (lamp * .7 + .3) * (1 + S.A * .04)); ctx.beginPath();
     for (let x = G.ix0; x <= G.ix1; x += 14) { const y = yb + Math.sin(x * .03 + t * (1.6 + k * .2) + k) * (4 + S.A * .4) + Math.sin(x * .011 - t * 1.1 + k * 2) * 6; x === G.ix0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y); }
     ctx.stroke();
   }

@@ -52,7 +52,7 @@ function geo() {
 function drawMap(ctx, t, z, o) {
   const G = geo();
   // sea: deep teal pool of light under the islands
-  glow(ctx, 560, 860, 1100, '#0f4656', .22, 'screen');
+  glow(ctx, 560, 860, 1000, '#0f4656', .22, 'source-over');
   // lat / lon grid, revealed by a scan line
   ctx.save(); ctx.strokeStyle = rgba('#8fd3e8', .07 * o.grid); ctx.lineWidth = 1.3 / z;
   for (let lo = -63.5; lo <= -59; lo += .25) { const x = pj(lo, 10)[0]; ctx.beginPath(); ctx.moveTo(x, -1500); ctx.lineTo(x, 3000); ctx.stroke(); }
@@ -148,7 +148,7 @@ function drawSite(ctx, t, z, o) {
   g = ctx.createLinearGradient(0, surf, 0, bed); g.addColorStop(0, '#0b3341'); g.addColorStop(.4, '#062029'); g.addColorStop(1, '#020b10');
   ctx.fillStyle = g; ctx.fillRect(-900, surf, 3000, bed - surf + 40);
   // light shafts below the surface
-  ctx.save(); ctx.beginPath(); ctx.rect(-900, surf, 3000, bed - surf); ctx.clip(); ctx.globalCompositeOperation = 'lighter';
+  ctx.save(); ctx.beginPath(); ctx.rect(-900, surf, 3000, bed - surf); ctx.clip();
   for (let i = 0; i < 8; i++) {
     const x = -200 + i * 190 + Math.sin(t * .35 + i * 1.7) * 40, w = 30 + 50 * hash(i * 5 + 2), al = .07 * (.45 + .55 * (.5 + .5 * Math.sin(t * .8 + i * 2.3)));
     const sg = ctx.createLinearGradient(0, surf, 0, bed); sg.addColorStop(0, rgba('#9fe7ff', al)); sg.addColorStop(1, 'rgba(159,231,255,0)'); ctx.fillStyle = sg;
@@ -219,7 +219,7 @@ function drawHabitat(ctx, t, o) {
   const { rx: x, hab: y, hw: w, hh: h } = ST; const on = o.on;
   ctx.save();
   // warm spill into the water around the chamber
-  glow(ctx, x, y, 260, '#ffb347', .16 * on);
+  glow(ctx, x, y, 200, '#ffb347', .18 * on);
   // shell
   const g = ctx.createLinearGradient(x - w / 2, 0, x + w / 2, 0); g.addColorStop(0, '#6e5214'); g.addColorStop(.28, '#c4962f'); g.addColorStop(.62, '#a87d22'); g.addColorStop(1, '#4b370b');
   roundRect(ctx, x - w / 2, y - h / 2, w, h, 20); ctx.fillStyle = g; ctx.fill(); ctx.strokeStyle = 'rgba(0,0,0,.65)'; ctx.lineWidth = 3; ctx.stroke();

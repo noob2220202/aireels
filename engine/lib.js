@@ -27,7 +27,14 @@ const P = (t, t0, t1, ease = E.lin) => ease(clamp((t - t0) / (t1 - t0)));
 // 0→1→0 envelope with fade in/out
 const env = (t, t0, t1, fin = .2, fout = .2) => Math.min(P(t, t0, t0 + fin, E.outQ), 1 - P(t, t1 - fout, t1, E.inQ));
 
-function hash(n) { n = (n << 13) ^ n; return (1.0 - ((n * (n * n * 15731 + 789221) + 1376312589) & 0x7fffffff) / 1073741824.0) * .5 + .5; }
+// integer hash -> [0,1]. The float formula loses precision for |n| >= ~300 (constant output), which froze noise1/fbm,
+// drift() and camera shake; large inputs therefore use exact 32-bit math (small inputs keep their original values).
+function hash(n) {
+  if (Math.abs(n) < 300) { n = (n << 13) ^ n; return (1.0 - ((n * (n * n * 15731 + 789221) + 1376312589) & 0x7fffffff) / 1073741824.0) * .5 + .5; }
+  n = n | 0; n = (n << 13) ^ n;
+  const m = (Math.imul(n, (Math.imul(Math.imul(n, n), 15731) + 789221) | 0) + 1376312589) & 0x7fffffff;
+  return (1.0 - m / 1073741824.0) * .5 + .5;
+}
 function rng(seed) { let a = seed >>> 0; return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
 function noise1(x, seed = 0) { const i = Math.floor(x), f = x - i, u = f * f * (3 - 2 * f); return lerp(hash(i + seed * 1013), hash(i + 1 + seed * 1013), u) * 2 - 1; }
 // fractal noise

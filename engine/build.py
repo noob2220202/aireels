@@ -371,6 +371,9 @@ def block_tracks(S, V, B, cache, P):
                 cur = []
             groups.append(('clip' if sc.get('clip') else 'hold', [sc]))
         else:
+            if sc.get('new_block') and cur:  # start a separate narration block (own voice/pause settings)
+                groups.append(('narr', cur))
+                cur = []
             cur.append(sc)
     if cur:
         groups.append(('narr', cur))
@@ -379,7 +382,7 @@ def block_tracks(S, V, B, cache, P):
     for kind, scs in groups:
         if kind == 'narr':
             texts = [sc.get('tts', sc['say']) for sc in scs]
-            wav, st, en, dur = tts_block(texts, V, cache, S.get('max_pause'))
+            wav, st, en, dur = tts_block(texts, dict(V, **scs[0].get('voice', {})), cache, scs[0].get('max_pause', S.get('max_pause')))
             voice.append({'file': str(wav.relative_to(B)), 't': round(cursor, 3), 'dur': round(dur, 3), 'kind': 'narration'})
             idx = 0
             for sc in scs:
