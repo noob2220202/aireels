@@ -836,9 +836,11 @@ def mix(project):
     if music.shape[1] < n:
         music = np.pad(music, ((0, 0), (0, n - music.shape[1])))
     sfx = np.zeros((2, n))
+    dry = np.zeros((2, n))  # cues flagged 'dry' (close, in-your-head sounds) bypass the muffle
     for c in TL['sfx']:
         f = SFX[c['type']](c)
-        place(sfx, f, c['t'], db(c.get('db', 0)))
+        place(dry if c.get('dry') else sfx, f, c['t'], db(c.get('db', 0)))
+    sfx_all = sfx + dry
     # ducking: music follows voice envelope
     venv = filt(np.abs(voice.mean(axis=0)), 'lowpass', 6)
     venv = venv / (venv.max() + 1e-9)
@@ -848,7 +850,9 @@ def mix(project):
     # auto-gain: music bed sits rel_db under the voice (RMS), sfx peaks relative to voice
     vr = rms(voice[:, np.abs(voice).max(axis=0) > 1e-4]) if np.any(voice) else .1
     music = music * (vr * db(M.get('rel_db', -8)) / rms(music))
-    sfx = sfx * (vr * db(TL.get('sfx_rel_db', 12)) / (np.abs(sfx).max() + 1e-9)) if np.any(sfx) else sfx
+    if np.any(sfx_all):
+        k = vr * db(TL.get('sfx_rel_db', 12)) / (np.abs(sfx_all).max() + 1e-9)
+        sfx, dry, sfx_all = sfx * k, dry * k, sfx_all * k
     mf = TL.get('muffle')  # [[t, cutoff_hz], ...] -> underwater/inside-pipe feel on music+sfx
     if mf:
         tt = np.arange(n) / SR
@@ -859,11 +863,11 @@ def mix(project):
         w_lo = np.clip((1500 - cut) / 1000, 0, 1)
         w_mid = np.clip((6000 - cut) / 4500, 0, 1) * (1 - w_lo)
         bed = bed * (1 - w_lo - w_mid) + mid * w_mid + lo * w_lo
-        out = voice * db(TL.get('voice_db', 0)) + bed
+        out = voice * db(TL.get('voice_db', 0)) + bed + dry
     else:
-        out = voice * db(TL.get('voice_db', 0)) + music * duck + sfx
-    # stems for diagnostics
-    for nm, x in (('stem_voice', voice), ('stem_music', music * duck), ('stem_sfx', sfx)):
+        out = voice * db(TL.get('voice_db', 0)) + music * duck + sfx_all
+    # stems for diagnostics (pre-muffle)
+    for nm, x in (('stem_voice', voice), ('stem_music', music * duck), ('stem_sfx', sfx_all)):
         sf.write(B / f'{nm}.wav', x.T, SR, subtype='PCM_16')
     # fade out tail
     fo = int(.4 * SR)
