@@ -1,0 +1,502 @@
+{
+  "name": "klimt_wall",
+  "voice": {
+    "name": "ko-KR-InJoonNeural",
+    "rate": "+18%",
+    "pitch": "-2Hz"
+  },
+  "start_pad": 0.08,
+  "end_pad": 0.9,
+  "maxu": 10.5,
+  "title": {
+    "l1": "도둑맞은 클림트 명화",
+    "l2": "22년 뒤 벽 속에서 발견"
+  },
+  "scenes": [
+    {
+      "id": "hook",
+      "say": "도둑맞은 명화가 그 미술관 벽 속에서 나왔다.",
+      "hl": [
+        "명화가",
+        "나왔다"
+      ],
+      "tail": 0.28,
+      "sfx": [
+        {
+          "type": "impact",
+          "at": 0.0,
+          "size": 1.0
+        },
+        {
+          "type": "creak",
+          "word": "나왔다",
+          "off": -0.25,
+          "dur": 0.6,
+          "db": -3
+        },
+        {
+          "type": "shimmer",
+          "word": "나왔다",
+          "off": 0.05,
+          "db": -2
+        }
+      ]
+    },
+    {
+      "id": "culprit",
+      "say": "범인은 아무도 모른다.",
+      "hl": [
+        "아무도"
+      ],
+      "tail": 0.3,
+      "trans": {
+        "type": "whip",
+        "dur": 0.36
+      },
+      "sfx": [
+        {
+          "type": "whoosh",
+          "at": -0.2,
+          "dur": 0.45,
+          "db": -4
+        },
+        {
+          "type": "type",
+          "at": 0.25,
+          "db": -8
+        },
+        {
+          "type": "type",
+          "at": 0.33,
+          "db": -8
+        },
+        {
+          "type": "type",
+          "at": 0.41,
+          "db": -8
+        },
+        {
+          "type": "type",
+          "at": 0.5,
+          "db": -8
+        },
+        {
+          "type": "type",
+          "at": 0.58,
+          "db": -8
+        },
+        {
+          "type": "snap",
+          "word": "모른다",
+          "off": 0.0,
+          "db": -3
+        },
+        {
+          "type": "glitch",
+          "word": "모른다",
+          "off": 0.25,
+          "dur": 0.3,
+          "db": -9
+        }
+      ]
+    },
+    {
+      "id": "y1997",
+      "say": "1997년 이탈리아, 클림트 그림이 사라졌다.",
+      "tts": "천구백구십칠년 이탈리아, 클림트 그림이 사라졌다.",
+      "hl": [
+        "1997년",
+        "사라졌다"
+      ],
+      "tail": 0.25,
+      "trans": {
+        "type": "glitch",
+        "dur": 0.3
+      },
+      "sfx": [
+        {
+          "type": "rewind",
+          "at": -0.1,
+          "dur": 0.8,
+          "db": -6
+        },
+        {
+          "type": "flap",
+          "at": 0.15,
+          "count": 9,
+          "dur": 0.55,
+          "db": -6
+        },
+        {
+          "type": "thunk",
+          "word": "이탈리아",
+          "off": 0.1,
+          "db": -3
+        },
+        {
+          "type": "whoosh",
+          "word": "클림트",
+          "off": -0.3,
+          "dur": 0.4,
+          "db": -8
+        },
+        {
+          "type": "glitch",
+          "word": "사라졌다",
+          "off": 0.15,
+          "dur": 0.22,
+          "db": -10
+        },
+        {
+          "type": "impact",
+          "word": "사라졌다",
+          "off": 0.45,
+          "size": 0.6,
+          "db": -6
+        }
+      ]
+    },
+    {
+      "id": "roof",
+      "say": "지붕엔 빈 액자만 남았는데, 천창은 액자보다 작았다.",
+      "hl": [
+        "액자만",
+        "작았다"
+      ],
+      "tail": 0.22,
+      "trans": {
+        "type": "dip",
+        "dur": 0.3
+      },
+      "sfx": [
+        {
+          "type": "wind",
+          "at": 0.0,
+          "dur": 4.4,
+          "db": -16
+        },
+        {
+          "type": "thunk",
+          "word": "액자만",
+          "off": 0.0,
+          "db": -8
+        },
+        {
+          "type": "tick",
+          "word": "천창은",
+          "off": 0.05,
+          "db": -2
+        },
+        {
+          "type": "tick",
+          "word": "액자보다",
+          "off": 0.05,
+          "db": -2
+        },
+        {
+          "type": "slash",
+          "word": "작았다",
+          "off": 0.1,
+          "db": -4
+        },
+        {
+          "type": "piano",
+          "word": "작았다",
+          "off": 0.15,
+          "f": 146.83,
+          "db": -4
+        }
+      ]
+    },
+    {
+      "id": "found",
+      "say": "22년 뒤 정원사가 담쟁이 속 작은 철문을 열었다.",
+      "tts": "이십이년 뒤 정원사가 담쟁이 속 작은 철문을 열었다.",
+      "hl": [
+        "22년",
+        "철문을"
+      ],
+      "tail": 0.2,
+      "trans": {
+        "type": "whipV",
+        "dur": 0.34
+      },
+      "sfx": [
+        {
+          "type": "flap",
+          "at": 0.0,
+          "count": 10,
+          "dur": 0.6,
+          "db": -6
+        },
+        {
+          "type": "whoosh",
+          "at": 0.95,
+          "dur": 0.5,
+          "db": -10
+        },
+        {
+          "type": "snip",
+          "word": "정원사가",
+          "off": 0.33,
+          "db": -6
+        },
+        {
+          "type": "rustle",
+          "word": "정원사가",
+          "off": 0.36,
+          "dur": 0.9,
+          "db": -9
+        },
+        {
+          "type": "snip",
+          "word": "담쟁이",
+          "off": 0.25,
+          "db": -6
+        },
+        {
+          "type": "snip",
+          "word": "담쟁이",
+          "off": 0.55,
+          "db": -7
+        },
+        {
+          "type": "rustle",
+          "word": "담쟁이",
+          "off": 0.3,
+          "dur": 0.8,
+          "db": -9
+        },
+        {
+          "type": "creak",
+          "word": "열었다",
+          "off": -0.02,
+          "dur": 0.55,
+          "db": -4
+        }
+      ]
+    },
+    {
+      "id": "bag",
+      "say": "검은 쓰레기봉투 속 액자 없는 그 그림.",
+      "hl": [
+        "쓰레기봉투",
+        "그림"
+      ],
+      "tail": 0.3,
+      "trans": {
+        "type": "zoom",
+        "dur": 0.34
+      },
+      "sfx": [
+        {
+          "type": "crinkle",
+          "word": "쓰레기봉투",
+          "off": 0.0,
+          "dur": 1.0,
+          "db": -8
+        },
+        {
+          "type": "revcymbal",
+          "word": "그림",
+          "off": -1.35,
+          "dur": 1.4,
+          "db": -6
+        },
+        {
+          "type": "braam",
+          "word": "그림",
+          "off": 0.0,
+          "db": -2
+        },
+        {
+          "type": "shimmer",
+          "word": "그림",
+          "off": 0.02,
+          "db": -4
+        }
+      ]
+    },
+    {
+      "id": "verdict",
+      "say": "감정 결과 진품, 추정가 6천만 유로 이상, 수사는 미제로 끝났다.",
+      "tts": "감정 결과 진품, 추정가 육천만 유로 이상, 수사는 미제로 끝났다.",
+      "hl": [
+        "진품",
+        "6천만",
+        "미제로"
+      ],
+      "tail": 0.22,
+      "trans": {
+        "type": "flash",
+        "dur": 0.24
+      },
+      "sfx": [
+        {
+          "type": "scan",
+          "at": 0.0,
+          "dur": 1.0,
+          "db": -12
+        },
+        {
+          "type": "stamp",
+          "word": "진품",
+          "off": 0.08,
+          "db": 0
+        },
+        {
+          "type": "flap",
+          "word": "6천만",
+          "off": 0.0,
+          "count": 12,
+          "dur": 0.75,
+          "db": -10
+        },
+        {
+          "type": "tick",
+          "word": "이상",
+          "off": 0.1,
+          "db": -3
+        },
+        {
+          "type": "slam",
+          "word": "수사는",
+          "off": 0.05,
+          "db": -2
+        },
+        {
+          "type": "stamp",
+          "word": "끝났다",
+          "off": 0.1,
+          "db": 0
+        },
+        {
+          "type": "impact",
+          "word": "끝났다",
+          "off": 0.12,
+          "size": 0.7,
+          "db": -5
+        }
+      ]
+    },
+    {
+      "id": "ending",
+      "say": "내내 벽 속에 있었을까, 누가 돌려놓았을까.",
+      "hl": [
+        "내내",
+        "누가"
+      ],
+      "tail": 0.3,
+      "trans": {
+        "type": "dip",
+        "dur": 0.34
+      },
+      "sfx": [
+        {
+          "type": "piano",
+          "word": "내내",
+          "off": 0.0,
+          "f": 110.0,
+          "db": -4
+        },
+        {
+          "type": "piano",
+          "word": "누가",
+          "off": 0.0,
+          "f": 103.83,
+          "db": -3
+        },
+        {
+          "type": "rustle",
+          "from": "voice_end",
+          "at": 0.05,
+          "dur": 0.7,
+          "db": -6
+        },
+        {
+          "type": "slam",
+          "from": "voice_end",
+          "at": 0.62,
+          "db": -6
+        }
+      ]
+    }
+  ],
+  "music": {
+    "root": 73.42,
+    "rel_db": -7,
+    "intensity": [
+      [
+        0,
+        0.75
+      ],
+      [
+        "@culprit",
+        0.6
+      ],
+      [
+        "@y1997",
+        0.25
+      ],
+      [
+        "@roof",
+        0.35
+      ],
+      [
+        "@found",
+        0.5
+      ],
+      [
+        "@bag",
+        0.8
+      ],
+      [
+        "@verdict",
+        0.95
+      ],
+      [
+        "@ending",
+        0.4
+      ]
+    ],
+    "gain": [
+      [
+        0,
+        0
+      ],
+      [
+        "@y1997:사라졌다+0.4",
+        0
+      ],
+      [
+        "@y1997:사라졌다+0.6",
+        -14
+      ],
+      [
+        "@roof+0.6",
+        -4
+      ],
+      [
+        "@ending:누가-0.1",
+        0
+      ],
+      [
+        "@ending:누가+0.15",
+        -18
+      ]
+    ],
+    "pulse_start": "@found",
+    "pulse_end": "@ending:누가-0.05",
+    "ticks": true,
+    "tick_db": -3,
+    "bells": [
+      "@hook:나왔다+0.1",
+      "@roof:작았다+0.3",
+      "@bag:그림+0.1"
+    ],
+    "bell_oct": 1.0
+  },
+  "meta": {
+    "case": "Portrait of a Lady (Klimt) - stolen Feb 1997 from Galleria Ricci Oddi, Piacenza; found 10 Dec 2019 in an exterior wall cavity; authenticated 17 Jan 2020; investigation archived 2021 with no one charged."
+  }
+}

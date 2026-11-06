@@ -306,6 +306,131 @@ def clock_ticks(dur, bpm=60, accent_every=0):
     return out
 
 
+def creak(dur=.7):
+    """rusty hinge: stick-slip friction = jittery pulse train through resonances."""
+    n = int(dur * SR)
+    t = np.arange(n) / SR
+    f = 38 + 30 * np.sin(np.pi * t / dur) + 12 * np.cumsum(RNG.standard_normal(n)) / np.sqrt(SR) * 20
+    f = np.clip(f, 18, 90)
+    ph = np.cumsum(f) / SR
+    pulses = (np.diff(np.floor(ph), prepend=0) > 0).astype(float) * (0.6 + 0.4 * RNG.random(n))
+    y = sum(filt(pulses, 'bandpass', [fc * .93, fc * 1.07]) * g for fc, g in ((620, 1), (1350, .7), (2300, .5), (3700, .3)))
+    e = np.minimum(1, t / .05) * np.minimum(1, (dur - t) / .1)
+    return reverb(y * e * 6, rt=.9, mix=.2)
+
+
+def shimmer(dur=1.6):
+    t = secs(dur)
+    y = np.zeros_like(t)
+    for i, f in enumerate([1318.5, 1567.98, 1975.5, 2349.3, 2637.0, 3135.9]):
+        on = i * .07
+        tt = np.clip(t - on, 0, None)
+        y += np.sin(2 * np.pi * f * tt) * np.exp(-tt * 2.2) * (t >= on) * (1 + .3 * np.sin(2 * np.pi * 6 * tt))
+    y += filt(noise(len(t)), 'highpass', 7000) * np.exp(-t * 3) * .15
+    return reverb(y * .25, rt=2.8, mix=.5, bright=9000)
+
+
+def rewind(dur=.7):
+    t = secs(dur)
+    f = 2200 * (1 - t / dur) ** 1.5 + 300
+    y = np.sign(np.sin(2 * np.pi * np.cumsum(f) / SR)) * .12 + filt(noise(len(t)), 'bandpass', [1500, 6000]) * .25
+    y *= (1 + .5 * np.sign(np.sin(2 * np.pi * 37 * t)))
+    return y * np.minimum(1, t / .02) * np.minimum(1, (dur - t) / .05)
+
+
+def snap():
+    n = int(.4 * SR)
+    t = np.arange(n) / SR
+    y = filt(noise(n), 'highpass', 1500) * np.exp(-t * 90) * 1.5
+    y += np.sin(2 * np.pi * (900 * np.exp(-t * 25) + 120) * t) * np.exp(-t * 20) * .6
+    return reverb(y, rt=.8, mix=.15)
+
+
+def flap(count=8, dur=.6):
+    n = int(dur * SR)
+    out = np.zeros(n)
+    k = int(.03 * SR)
+    for i in range(count):
+        j = int(i / count * (n - k))
+        click = filt(noise(k), 'bandpass', [800, 5000]) * np.exp(-np.arange(k) / SR * 220)
+        out[j:j + k] += click * (.6 + .4 * RNG.random())
+    return out * 1.2
+
+
+def snip():
+    n = int(.18 * SR)
+    t = np.arange(n) / SR
+    y = filt(noise(n), 'bandpass', [3000, 9000]) * np.exp(-t * 60)
+    y += np.sin(2 * np.pi * 4200 * t) * np.exp(-t * 80) * .3
+    return y
+
+
+def rustle(dur=.8):
+    n = int(dur * SR)
+    t = np.arange(n) / SR
+    g = (RNG.random(n // 300 + 1) ** 3).repeat(300)[:n]
+    y = filt(noise(n), 'bandpass', [1200, 7000]) * filt(g, 'lowpass', 60) * 2.5
+    return y * np.sin(np.pi * t / dur)
+
+
+def crinkle(dur=.9):
+    n = int(dur * SR)
+    t = np.arange(n) / SR
+    y = np.zeros(n)
+    idx = RNG.integers(0, n, size=int(dur * 260))
+    y[idx] = RNG.standard_normal(len(idx))
+    y = filt(y, 'highpass', 1800) * 2.0 + filt(noise(n), 'bandpass', [2000, 8000]) * .08
+    return y * np.sin(np.pi * t / dur) ** .5
+
+
+def revcymbal(dur=1.4):
+    n = int(dur * SR)
+    t = np.arange(n) / SR
+    y = filt(noise(n), 'highpass', 4000) * np.exp(-(dur - t) * 3.5)
+    y = reverb(y, rt=1.2, mix=.3)
+    return y * .7
+
+
+def scan(dur=1.0):
+    t = secs(dur)
+    y = np.sin(2 * np.pi * 120 * t) * .25 + np.sin(2 * np.pi * 240 * t) * .12
+    y += np.sin(2 * np.pi * (1200 + 900 * t / dur) * t) * .08
+    y *= (1 + .4 * np.sin(2 * np.pi * 14 * t))
+    return y * np.minimum(1, t / .05) * np.minimum(1, (dur - t) / .1)
+
+
+def slam():
+    n = int(.8 * SR)
+    t = np.arange(n) / SR
+    y = filt(noise(n), 'lowpass', 2500) * np.exp(-t * 30) * 1.4
+    y += np.sin(2 * np.pi * (95 * np.exp(-t * 6) + 40) * t) * np.exp(-t * 9)
+    return reverb(np.tanh(y * 1.4), rt=1.0, mix=.2)
+
+
+def slash():
+    n = int(.3 * SR)
+    t = np.arange(n) / SR
+    y = sweep_filter(noise(n), 1500, 6000, 'bandpass', q=2, blocks=12) * np.sin(np.pi * t / .3) * 1.4
+    return y
+
+
+def thunk():
+    n = int(.4 * SR)
+    t = np.arange(n) / SR
+    y = np.sin(2 * np.pi * (180 * np.exp(-t * 30) + 70) * t) * np.exp(-t * 18)
+    y += filt(noise(n), 'bandpass', [400, 2500]) * np.exp(-t * 60) * .5
+    return y
+
+
+def piano(f=146.83, dur=3.0):
+    t = secs(dur)
+    y = np.zeros_like(t)
+    for h, a in ((1, 1), (2, .5), (3, .25), (4, .12), (5, .08)):
+        y += np.sin(2 * np.pi * f * h * t * (1 + .0004 * h * h)) * a * np.exp(-t * (1.2 + h * .5))
+    y *= np.minimum(1, t / .003)
+    return reverb(y * .6, rt=3.2, mix=.45)
+
+
 SFX = {
     'impact': lambda o: impact(o.get('size', 1.0)),
     'braam': lambda o: braam(o.get('root', 36.71), o.get('dur', 2.6)),
@@ -320,6 +445,20 @@ SFX = {
     'rain': lambda o: rain_amb(o.get('dur', 4.0)),
     'wind': lambda o: wind(o.get('dur', 4.0)),
     'engine': lambda o: engine_rumble(o.get('dur', 4.0)),
+    'creak': lambda o: creak(o.get('dur', .7)),
+    'shimmer': lambda o: shimmer(o.get('dur', 1.6)),
+    'rewind': lambda o: rewind(o.get('dur', .7)),
+    'snap': lambda o: snap(),
+    'flap': lambda o: flap(o.get('count', 8), o.get('dur', .6)),
+    'snip': lambda o: snip(),
+    'rustle': lambda o: rustle(o.get('dur', .8)),
+    'crinkle': lambda o: crinkle(o.get('dur', .9)),
+    'revcymbal': lambda o: revcymbal(o.get('dur', 1.4)),
+    'scan': lambda o: scan(o.get('dur', 1.0)),
+    'slam': lambda o: slam(),
+    'slash': lambda o: slash(),
+    'thunk': lambda o: thunk(),
+    'piano': lambda o: piano(o.get('f', 146.83), o.get('dur', 3.0)),
 }
 
 
@@ -344,6 +483,8 @@ def music_bed(TL):
             g = .35 + .65 * np.interp(tt, t, inten)
             place(bus, hb, tt, gain=.55 * g * db(M.get('pulse_db', 0)))
         tt += 60 / (58 + 40 * np.interp(tt, t, inten))
+        if M.get('pulse_end') and tt >= M['pulse_end']:
+            break
     # clock ticks
     if M.get('ticks', True):
         ck = clock_ticks(dur, bpm=120) * .12 * db(M.get('tick_db', 0))
@@ -355,6 +496,10 @@ def music_bed(TL):
     for i, bt in enumerate(M.get('bells', [])):
         notes = [587.33, 698.46, 554.37, 440.0, 587.33, 523.25]
         place(bus, reverb(bell(notes[i % len(notes)] * M.get('bell_oct', .5), 4), rt=3.5, mix=.55), bt, .22)
+    # gain automation in dB keyframes [[t, db], ...]
+    if M.get('gain'):
+        g = np.interp(t, [k[0] for k in M['gain']], [k[1] for k in M['gain']])
+        bus = bus * db(g)[:bus.shape[1]]
     # tame sub energy (inaudible on phones, eats loudness headroom)
     bus = np.stack([filt(c, 'highpass', 38, 4) for c in bus])
     low = np.stack([filt(c, 'lowpass', 110) for c in bus])

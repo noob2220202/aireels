@@ -72,6 +72,7 @@ async function renderRange(browser, port, TL, f0, f1, outFile) {
   try {
     if (stills) {
       const page = await openPage(browser, port, TL);
+      if (args.includes('--cover')) await page.evaluate(() => { window.COVER_MODE = true; });
       for (const s of stills.split(',').map(Number)) {
         const url = await page.evaluate(t => { window.renderAt(t); return window.grabPng(); }, s);
         const f = path.join(outdir, `still_${s.toFixed(2).padStart(6, '0')}.png`);

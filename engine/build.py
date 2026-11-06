@@ -203,16 +203,27 @@ def step_tts(P):
           'voice_db': S.get('voice_db', 0), 'sfx_rel_db': S.get('sfx_rel_db', 12), 'meta': S.get('meta', {})}
     # global music keyframes may reference scene ids: ["@scene_id", value] or ["@scene_id+0.5", v]
     def resolve(tk):
+        # "@scene", "@scene+0.3", "@scene:word-0.1", "@scene:end" (voice end)
         if isinstance(tk, str) and tk.startswith('@'):
-            m = re.match(r'@([\w-]+)([+-][\d.]+)?$', tk)
+            m = re.match(r'@([\w-]+)(?::([^+-]+))?([+-][\d.]+)?$', tk)
             sc = next(s for s in scenes if s['id'] == m.group(1))
-            return sc['t0'] + float(m.group(2) or 0)
+            base = sc['t0']
+            if m.group(2) == 'end':
+                base = sc['voice_end']
+            elif m.group(2):
+                base = next(w['t'] for w in sc['words'] if m.group(2) in w['w'])
+            return round(base + float(m.group(3) or 0), 3)
         return tk
     M = TL['music']
     if 'intensity' in M:
         M['intensity'] = sorted([[resolve(a), b] for a, b in M['intensity']])
     if 'bells' in M:
         M['bells'] = [resolve(x) for x in M['bells']]
+    for k in ('pulse_start', 'pulse_end'):
+        if k in M:
+            M[k] = resolve(M[k])
+    if 'gain' in M:
+        M['gain'] = sorted([[resolve(a), b] for a, b in M['gain']])
     if 'pulse_stops' in M:
         M['pulse_stops'] = [[resolve(a), resolve(b)] for a, b in M['pulse_stops']]
     for c in TL['sfx']:
@@ -241,7 +252,9 @@ def step_mux(P):
     name = S.get('name', P.name)
     final = out / f'{name}.mp4'
     subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-i', str(B / 'video_only.mp4'), '-i', str(B / 'mix.wav'),
-                    '-map', '0:v', '-map', '1:a', '-c:v', 'copy', '-c:a', 'aac', '-b:a', '256k', '-ar', '48000',
+                    '-map', '0:v', '-map', '1:a', '-c:v', 'libx264', '-preset', 'slow', '-crf', '19', '-maxrate', '14M', '-bufsize', '28M',
+                    '-profile:v', 'high', '-level', '4.2', '-pix_fmt', 'yuv420p', '-colorspace', 'bt709', '-color_primaries', 'bt709', '-color_trc', 'bt709',
+                    '-c:a', 'aac', '-b:a', '256k', '-ar', '48000',
                     '-shortest', '-movflags', '+faststart', str(final)], check=True)
     print(final)
     return final

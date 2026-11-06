@@ -30,7 +30,7 @@
   window.renderAt = function (T) {
     const S = TL.scenes;
     let i = S.findIndex(s => T >= s.t0 && T < s.t1);
-    if (i < 0) i = T < 0 ? 0 : S.length - 1;
+    if (i < 0) i = T < S[0].t0 ? 0 : S.length - 1;
     // transition windows: scene k (k>0) may define trans {type,dur} centred on its start boundary
     let done = false;
     for (const k of [i, i + 1]) {
