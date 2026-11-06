@@ -45,6 +45,8 @@ def main():
     ap.add_argument('--steps', type=int, default=25)
     ap.add_argument('--cfg', type=float, default=0.7)
     ap.add_argument('--report', action='store_true')
+    ap.add_argument('--f0', action='store_true', help='keep the source intonation (F0-conditioned 44k model)')
+    ap.add_argument('--pitch', type=int, default=0, help='extra semitone shift with --f0')
     ap.add_argument('pairs', nargs='+')
     a = ap.parse_args()
     from seed_vc_wrapper import SeedVCWrapper
@@ -60,7 +62,8 @@ def main():
         src, dst = absp(src), absp(dst)
         t1 = time.time()
         out = w.convert_voice(source=src, target=ref, diffusion_steps=a.steps, length_adjust=1.0,
-                              inference_cfg_rate=a.cfg, f0_condition=False, stream_output=False)
+                              inference_cfg_rate=a.cfg, f0_condition=a.f0, auto_f0_adjust=True,
+                              pitch_shift=a.pitch, stream_output=False)
         if not isinstance(out, np.ndarray):  # generator form
             res = None
             try:
@@ -70,7 +73,7 @@ def main():
                 res = e.value
             out = res
         out = np.asarray(out, dtype=np.float32)
-        y = librosa.resample(out, orig_sr=22050, target_sr=48000)
+        y = librosa.resample(out, orig_sr=44100 if a.f0 else 22050, target_sr=48000)
         n = sf.info(src).frames * 48000 // sf.info(src).samplerate
         y = np.pad(y, (0, max(0, n - len(y))))[:n]
         y = y / (np.abs(y).max() + 1e-9) * 0.9
