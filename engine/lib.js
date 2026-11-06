@@ -275,11 +275,13 @@ function hline(ctx, x, y, w, color, lw = 3, a = 1) { ctx.save(); ctx.globalAlpha
 function subtitles(ctx, t, chunks, { y = 1270, size = 74, maxW = 900, color = '#fff', hlColor = C.yellow } = {}) {
   const c = chunks.find(c => t >= c.t0 && t < c.t1); if (!c) return;
   const p = clamp((t - c.t0) / .12); const sc = lerp(1.12, 1, E.outBack(p)); const a = clamp((t - c.t0) / .05);
-  const lines = c.lines || [c.text];
+  let lines = c.lines || [c.text];
+  if (c.quote) lines = lines.map((l, i) => (i === 0 ? '“' : '') + l + (i === lines.length - 1 ? '”' : ''));
+  const base = c.quote ? '#cfe8ff' : color;  // real testimony audio: quoted, cool tint
   ctx.save(); ctx.translate(W / 2, y); ctx.scale(sc, sc); ctx.globalAlpha = a;
   lines.forEach((ln, i) => {
     const words = ln.split(' '); const segs = [];
-    words.forEach((w, j) => { const isH = (c.hl || []).some(h => h && w.includes(h)); segs.push({ s: w + (j < words.length - 1 ? ' ' : ''), color: isH ? hlColor : color }); });
+    words.forEach((w, j) => { const isH = (c.hl || []).some(h => h && w.includes(h)); segs.push({ s: w + (j < words.length - 1 ? ' ' : ''), color: isH ? hlColor : base }); });
     richLine(ctx, segs, 0, (i - (lines.length - 1) / 2) * size * 1.22, { size, strokeW: size * .2 });
   });
   ctx.restore();

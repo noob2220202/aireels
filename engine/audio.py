@@ -714,6 +714,11 @@ def mix(project):
     voice = np.zeros((2, n))
     for v in TL['voice']:
         x = load_voice(B / v['file'])
+        if v.get('kind') == 'clip':
+            # real archival audio: band-limit, de-noise lightly, level-match later via process_voice's normaliser
+            x = filt(filt(x, 'highpass', 90), 'lowpass', 9000)
+            place(voice, process_voice(x) * db(v.get('db', -1.5)), v['t'], 1.0)
+            continue
         if TL.get('voice_match'):
             x = match_voice(x, str(Path(__file__).resolve().parent.parent / TL['voice_match']))
         place(voice, process_voice(x), v['t'], 1.0)
