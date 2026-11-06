@@ -407,7 +407,7 @@ def block_tracks(S, V, B, cache, P):
             out, dur = cut_clip(P, c, cache, sc['id'])
             lead = c.get('lead', .35)
             vt = cursor + lead
-            voice.append({'file': str(out.relative_to(B)), 't': round(vt, 3), 'dur': round(dur, 3), 'kind': 'clip'})
+            voice.append({'file': str(out.relative_to(B)), 't': round(vt, 3), 'dur': round(dur, 3), 'kind': 'clip', 'db': c.get('db', -1.5)})
             rows.append((sc, [], [], [], vt, vt + dur, 'clip', cursor))
             cursor = vt + dur + c.get('tail', .35)
     scenes, subs, sfx = [], [], []
@@ -446,8 +446,8 @@ def block_tracks(S, V, B, cache, P):
             for it in items:
                 sub = {'t0': round(vt + it['t0'], 3), 't1': round(vt + it['t1'], 3), 'lines': [clean_sub(it['text'])],
                        'hl': sc.get('hl', []), 'quote': it.get('quote', True)}
-                for k2 in ('en', 'who'):
-                    if it.get(k2):
+                for k2 in ('en', 'who', 'typed'):
+                    if k2 in it:
                         sub[k2] = it[k2]
                 subs.append(sub)
         for c in sc.get('sfx', []):

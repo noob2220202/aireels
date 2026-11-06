@@ -1,0 +1,986 @@
+{
+ "name": "okene_jascon4",
+ "voice": {
+  "name": "ko-KR-HyunsuMultilingualNeural",
+  "rate": "+18%",
+  "pitch": "+0Hz",
+  "clone_ref": "assets/voices/my_voice_ref15.wav",
+  "clone_steps": 30,
+  "clone_f0": true
+ },
+ "voice_match": "assets/voices/my_voice_full.mp3",
+ "narration": "blocks",
+ "max_pause": 0.45,
+ "block_gap": 0.3,
+ "start_pad": 0.15,
+ "end_pad": 1.8,
+ "maxu": 10.5,
+ "sfx_rel_db": 7,
+ "title": {
+  "l1": "수심 30m 뒤집힌 배 속",
+  "l2": "60시간을 버틴 요리사"
+ },
+ "meta": {
+  "warning": "※ 실제 구조 무전·생존자 음성 포함"
+ },
+ "scenes": [
+  {
+   "id": "hook",
+   "say": "시신을 찾던 잠수부의 손을, 누군가 붙잡았습니다.",
+   "hl": [
+    "붙잡았습니다."
+   ],
+   "sfx": [
+    {
+     "type": "underwater",
+     "at": 0,
+     "dur": 4,
+     "db": -6
+    },
+    {
+     "type": "breath",
+     "at": 0,
+     "dur": 4,
+     "rate": 0.3,
+     "db": -8,
+     "dry": true
+    },
+    {
+     "type": "impact",
+     "word": "붙잡았습니다.",
+     "off": 0,
+     "size": 0.6,
+     "db": -5
+    },
+    {
+     "type": "braam",
+     "word": "붙잡았습니다.",
+     "off": -0.05,
+     "db": -8,
+     "dur": 2.4
+    }
+   ],
+   "data": {
+    "warning": "※ 실제 구조 무전·생존자 음성 포함"
+   }
+  },
+  {
+   "id": "nico",
+   "say": "",
+   "trans": {
+    "type": "cut",
+    "dur": 0.02
+   },
+   "clip": {
+    "file": "../../assets/okene_media/bbc_lives_less_ordinary_20230827_miracle_on_the_ocean_floor.mp3",
+    "segs": [
+     [
+      1367.4,
+      1374.92
+     ]
+    ],
+    "fade": [
+     0.04,
+     0.1
+    ],
+    "lead": 0.3,
+    "tail": 0.4,
+    "subs": [
+     {
+      "src0": 1367.45,
+      "src1": 1370.8,
+      "text": "그가 손을 뻗어 제 손을 잡은 순간이",
+      "en": "The exact moment when he stuck his hand out to grab my hand"
+     },
+     {
+      "src0": 1371.3,
+      "src1": 1374.92,
+      "text": "제 경력에서 가장 무서운 순간이었어요",
+      "en": "was the most terrifying moment of my career."
+     }
+    ]
+   },
+   "sfx": [
+    {
+     "type": "underwater",
+     "at": 0,
+     "dur": 8,
+     "db": -10
+    }
+   ],
+   "data": {
+    "who": "니코 반 헤이르던 · 그를 찾은 잠수부",
+    "where": "BBC World Service 「Lives Less Ordinary」 (2023)"
+   }
+  },
+  {
+   "id": "setup",
+   "say": "그보다 약 60시간 전, 2013년 5월 나이지리아 앞바다.",
+   "tts": "그보다 약 육십시간 전, 이천십삼년 오월 나이지리아 앞바다.",
+   "hl": [
+    "60시간"
+   ],
+   "trans": {
+    "type": "dip",
+    "dur": 0.5
+   },
+   "sfx": [
+    {
+     "type": "rewind",
+     "at": 0,
+     "dur": 0.7,
+     "db": -6
+    },
+    {
+     "type": "wind",
+     "at": 0.3,
+     "dur": 4.5,
+     "db": -10
+    },
+    {
+     "type": "rain",
+     "at": 0.3,
+     "dur": 4.5,
+     "db": -16
+    }
+   ],
+   "data": {
+    "date": "2013.5.26",
+    "place": "에스크라보스 앞바다 · 해안에서 약 30km",
+    "note": "셰브런 원유 선적 부이 · 유조선 계류 작업"
+   }
+  },
+  {
+   "id": "capsize",
+   "say": "새벽, 12명이 탄 예인선 재스콘 4호가 뒤집힌 채 30미터 해저로 가라앉았습니다.",
+   "tts": "새벽, 열두명이 탄 예인선 재스콘 사호가 뒤집힌 채 삼십미터 해저로 가라앉았습니다.",
+   "hl": [
+    "뒤집힌",
+    "30미터"
+   ],
+   "trans": {
+    "type": "push",
+    "dur": 0.4
+   },
+   "sfx": [
+    {
+     "type": "wind",
+     "at": 0,
+     "dur": 3,
+     "db": -10
+    },
+    {
+     "type": "groan",
+     "word": "뒤집힌",
+     "off": -0.2,
+     "db": -4
+    },
+    {
+     "type": "impact",
+     "word": "뒤집힌",
+     "off": 0.1,
+     "size": 0.8,
+     "db": -4
+    },
+    {
+     "type": "suction",
+     "word": "해저로",
+     "off": -0.3,
+     "dur": 2.4,
+     "db": -4
+    },
+    {
+     "type": "gurgle",
+     "word": "가라앉았습니다.",
+     "off": 0,
+     "dur": 2,
+     "db": -6
+    }
+   ],
+   "data": {
+    "clock": "04:50경 (본인 기억) · AP 04:30경",
+    "crew": "승선 12명",
+    "depth": "수심 약 30m"
+   }
+  },
+  {
+   "id": "swept",
+   "say": "요리사 해리슨 오케네는 캄캄한 통로에서 물살에 휩쓸려 작은 화장실로 밀려갔습니다.",
+   "hl": [
+    "해리슨",
+    "휩쓸려"
+   ],
+   "trans": {
+    "type": "fade",
+    "dur": 0.4
+   },
+   "sfx": [
+    {
+     "type": "gurgle",
+     "at": 0,
+     "dur": 2,
+     "db": -4,
+     "dry": true
+    },
+    {
+     "type": "whoosh",
+     "word": "휩쓸려",
+     "off": -0.2,
+     "dur": 0.8,
+     "db": -6
+    },
+    {
+     "type": "groan",
+     "word": "통로에서",
+     "off": 0,
+     "db": -8
+    },
+    {
+     "type": "thunk",
+     "word": "밀려갔습니다.",
+     "off": 0,
+     "db": -8
+    }
+   ],
+   "data": {
+    "tag": "요리사 · 당시 29세"
+   }
+  },
+  {
+   "id": "pocket",
+   "say": "물 위로 1미터 남짓 공기가 남아 있었고, 그는 뒤집힌 세면대를 붙잡고 버텼습니다.",
+   "tts": "물 위로 일미터 남짓 공기가 남아 있었고, 그는 뒤집힌 세면대를 붙잡고 버텼습니다.",
+   "hl": [
+    "1미터",
+    "세면대를"
+   ],
+   "trans": {
+    "type": "fade",
+    "dur": 0.4
+   },
+   "sfx": [
+    {
+     "type": "breath",
+     "at": 0.1,
+     "dur": 5.5,
+     "rate": 0.45,
+     "fast": 0.4,
+     "db": -6,
+     "dry": true
+    },
+    {
+     "type": "gurgle",
+     "at": 0.5,
+     "dur": 2,
+     "db": -8,
+     "dry": true
+    }
+   ],
+   "data": {
+    "gap": "공기층 약 1.2m (약 4피트 · 로이터, 실측 아님)"
+   }
+  },
+  {
+   "id": "cold",
+   "say": "춥고 목이 타는 사이, 물은 차오르고 공기는 점점 줄어들었습니다.",
+   "hl": [
+    "차오르고",
+    "줄어들었습니다."
+   ],
+   "trans": {
+    "type": "fade",
+    "dur": 0.4
+   },
+   "sfx": [
+    {
+     "type": "breath",
+     "at": 0,
+     "dur": 5,
+     "rate": 0.55,
+     "fast": 0.7,
+     "db": -5,
+     "dry": true
+    },
+    {
+     "type": "gurgle",
+     "word": "차오르고",
+     "off": 0,
+     "dur": 2.2,
+     "db": -5,
+     "dry": true
+    },
+    {
+     "type": "groan",
+     "at": 1.2,
+     "dur": 2,
+     "db": -9
+    }
+   ],
+   "data": {
+    "hours": [
+     24,
+     36,
+     48
+    ]
+   }
+  },
+  {
+   "id": "oxygen",
+   "say": "",
+   "trans": {
+    "type": "cut",
+    "dur": 0.02
+   },
+   "clip": {
+    "file": "../../assets/okene_media/bbc_lives_less_ordinary_20230827_miracle_on_the_ocean_floor.mp3",
+    "segs": [
+     [
+      1283.0,
+      1285.55
+     ],
+     [
+      1286.85,
+      1288.8
+     ],
+     [
+      1290.3,
+      1292.0
+     ]
+    ],
+    "gap": 0.2,
+    "fade": [
+     0.04,
+     0.12
+    ],
+    "lead": 0.3,
+    "tail": 0.35,
+    "subs": [
+     {
+      "src0": 1283.0,
+      "src1": 1288.8,
+      "text": "공기주머니 속 산소가 거의 다 떨어졌어요",
+      "en": "The oxygen in the air pockets, it was almost gone"
+     },
+     {
+      "src0": 1290.3,
+      "src1": 1292.0,
+      "text": "이미 숨쉬기가 힘들었거든요",
+      "en": "because I was already struggling to breathe."
+     }
+    ]
+   },
+   "sfx": [
+    {
+     "type": "breath",
+     "at": 0,
+     "dur": 8,
+     "rate": 0.6,
+     "fast": 1,
+     "db": -6,
+     "dry": true
+    }
+   ],
+   "data": {
+    "who": "해리슨 오케네 · 생존자",
+    "where": "BBC World Service 「Lives Less Ordinary」 (2023)"
+   }
+  },
+  {
+   "id": "divers",
+   "say": "그때, 선체를 두드리는 망치 소리가 들렸습니다.",
+   "hl": [
+    "망치"
+   ],
+   "trans": {
+    "type": "cut",
+    "dur": 0.02
+   },
+   "sfx": [
+    {
+     "type": "knock",
+     "word": "망치",
+     "off": -0.1,
+     "n": 3,
+     "gap": 0.45,
+     "db": -2
+    },
+    {
+     "type": "knock",
+     "word": "들렸습니다.",
+     "off": 0.4,
+     "n": 3,
+     "gap": 0.45,
+     "db": -5
+    }
+   ],
+   "data": {
+    "bang": "쿵, 쿵, 쿵 — 오케네 (로이터)"
+   }
+  },
+  {
+   "id": "signal",
+   "say": "",
+   "trans": {
+    "type": "cut",
+    "dur": 0.02
+   },
+   "clip": {
+    "file": "../../assets/okene_media/bbc_lives_less_ordinary_20230827_miracle_on_the_ocean_floor.mp3",
+    "segs": [
+     [
+      1267.6,
+      1270.66
+     ],
+     [
+      1272.82,
+      1274.85
+     ]
+    ],
+    "gap": 0.25,
+    "fade": [
+     0.04,
+     0.12
+    ],
+    "lead": 0.3,
+    "tail": 0.35,
+    "subs": [
+     {
+      "src0": 1267.6,
+      "src1": 1270.66,
+      "text": "저도 철판을 두드려 신호를 보냈어요",
+      "en": "…hit back on the metal to transfer the signal"
+     },
+     {
+      "src0": 1272.82,
+      "src1": 1274.85,
+      "text": "제가 아직 살아 있다는 걸 알리려고요",
+      "en": "for him to know I'm still alive."
+     }
+    ]
+   },
+   "sfx": [
+    {
+     "type": "knock",
+     "at": 0.5,
+     "n": 3,
+     "gap": 0.5,
+     "db": -6
+    }
+   ],
+   "data": {
+    "who": "해리슨 오케네",
+    "where": "BBC World Service 「Lives Less Ordinary」 (2023)"
+   }
+  },
+  {
+   "id": "hand",
+   "say": "잠수부의 불빛이 그냥 지나쳤다가 다시 다가오자, 그는 물속으로 들어가 그 손을 붙잡았습니다.",
+   "hl": [
+    "불빛이",
+    "붙잡았습니다."
+   ],
+   "trans": {
+    "type": "fade",
+    "dur": 0.4
+   },
+   "sfx": [
+    {
+     "type": "underwater",
+     "at": 0,
+     "dur": 6.5,
+     "db": -7
+    },
+    {
+     "type": "breath",
+     "at": 0,
+     "dur": 6,
+     "rate": 0.35,
+     "db": -10
+    },
+    {
+     "type": "whoosh",
+     "word": "지나쳤다가",
+     "off": 0,
+     "dur": 0.7,
+     "db": -10
+    },
+    {
+     "type": "shimmer",
+     "word": "붙잡았습니다.",
+     "off": 0,
+     "dur": 1.6,
+     "db": -8
+    },
+    {
+     "type": "impact",
+     "word": "붙잡았습니다.",
+     "off": 0.05,
+     "size": 0.5,
+     "db": -8
+    }
+   ],
+   "data": {
+    "date": "2013.5.28"
+   }
+  },
+  {
+   "id": "alive",
+   "say": "",
+   "trans": {
+    "type": "cut",
+    "dur": 0.02
+   },
+   "clip": {
+    "file": "../../assets/okene_media/dcn_rescue_helmetcam_full_archiveorg_ZPz8mxJNPh8.mp4",
+    "segs": [
+     [
+      340.92,
+      345.3
+     ]
+    ],
+    "fade": [
+     0.03,
+     0.12
+    ],
+    "lead": 0.25,
+    "tail": 0.3,
+    "db": -4,
+    "subs": [
+     {
+      "src0": 341.0,
+      "src1": 342.6,
+      "text": "살아 있어! 살아 있어!",
+      "en": "He's alive! He's alive!"
+     },
+     {
+      "src0": 342.6,
+      "src1": 345.3,
+      "text": "좋아, 그대로 붙잡고 있어",
+      "en": "Okay, keep him there, keep him there."
+     }
+    ]
+   },
+   "sfx": [
+    {
+     "type": "static",
+     "at": 0,
+     "dur": 0.5,
+     "db": -8,
+     "dry": true
+    }
+   ],
+   "data": {
+    "who": "구조팀 무전 (수면)",
+    "where": "DCN Diving 헬멧 카메라 영상 속 무전 (2013)"
+   }
+  },
+  {
+   "id": "name",
+   "say": "",
+   "trans": {
+    "type": "cut",
+    "dur": 0.02
+   },
+   "clip": {
+    "file": "../../assets/okene_media/bbc_lives_less_ordinary_20230827_miracle_on_the_ocean_floor.mp3",
+    "segs": [
+     [
+      1482.0,
+      1486.85
+     ]
+    ],
+    "fade": [
+     0.03,
+     0.1
+    ],
+    "lead": 0.3,
+    "tail": 0.3,
+    "subs": [
+     {
+      "src0": 1482.05,
+      "src1": 1483.8,
+      "text": "좋아, 이름이 뭐예요?",
+      "en": "Alright, what's your name?",
+      "who": "구조팀",
+      "typed": false
+     },
+     {
+      "src0": 1483.85,
+      "src1": 1485.3,
+      "text": "해리슨, 해리슨.",
+      "en": "Harrison, Harrison.",
+      "who": "오케네",
+      "typed": false
+     },
+     {
+      "src0": 1485.35,
+      "src1": 1486.0,
+      "text": "해리슨?",
+      "en": "Harrison?",
+      "who": "구조팀",
+      "typed": false
+     },
+     {
+      "src0": 1486.0,
+      "src1": 1486.85,
+      "text": "네.",
+      "en": "Yes, sir.",
+      "who": "오케네",
+      "typed": false
+     }
+    ]
+   },
+   "data": {
+    "who": "구조 무전 속 오케네 본인 목소리",
+    "where": "DCN Diving 무전 · BBC World Service (2023) 편집본"
+   }
+  },
+  {
+   "id": "home",
+   "say": "",
+   "trans": {
+    "type": "cut",
+    "dur": 0.02
+   },
+   "clip": {
+    "file": "../../assets/okene_media/dcn_rescue_helmetcam_full_archiveorg_ZPz8mxJNPh8.mp4",
+    "segs": [
+     [
+      479.1,
+      481.3
+     ]
+    ],
+    "fade": [
+     0.03,
+     0.12
+    ],
+    "lead": 0.25,
+    "tail": 0.45,
+    "subs": [
+     {
+      "src0": 479.1,
+      "src1": 481.3,
+      "text": "이제 집으로 데려다줄게요, 알았죠?",
+      "en": "And then we're gonna bring you home, okay?"
+     }
+    ]
+   },
+   "data": {
+    "who": "구조팀 무전 (수면 감독)",
+    "where": "DCN Diving 헬멧 카메라 영상 속 무전 (2013)"
+   }
+  },
+  {
+   "id": "chamber",
+   "say": "곧장 올라오면 위험했기에, 그는 감압 챔버에서 약 60시간을 더 보내야 했습니다.",
+   "tts": "곧장 올라오면 위험했기에, 그는 감압 챔버에서 약 육십시간을 더 보내야 했습니다.",
+   "hl": [
+    "감압",
+    "60시간을"
+   ],
+   "trans": {
+    "type": "fade",
+    "dur": 0.5
+   },
+   "sfx": [
+    {
+     "type": "whoosh",
+     "at": 0,
+     "dur": 1.2,
+     "db": -8
+    },
+    {
+     "type": "static",
+     "word": "챔버에서",
+     "off": 0,
+     "dur": 1.5,
+     "db": -16
+    }
+   ],
+   "data": {
+    "gauge": "수심 30m ≈ 약 4기압",
+    "dur": "약 60시간 (보도에 따라 2~3일)"
+   }
+  },
+  {
+   "id": "eleven",
+   "say": "선장을 포함한 11명은 돌아오지 못했습니다. 1명은 끝내 찾지 못했습니다.",
+   "tts": "선장을 포함한 열한명은 돌아오지 못했습니다. 한명은 끝내 찾지 못했습니다.",
+   "hl": [
+    "11명은"
+   ],
+   "trans": {
+    "type": "dip",
+    "dur": 0.7
+   },
+   "sfx": [
+    {
+     "type": "piano",
+     "at": 0.2,
+     "f": 110.0,
+     "dur": 4,
+     "db": -9,
+     "from": "voice_end"
+    }
+   ],
+   "data": {
+    "note": "시신 10구 수습 · 1명 실종 · 선체 불안정으로 수색 중단 (운영사 발표, 2013.5.31)"
+   }
+  },
+  {
+   "id": "whyme",
+   "say": "",
+   "trans": {
+    "type": "fade",
+    "dur": 0.5
+   },
+   "hold": {
+    "dur": 5.8,
+    "lead": 0.25,
+    "tail": 0.3,
+    "subs": [
+     {
+      "t0": 0.0,
+      "t1": 1.6,
+      "text": "매주 (하나님께) 묻습니다.",
+      "en": "Every week I ask (God)",
+      "who": "해리슨 오케네"
+     },
+     {
+      "t0": 1.6,
+      "t1": 3.2,
+      "text": "'왜 저만입니까?",
+      "en": "'Why only me?",
+      "who": "해리슨 오케네"
+     },
+     {
+      "t0": 3.2,
+      "t1": 5.8,
+      "text": "왜 제 동료들은 죽어야 했습니까?'",
+      "en": "Why did my colleagues have to die?'",
+      "who": "해리슨 오케네"
+     }
+    ]
+   },
+   "data": {
+    "badge": "생존자 인터뷰 · 글로 옮김",
+    "src": "해리슨 오케네 · AP 인터뷰, 나이지리아 와리 (2013.12)"
+   }
+  },
+  {
+   "id": "after",
+   "say": "다시는 바다로 돌아가지 않겠다던 그는, 몇 년 뒤 직업 잠수사가 됐습니다.",
+   "hl": [
+    "잠수사가"
+   ],
+   "trans": {
+    "type": "fade",
+    "dur": 0.5
+   },
+   "sfx": [
+    {
+     "type": "shimmer",
+     "word": "잠수사가",
+     "off": 0,
+     "dur": 1.6,
+     "db": -10
+    }
+   ],
+   "data": {
+    "chips": [
+     "2013 \"다시는 바다로 돌아가지 않겠다\" (AP)",
+     "2015 남아공 상업 잠수 과정 수료 (현지 보도)",
+     "2023 보도: IMCA 2급 상업 잠수사"
+    ]
+   }
+  },
+  {
+   "id": "ocean",
+   "say": "",
+   "trans": {
+    "type": "cut",
+    "dur": 0.02
+   },
+   "clip": {
+    "file": "../../assets/okene_media/bbc_lives_less_ordinary_20230827_miracle_on_the_ocean_floor.mp3",
+    "segs": [
+     [
+      2049.28,
+      2053.88
+     ]
+    ],
+    "fade": [
+     0.04,
+     0.15
+    ],
+    "lead": 0.3,
+    "tail": 0.4,
+    "subs": [
+     {
+      "src0": 2049.3,
+      "src1": 2051.1,
+      "text": "그런데 지금도 저는 바다에 있어요",
+      "en": "But today I found myself still in the ocean"
+     },
+     {
+      "src0": 2051.1,
+      "src1": 2053.88,
+      "text": "여기가 제가 있어야 할 곳이에요",
+      "en": "and I know it's where I'm made to be."
+     }
+    ]
+   },
+   "data": {
+    "who": "해리슨 오케네 · 현재 상업 잠수사",
+    "where": "BBC World Service 「Lives Less Ordinary」 (2023)"
+   }
+  },
+  {
+   "id": "memorial",
+   "say": "재스콘 4호 선원 열한 분의 명복을 빕니다.",
+   "tts": "재스콘 사호 선원 열한 분의 명복을 빕니다.",
+   "new_block": true,
+   "voice": {
+    "rate": "+6%"
+   },
+   "max_pause": 1.0,
+   "trans": {
+    "type": "dip",
+    "dur": 0.8
+   },
+   "sfx": [
+    {
+     "type": "bell",
+     "word": "명복을",
+     "off": 0,
+     "f": 587.33,
+     "db": -12
+    }
+   ],
+   "data": {
+    "line": "In memoriam · 재스콘 4호 선원 11명 · 2013.5.26",
+    "rip": "고인들의 명복을 빕니다"
+   }
+  }
+ ],
+ "music": {
+  "style": "dark",
+  "root": 61.74,
+  "rel_db": -12,
+  "duck": 0.42,
+  "ticks": false,
+  "intensity": [
+   [
+    0,
+    0.55
+   ],
+   [
+    "@setup",
+    0.3
+   ],
+   [
+    "@capsize",
+    0.55
+   ],
+   [
+    "@capsize:뒤집힌",
+    0.9
+   ],
+   [
+    "@swept",
+    0.6
+   ],
+   [
+    "@pocket",
+    0.5
+   ],
+   [
+    "@cold",
+    0.65
+   ],
+   [
+    "@oxygen",
+    0.75
+   ],
+   [
+    "@divers",
+    0.6
+   ],
+   [
+    "@hand",
+    0.8
+   ],
+   [
+    "@alive",
+    0.5
+   ],
+   [
+    "@name",
+    0.35
+   ],
+   [
+    "@chamber",
+    0.3
+   ],
+   [
+    "@eleven",
+    0.15
+   ]
+  ],
+  "pulse_start": 0.3,
+  "pulse_end": "@eleven",
+  "pulse_db": -2,
+  "gain": [
+   [
+    0,
+    0
+   ],
+   [
+    "@eleven",
+    -4
+   ],
+   [
+    "@eleven:end",
+    -8
+   ]
+  ],
+  "coda": "@whyme+0.5",
+  "coda_fade": 3.0,
+  "coda_db": -1,
+  "coda_music": {
+   "bpm": 66,
+   "intensity": [
+    [
+     0,
+     0.35
+    ]
+   ]
+  }
+ },
+ "muffle": [
+  [
+   0,
+   1600
+  ],
+  [
+   "@setup",
+   18000
+  ],
+  [
+   "@capsize:해저로",
+   18000
+  ],
+  [
+   "@capsize:가라앉았습니다.",
+   420
+  ],
+  [
+   "@home",
+   420
+  ],
+  [
+   "@home:end",
+   18000
+  ]
+ ]
+}
