@@ -1,0 +1,9 @@
+# build outputs
+projects/*/build/
+out/
+node_modules/
+__pycache__/
+*.pyc
+# large binary fonts are fetched by scripts/fetch_fonts.sh
+assets/fonts/*.otf
+assets/fonts/*.ttf
