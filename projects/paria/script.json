@@ -204,13 +204,13 @@
      "type": "underwater",
      "at": 0.0,
      "dur": 6.0,
-     "db": -9
+     "db": -2
     },
     {
      "type": "gurgle",
      "at": -0.2,
      "dur": 1.2,
-     "db": -12,
+     "db": -3,
      "from": "voice_end",
      "dry": true
     }
@@ -238,7 +238,7 @@
      "type": "underwater",
      "at": 0.0,
      "dur": 4.0,
-     "db": -8
+     "db": -1
     }
    ]
   },
@@ -302,13 +302,13 @@
      "type": "underwater",
      "at": 0.0,
      "dur": 7.0,
-     "db": -11
+     "db": -4
     },
     {
      "type": "groan",
      "at": 2.6,
      "dur": 2.0,
-     "db": -12
+     "db": -5
     }
    ]
   },
@@ -332,7 +332,7 @@
      "type": "gurgle",
      "at": 0.2,
      "dur": 2.2,
-     "db": -7,
+     "db": 2,
      "dry": true
     },
     {
@@ -341,7 +341,7 @@
      "dur": 6.5,
      "rate": 0.45,
      "fast": 0.4,
-     "db": -8,
+     "db": 1,
      "dry": true
     },
     {
@@ -349,14 +349,14 @@
      "word": "고프로에",
      "off": -0.15,
      "dur": 0.5,
-     "db": -10,
+     "db": -1,
      "dry": true
     },
     {
      "type": "groan",
      "word": "붙잡고",
      "off": 0.0,
-     "db": -5
+     "db": 2
     }
    ]
   },
@@ -410,20 +410,20 @@
      "type": "static",
      "at": 0.1,
      "dur": 0.45,
-     "db": -11,
+     "db": -2,
      "dry": true
     },
     {
      "type": "underwater",
      "at": 0.0,
      "dur": 6.0,
-     "db": -11
+     "db": -4
     },
     {
      "type": "static",
      "at": -0.1,
      "dur": 0.4,
-     "db": -12,
+     "db": -3,
      "from": "voice_end",
      "dry": true
     }
@@ -450,7 +450,7 @@
      "type": "gurgle",
      "at": 0.0,
      "dur": 3.0,
-     "db": -5,
+     "db": 4,
      "dry": true
     },
     {
@@ -458,7 +458,7 @@
      "word": "차올라",
      "off": 0.0,
      "dur": 2.2,
-     "db": -5,
+     "db": 4,
      "dry": true
     },
     {
@@ -467,7 +467,7 @@
      "dur": 7.0,
      "rate": 0.6,
      "fast": 0.8,
-     "db": -6,
+     "db": 3,
      "dry": true
     },
     {
@@ -476,7 +476,7 @@
      "off": -1.4,
      "n": 3,
      "gap": 0.55,
-     "db": -9
+     "db": -2
     }
    ]
   },
@@ -530,7 +530,7 @@
      "type": "groan",
      "at": 0.2,
      "dur": 2.4,
-     "db": -14
+     "db": -7
     }
    ]
   },
@@ -584,7 +584,7 @@
      "type": "underwater",
      "at": 0.0,
      "dur": 7.5,
-     "db": -13
+     "db": -6
     }
    ]
   },
@@ -635,14 +635,14 @@
      "dur": 5.2,
      "rate": 0.85,
      "fast": 1.0,
-     "db": -4,
+     "db": 5,
      "dry": true
     },
     {
      "type": "gurgle",
      "at": 0.3,
      "dur": 4.0,
-     "db": -6,
+     "db": 3,
      "dry": true
     },
     {
@@ -674,7 +674,7 @@
      "type": "gurgle",
      "at": 0.0,
      "dur": 1.2,
-     "db": -5,
+     "db": 4,
      "dry": true
     },
     {
@@ -714,7 +714,7 @@
      "word": "파리아는",
      "off": -0.1,
      "dur": 0.8,
-     "db": -13
+     "db": -4
     },
     {
      "type": "thunk",
