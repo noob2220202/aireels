@@ -73,10 +73,8 @@ function cabinAt(ctx, T, KN, o) {
   ctx.fillStyle = '#030607'; ctx.fillRect(x, y, w, h);
   if (warm > 0) { const g = ctx.createRadialGradient(lx, ly, 0, lx, ly, w * .7); g.addColorStop(0, rgba('#ffb36b', .22 * warm)); g.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = g; ctx.fillRect(x, y, w, h); }
   ctx.fillStyle = 'rgba(160,190,205,.12)'; for (let i = 1; i < 6; i++) ctx.fillRect(x + w * i / 6, y, 2, h);
-  // wall panels pulled off (right): exposed frames and the dark gap behind them
-  ctx.fillStyle = '#010203'; ctx.fillRect(x + w * .7, y + 40, w * .27, WTOP - y - 40);
-  ctx.fillStyle = rgba('#9fb3bd', .14 + .2 * warm); for (let k = 0; k < 3; k++) ctx.fillRect(x + w * (.72 + k * .09), y + 40, 7, WTOP - y - 40);
-  ctx.strokeStyle = rgba('#9fb3bd', .1 + .15 * warm); ctx.lineWidth = 2; ctx.strokeRect(x + w * .7, y + 40, w * .27, WTOP - y - 40);
+  // wall panels pulled off (right): the bare hull steel behind them (shared with oxygen/divers/signal: PK.KN.bareWall)
+  KN.bareWall(ctx, warm, lx, ly);
   // old floor tiles on the ceiling
   ctx.fillStyle = '#0e1418'; ctx.strokeStyle = rgba('#9fb3bd', .22 + .25 * warm); ctx.lineWidth = 3;
   for (let i = 0; i < 9; i++) ctx.strokeRect(x + i * w / 9, y, w / 9, 18);

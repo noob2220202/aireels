@@ -3,9 +3,10 @@
 // its final upside-down pose: antifouling red on top, the deckhouse down in the silt) as a cold silhouette. Above it, a row of
 // eleven places. '선장을' -> the first small warm light comes up on its own; '포함한' -> nine more come up one after another,
 // left to right, each laying a faint warm touch on the upturned hull below it; '11명은' -> the eleventh place is drawn as an
-// empty dotted outline (no light ever goes out: it was never lit). '돌아오지 못했습니다' -> slow pull back to the whole hull,
-// the footnote fades in. '1명은' -> a single faint cold ring from the empty outline, its dashes brighten; '1명 실종' in the
-// footnote lifts with it. Then stillness: a slow push, drifting silt. No bodies, no dimming, no names.
+// dotted outline (no light ever goes out). '돌아오지 못했습니다' -> slow pull back to the whole hull, the footnote fades in.
+// '1명은' -> a single faint cold ring from the outline, its dashes brighten and a dim warm core of its own comes up inside it;
+// '1명 실종' in the footnote lifts with it. Then a slow push toward the row that keeps going to the hand-off, drifting silt.
+// No bodies, no dimming, no names.
 // Also defines window.PK.FIN: the small kit shared by the closing scenes (eleven, whyme, after, ocean, memorial).
 (function () {
 'use strict';
@@ -40,22 +41,23 @@ function crewLight(ctx, x, y, a, s = 1) {
   if (a <= .002) return; const R = 128 * s;
   ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = clamp(a); ctx.drawImage(lightSprite(), x - R, y - R, R * 2, R * 2); ctx.restore();
 }
-// the empty place: a dotted outline (p = how much of it is drawn), slowly turning
+// the place of the one never found: a dotted outline (p = how much of it is drawn), slowly turning; from '1명은' on it
+// also holds a dim warm core of its own (eleven, whyme), and in memorial it is a full light with only a faint dotted halo
 function crewRing(ctx, t, x, y, a, s = 1, p = 1, col = '#cfe8ff') {
   if (a <= .002 || p <= 0) return; const r = 15 * s;
   ctx.save(); ctx.globalAlpha = clamp(a); ctx.strokeStyle = col; ctx.lineWidth = Math.max(1.4, 2.6 * s); ctx.lineCap = 'round';
   ctx.setLineDash([2.5 * s, 6.2 * s]); ctx.lineDashOffset = -t * 4 * s;
   ctx.beginPath(); ctx.arc(x, y, r, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * clamp(p)); ctx.stroke(); ctx.restore();
 }
-// keep the subtitle band and the app UI area quiet
-function subBand(ctx, a = .86, y0 = 1150) {
-  const g = ctx.createLinearGradient(0, y0, 0, 1290); g.addColorStop(0, 'rgba(1,2,3,0)'); g.addColorStop(1, `rgba(1,2,3,${a})`);
-  ctx.save(); ctx.fillStyle = g; ctx.fillRect(0, y0, W, 1290 - y0); ctx.fillStyle = `rgba(1,2,3,${a})`; ctx.fillRect(0, 1290, W, H - 1290); ctx.restore();
+// keep the subtitle band and the app UI area quiet (fades in from y0 to y1, solid below)
+function subBand(ctx, a = .86, y0 = 1150, y1 = 1290) {
+  const g = ctx.createLinearGradient(0, y0, 0, y1); g.addColorStop(0, 'rgba(1,2,3,0)'); g.addColorStop(1, `rgba(1,2,3,${a})`);
+  ctx.save(); ctx.fillStyle = g; ctx.fillRect(0, y0, W, y1 - y0); ctx.fillStyle = `rgba(1,2,3,${a})`; ctx.fillRect(0, y1, W, H - y1); ctx.restore();
 }
 // the row of eleven places (world coords of this scene; whyme starts from the same screen positions)
 const ROW = { y: 640, x: i => 130 + i * 82, n: 11, empty: 10 };
-// camera at the end of eleven (whyme picks the row up exactly there)
-const END = { cx: 540, cy: 850, z: 1.025 };
+// camera at the end of eleven (whyme picks the row up exactly there); ls = the lights' scale in eleven's world
+const END = { cx: 540, cy: 850, z: 1.14, ls: 1.05 };
 PK.FIN = { hi, nz, fb, wt, lightSprite, crewLight, crewRing, subBand, ROW, END };
 
 // =============================== the overturned hull (capsize scene geometry, final pose) ===============================
@@ -198,10 +200,10 @@ window.PK.scenes.eleven = function (ctx, t, d, info) {
   for (let i = 0; i < ROW.n; i++) { if (i === ROW.empty) { lit.push(0); continue; } const a = P(t, lightAt(i) - .03, lightAt(i) + .45, E.outQ); lit.push(a); warmSum += a; }
   warmSum /= 10;
 
-  // camera: in close on the row -> slow pull back to the whole hull -> very slow push to the end
-  const pull = P(t, -.3, tRet + 1.4, E.inOutQ), push = P(t, tRet + 1.4, d + .3, E.inOutQ);
+  // camera: in close on the row -> slow pull back to the whole hull -> a slow push that keeps going to the hand-off
+  const pull = P(t, -.3, tRet + 1.4, E.inOutQ), push = P(t, tRet + 1.4, d + .25, E.inOutQ);
   const z = lerp(1.11, 1, pull) * lerp(1, END.z, push), cy = lerp(790, END.cy, pull), cx = END.cx;
-  const dk = 1 - P(t, d - 1.2, d, E.inOutQ);                       // drift settles to zero for the hand-off to whyme
+  const dk = 1 - .7 * P(t, d - 1.2, d, E.inOutQ);                  // drift calms (to 30%) for the hand-off to whyme
   const dr = { x: fb(t * .3, 101) * 9 * dk, y: fb(t * .26, 102) * 7 * dk, r: fb(t * .2, 103) * .003 * dk };
 
   ctx.save();
@@ -232,6 +234,8 @@ window.PK.scenes.eleven = function (ctx, t, d, info) {
       const p = P(t, t11 - .02, t11 + .55, E.inOutQ);
       const lift = P(t, tOne - .05, tOne + .5, E.outQ);
       crewRing(ctx, t, x, y, (.62 + .3 * lift) * P(t, t11 - .05, t11 + .1), 1.25, p);
+      // '1명은': a dim warm core of its own comes up inside the outline (he is one of the eleven lights too)
+      crewLight(ctx, x, y, .45 * P(t, tOne + .05, tOne + .9, E.inOutQ) * (1 + .04 * Math.sin(t * 1.05 + i * 1.7)), .8 * END.ls);
       // '1명은': one faint cold ring, once
       const u = t - tOne;
       if (u > 0 && u < 2.4) { const q = u / 2.4; ctx.save(); ctx.strokeStyle = rgba('#cfe8ff', .3 * (1 - q) * (1 - q)); ctx.lineWidth = 1.6; ctx.beginPath(); ctx.arc(x, y, 18 + E.outC(q) * 120, 0, 7); ctx.stroke(); ctx.restore(); }
@@ -239,7 +243,7 @@ window.PK.scenes.eleven = function (ctx, t, d, info) {
     }
     const a = lit[i], u = t - lightAt(i), boost = u > 0 ? .5 * Math.exp(-u * 3) : 0;
     const sh = 1 + .045 * Math.sin(t * 1.05 + i * 1.7) + .025 * nz(t * 2.1, 40 + i);
-    crewLight(ctx, x, y, a * (.95 + boost) * sh, .84 + .12 * boost);
+    crewLight(ctx, x, y, a * (.95 + boost) * sh, END.ls + .12 * boost);
     // the moment it comes up: a small warm ring, very faint
     if (u > 0 && u < 1.3) { const q = u / 1.3; ctx.save(); ctx.strokeStyle = rgba('#ffcf9a', .22 * (1 - q)); ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(x, y, 14 + E.outC(q) * 46, 0, 7); ctx.stroke(); ctx.restore(); }
   }
@@ -255,7 +259,7 @@ window.PK.scenes.eleven = function (ctx, t, d, info) {
   const fa = P(t, tNo + .2, tNo + .9, E.outQ);
   if (note && fa > 0) {
     const l1a = parts.length >= 3 ? parts[0] + ' · ' : note, l1b = parts.length >= 3 ? parts[1] : '', l2 = parts.length >= 3 ? parts.slice(2).join(' · ') : '';
-    const s1 = 31, s2 = 25, y1 = 1158 + 6 * (1 - fa), y2 = 1199 + 6 * (1 - fa);
+    const s1 = 31, s2 = 30, y1 = 1156 + 6 * (1 - fa), y2 = 1199 + 6 * (1 - fa);
     const wa = measure(ctx, l1a, s1, FONT.sub, 700), wb = measure(ctx, l1b, s1, FONT.sub, 800), x0 = 540 - (wa + wb) / 2;
     const hl = P(t, tOne - .05, tOne + .45, E.outQ);
     ctx.save(); ctx.globalAlpha = fa * .5; ctx.fillStyle = '#8fb3c4'; ctx.fillRect(540 - 26, y1 - 40, 52, 1.5); ctx.restore();
@@ -264,7 +268,7 @@ window.PK.scenes.eleven = function (ctx, t, d, info) {
       text(ctx, l1b, x0 + wa, y1, { size: s1, weight: 800, color: hl > .5 ? '#ffffff' : '#c9d6de', align: 'left', alpha: fa });
       if (hl > 0) { ctx.save(); ctx.globalAlpha = fa * hl * .8; ctx.strokeStyle = '#cfe8ff'; ctx.lineWidth = 2; ctx.setLineDash([3, 5]); ctx.beginPath(); ctx.moveTo(x0 + wa, y1 + 22); ctx.lineTo(x0 + wa + wb * hl, y1 + 22); ctx.stroke(); ctx.restore(); }
     }
-    if (l2) text(ctx, l2, 540, y2, { size: s2, weight: 600, color: '#8fa9b8', alpha: fa });
+    if (l2) text(ctx, l2, 540, y2, { size: s2, weight: 600, color: '#b9cbd5', alpha: fa });
   }
 };
 })();

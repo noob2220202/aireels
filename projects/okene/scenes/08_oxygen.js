@@ -11,7 +11,9 @@
 // This file also holds the small kit shared by oxygen / divers / signal (window.PK.KN): local noise, quarter-res oily
 // background, 1/3-res additive light layer, tunnel-vision iris, low-frequency shake/jolts, the inverted cabin (same design and
 // coordinates as the hand scene's cabin: PK.room geometry, level .6) inside a cutaway of the upside-down hull (keel side up,
-// the hull side plating right behind the cabin's right wall, the sea outside), shock rings through the steel, falling dust.
+// the hull side plating right behind the cabin's right wall, the sea outside), shock rings through the steel, falling dust,
+// KN.bareWall (the wall he stripped of its panels: bare plate + one deep frame, at the coordinates of the old exposed frames;
+// cold's and hand's own cabin drawings can call it too) and KN.topMask / KN.subBand (quiet title zone and subtitle band).
 (function () {
 'use strict';
 const { W, H, E, P, clamp, lerp, fbm, rgba, glow, roundRect } = L;
@@ -70,9 +72,18 @@ KN.iris = function (ctx, k, close = 0, cx = 540, cy = 860) {
   ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(bb, 0, 0, W, H); ctx.restore();
 };
 // keep the subtitle band quiet
-KN.subBand = function (ctx, a = .86) {
-  const g = ctx.createLinearGradient(0, 1150, 0, 1290); g.addColorStop(0, 'rgba(1,2,3,0)'); g.addColorStop(1, `rgba(1,2,3,${a})`);
-  ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = g; ctx.fillRect(0, 1150, W, 140); ctx.fillStyle = `rgba(1,2,3,${a})`; ctx.fillRect(0, 1290, W, H - 1290); ctx.restore();
+// (y0..y1: the ramp to full darkness; the defaults are the original band)
+KN.subBand = function (ctx, a = .86, y1 = 1290, y0 = 1150) {
+  const g = ctx.createLinearGradient(0, y0, 0, y1); g.addColorStop(0, 'rgba(1,2,3,0)'); g.addColorStop(1, `rgba(1,2,3,${a})`);
+  ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = g; ctx.fillRect(0, y0, W, y1 - y0); ctx.fillStyle = `rgba(1,2,3,${a})`; ctx.fillRect(0, y1, W, H - y1); ctx.restore();
+};
+// keep the title zone quiet: dark above y 380, fading out by the top of the content band (470)
+KN.topMask = function (ctx, a = .88) {
+  if (a <= 0) return; const A = clamp(a).toFixed(3);
+  ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+  ctx.fillStyle = `rgba(1,2,3,${A})`; ctx.fillRect(0, 0, W, 380);
+  const g = ctx.createLinearGradient(0, 380, 0, 470); g.addColorStop(0, `rgba(1,2,3,${A})`); g.addColorStop(1, 'rgba(1,2,3,0)'); ctx.fillStyle = g; ctx.fillRect(0, 380, W, 90);
+  ctx.restore();
 };
 // low-frequency handheld tremble (<= ~6 px/frame at k = 1)
 KN.shake = (t, k, seed = 1) => [k * (nz(t * 6, seed) * 15 + nz(t * 19, seed + 5) * 2), k * (nz(t * 6, seed + 2) * 15 + nz(t * 19, seed + 7) * 2), k * nz(t * 5, seed + 3) * .007];
@@ -320,14 +331,14 @@ window.PK.scenes.oxygen = function (ctx, t, d, info) {
   const ph = ((t / per) % 1 + 1) % 1, inh = ph < .42 ? Math.pow(Math.sin(Math.PI * ph / .42), 1.5) : 0;
   const gone = P(t, s2 - .15, s2 + 1.3, E.inOutQ), strug = P(t, s3 - .25, s3 + .5, E.inOutQ), endK = P(t, d - .75, d - .04, E.inQ);
   const dip = (hi(Math.floor(t * 7) + 11) > .84 ? .2 : 0) * (.35 + gone);
-  const I = (1 - .3 * gone - .1 * strug) * (1 - .12 * (.5 + .5 * nz(t * 9, 4)) - dip) * (1 - .3 * endK);
+  const I = (1 - .38 * gone - .14 * strug) * (1 - .12 * (.5 + .5 * nz(t * 9, 4)) - dip) * (1 - .3 * endK);
   const bpm = lerp(84, 112, strug), bt = beat(t, bpm);
 
   // ---- section perspective: the near cut faces (steel slab above, hull-side wall at the right, water below) frame the gap,
   //      which recedes to a thin dark slit at the cabin's far wall. Front-plane coords; depth scale s: 1 (cut) .. SB (far wall)
   // the water keeps climbing: slowly all through, a step on 'almost gone', and again while he struggles to breathe
   const rise = .3 * P(t, 0, d, E.inOutQ) + .4 * gone + .3 * P(t, s3 - .5, d - .35, E.inOutQ);
-  const yC = 600, yW = lerp(852, 772, rise), VX = 610, VY = 712, SB = .56, XL = -260, XR = 1010;
+  const yC = 600, yW = lerp(852, 772, rise), VX = 610, VY = yW - 56, SB = .5, XL = -260, XR = 1010;   // eye just above the water
   const p3 = (x, y, s) => [VX + (x - VX) * s, VY + (y - VY) * s];
   const sL = .88, xLf = 650, yLf = yW - 42 + 2 * Math.sin(t * 1.1);   // his light rides the mattresses up with the water
   const Lp = p3(xLf, yLf, sL), Lc = p3(xLf, yC, sL);
@@ -339,8 +350,8 @@ window.PK.scenes.oxygen = function (ctx, t, d, info) {
   const [shx, shy, shr] = KN.shake(t, .16 * strug, 8);
   // close and low in the gap: his light held low in the frame (cold's last framing of the cabin: the old floor just under the
   // title, the light low right), pushing in as the water lifts him toward the ceiling; ends where divers opens on him
-  const cam = P(t, -.3, d + .2, E.inOutQ), z = lerp(1.45, 1.9, cam) * (1 + .012 * bt);
-  const AX = lerp(660, 570, P(t, 0, d, E.inOutQ)), AY = lerp(965, 925, P(t, 0, d, E.inOutQ));
+  const cam = P(t, -.3, d + .2, E.inOutQ), z = lerp(1.85, 2.15, cam) * (1 + .012 * bt);
+  const AX = lerp(660, 570, P(t, 0, d, E.inOutQ)), AY = lerp(940, 905, P(t, 0, d, E.inOutQ));
   ctx.translate(AX + dr.x + shx, AY + dr.y + shy); ctx.rotate(dr.r + shr); ctx.scale(z, z); ctx.translate(-Lp[0], -Lp[1] + 6);
 
   // ---- far wall (thin slit) with the doorway, side walls ----
@@ -370,17 +381,17 @@ window.PK.scenes.oxygen = function (ctx, t, d, info) {
     fillPoly(ctx, [p3(x0, yC, zs(j / 6)), p3(x0 + TW, yC, zs(j / 6)), p3(x0 + TW, yC, zs((j + 1) / 6)), p3(x0, yC, zs((j + 1) / 6))], h0 > .92 ? 'rgba(40,52,58,.5)' : 'rgba(0,0,0,.4)');
   }
   ctx.save(); ctx.translate(Lc[0], Lc[1]); ctx.scale(1.5, .3);
-  { const g = ctx.createRadialGradient(0, 0, 0, 0, 0, 420); g.addColorStop(0, rgba('#ffb877', .26 * I * (.85 + .15 * bt))); g.addColorStop(.45, rgba('#ff9a50', .06 * I)); g.addColorStop(1, 'rgba(255,150,80,0)'); ctx.fillStyle = g; ctx.fillRect(-460, -460, 920, 920); }
+  { const g = ctx.createRadialGradient(0, 0, 0, 0, 0, 420); g.addColorStop(0, rgba('#ffb877', .18 * I * (.85 + .15 * bt))); g.addColorStop(.45, rgba('#ff9a50', .06 * I)); g.addColorStop(1, 'rgba(255,150,80,0)'); ctx.fillStyle = g; ctx.fillRect(-420, -420, 840, 840); }
   ctx.restore();
   { const tg = ctx.createRadialGradient(Lc[0], Lc[1], 0, Lc[0], Lc[1], 520);
-    tg.addColorStop(0, rgba('#ffd2a0', .45 * I)); tg.addColorStop(.35, rgba('#9fb3bd', .1 * I + .2)); tg.addColorStop(1, 'rgba(159,179,189,.16)');
-    ctx.strokeStyle = tg; ctx.lineWidth = 2.6; ctx.beginPath();
+    tg.addColorStop(0, rgba('#ffd2a0', .32 * I)); tg.addColorStop(.3, rgba('#9fb3bd', .08 * I + .2)); tg.addColorStop(1, 'rgba(159,179,189,.16)');
+    ctx.strokeStyle = tg; ctx.lineWidth = 4.4 / z; ctx.beginPath();
     for (let k = 0; k <= NT; k++) { const a = p3(XL + k * TW, yC, 1), b = p3(XL + k * TW, yC, SB); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); }
     for (let j = 1; j <= 6; j++) { const a = p3(XL, yC, zs(j / 6)), b = p3(XR, yC, zs(j / 6)); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); }
     ctx.stroke(); }
   { ctx.globalCompositeOperation = 'lighter';
     const cg = ctx.createRadialGradient(Lc[0], Lc[1], 0, Lc[0], Lc[1], 330); cg.addColorStop(0, rgba('#ffc890', .38 * I)); cg.addColorStop(.6, rgba('#ffb070', .1 * I)); cg.addColorStop(1, 'rgba(255,170,100,0)');
-    ctx.strokeStyle = cg; ctx.lineWidth = 2.4; ctx.beginPath();
+    ctx.strokeStyle = cg; ctx.lineWidth = 4 / z; ctx.beginPath();
     for (let i = 0; i < 9; i++) { const si = sL + (i - 4) * .035; for (let j = 0; j <= 24; j++) { const x = xLf - 330 + j * 660 / 24, ds = .012 * Math.sin(x * .028 + t * 2.3 + i * 1.7) + .007 * Math.sin(x * .061 - t * 3.4 + i), p = p3(x, yC, clamp(si + ds, SB, 1)); j ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]); } }
     ctx.stroke(); }
   ctx.restore();
@@ -399,11 +410,13 @@ window.PK.scenes.oxygen = function (ctx, t, d, info) {
   const wq = [p3(XL, yW, SB), p3(XR, yW, SB), p3(XR, yW, 1), p3(XL, yW, 1)];
   { const g = ctx.createLinearGradient(0, wq[0][1], 0, yW); g.addColorStop(0, '#081a20'); g.addColorStop(1, '#0d2a33'); fillPoly(ctx, wq, g); }
   ctx.save(); ctx.clip();
-  { const tex = sheenTex(); ctx.globalCompositeOperation = 'screen'; ctx.globalAlpha = .22; ctx.drawImage(tex, -380 + Math.sin(t * .09) * 120 + t * 6, wq[0][1] - 60, 1900, 380); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over'; }
+  { // (only the rows of the texture that land on the thin water plane are drawn)
+    const tex = sheenTex(), oy = wq[0][1] - 60, d0 = 56, d1 = Math.min(380, yW + 4 - oy), k = 480 / 380; ctx.globalCompositeOperation = 'screen'; ctx.globalAlpha = .22;
+    ctx.drawImage(tex, 0, d0 * k, 270, (d1 - d0) * k, -380 + Math.sin(t * .09) * 120 + t * 6, oy + d0, 1900, d1 - d0); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over'; }
   ctx.strokeStyle = 'rgba(143,211,232,.3)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(wq[0][0], wq[0][1]); ctx.lineTo(wq[1][0], wq[1][1]); ctx.stroke();
   { const Mr = p3(xLf, yW + 10, (sL + 1) / 2), rg = ctx.createRadialGradient(Mr[0], Mr[1], 0, Mr[0], Mr[1], 520);
     rg.addColorStop(0, rgba('#ffc184', .7 * I)); rg.addColorStop(.3, rgba('#ffa860', .22 * I)); rg.addColorStop(1, 'rgba(130,200,220,.12)');
-    ctx.strokeStyle = rg; ctx.lineWidth = 1.8; ctx.beginPath();
+    ctx.strokeStyle = rg; ctx.lineWidth = 3 / z; ctx.beginPath();
     for (let j = 1; j < 12; j++) {
       const s = zs(1 - j / 12), w0 = Math.sin(t * 1.7 + j * 1.9); let on = false;
       for (let i = 0; i <= 30; i++) {
@@ -423,7 +436,7 @@ window.PK.scenes.oxygen = function (ctx, t, d, info) {
       const x = xLf + (hi(i * 3 + 1) - .5) * 700, s = lerp(.62, .97, hi(i * 5 + 2)), u = t - tf - .3; if (u <= 0 || u > 1.6) return;
       const C = p3(x, yW, s), lit = I * Math.exp(-Math.abs(x - xLf) / 300);
       for (let k = 0; k < 2; k++) { const q = clamp(u / 1.6 * 1.15 - k * .18); if (q <= 0) continue; const rr = (6 + 90 * q) * s;
-        ctx.strokeStyle = rgba(lit > .3 ? '#ffc48a' : '#9fd8ea', (.3 + .5 * lit) * (1 - q)); ctx.lineWidth = 1.6; ctx.beginPath(); ctx.ellipse(C[0], C[1], rr, rr * .16, 0, 0, 7); ctx.stroke(); }
+        ctx.strokeStyle = rgba(lit > .3 ? '#ffc48a' : '#9fd8ea', (.3 + .5 * lit) * (1 - q)); ctx.lineWidth = 2.8 / z; ctx.beginPath(); ctx.ellipse(C[0], C[1], rr, rr * .16, 0, 0, 7); ctx.stroke(); }
     }); }
   ctx.restore();
   // ---- the stacked mattresses, his light on them ----
@@ -438,13 +451,16 @@ window.PK.scenes.oxygen = function (ctx, t, d, info) {
       ctx.fillStyle = k === 2 ? '#15120e' : '#0d0b09'; ctx.beginPath(); ctx.roundRect(fa[0], fa[1], fb2[0] - fa[0], fb2[1] - fa[1], 6); ctx.fill();
       ctx.strokeStyle = eg; ctx.lineWidth = k === 2 ? 2.5 : 1.6; ctx.beginPath(); ctx.moveTo(fa[0] + 6, fa[1] + .5); ctx.lineTo(fb2[0] - 6, fa[1] + .5); ctx.stroke();
     } }
+  // the same cold grade cold left on the cabin (his own light stays warm on top)
+  { const M = ctx.getTransform(), gy0 = M.transformPoint(new DOMPoint(Lp[0], yC)).y - 40, gy1 = M.transformPoint(new DOMPoint(Lp[0], yW)).y + 40;
+    ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalCompositeOperation = 'multiply'; ctx.fillStyle = 'rgb(148,188,210)'; ctx.fillRect(0, gy0, W, gy1 - gy0); ctx.restore(); }
   souls(ctx, t, [{ x: Lp[0], y: Lp[1], a: clamp(.45 + .55 * I), s: 2.6 }], { bpm });
 
   // ---- the near cut faces: water body, hull-side wall, the steel slab overhead ----
   { ctx.beginPath(); ctx.moveTo(-300, 1500); for (let x = -300; x <= XR + 8; x += 8) ctx.lineTo(x, wy(x, t)); ctx.lineTo(XR, 1500); ctx.closePath();
     const g = ctx.createLinearGradient(0, yW, 0, yW + 420); g.addColorStop(0, '#0b222a'); g.addColorStop(.22, '#041116'); g.addColorStop(1, '#010304'); ctx.fillStyle = g; ctx.fill();
     ctx.save(); ctx.clip(); ctx.globalCompositeOperation = 'lighter';
-    ctx.save(); ctx.translate(Lp[0], yW + 30); ctx.scale(.85, 1.5);
+    ctx.save(); ctx.translate(Lp[0], yW + 30); ctx.scale(.85 * 1.4 / z, 1.5 * 1.4 / z);
     { const sg = ctx.createRadialGradient(0, 0, 0, 0, 0, 260); sg.addColorStop(0, rgba('#ff9f50', .2 * I)); sg.addColorStop(.5, rgba('#c86a30', .06 * I)); sg.addColorStop(1, 'rgba(255,150,80,0)'); ctx.fillStyle = sg; ctx.fillRect(-260, -40, 520, 300); }
     ctx.restore();
     for (let k = 0; k < 6; k++) {      // his light leaking down into the black water
@@ -457,7 +473,7 @@ window.PK.scenes.oxygen = function (ctx, t, d, info) {
       const lit = I * Math.exp(-Math.hypot(x - Lp[0], y - yW) / 200); ctx.fillStyle = rgba(lit > .2 ? '#ffd0a0' : '#9cc9d6', .1 + .6 * lit); ctx.fillRect(x, y, 2, 2);
     }
     ctx.restore();
-    ctx.strokeStyle = rgba('#9fd8ea', .5); ctx.lineWidth = 2.5; ctx.beginPath(); for (let x = -300; x <= XR + 8; x += 8) { const y = wy(x, t); x === -300 ? ctx.moveTo(x, y) : ctx.lineTo(x, y); } ctx.stroke();
+    ctx.strokeStyle = rgba('#9fd8ea', .5); ctx.lineWidth = 4.4 / z; ctx.beginPath(); for (let x = -300; x <= XR + 8; x += 8) { const y = wy(x, t); x === -300 ? ctx.moveTo(x, y) : ctx.lineTo(x, y); } ctx.stroke();
     const rl = ctx.createLinearGradient(Lp[0] - 220, 0, Lp[0] + 220, 0); rl.addColorStop(0, 'rgba(255,179,107,0)'); rl.addColorStop(.5, rgba('#ffb36b', .5 * I)); rl.addColorStop(1, 'rgba(255,179,107,0)'); ctx.fillStyle = rl; ctx.fillRect(Lp[0] - 220, yW - 3, 440, 6); }
   { const g = ctx.createLinearGradient(XR, 0, XR + 140, 0); g.addColorStop(0, '#2c363c'); g.addColorStop(.25, '#171d21'); g.addColorStop(1, '#0c1013');
     ctx.fillStyle = g; ctx.fillRect(XR, -200, 300, 1800); hatch(ctx, XR, -200, XR + 300, 1600, .045);
@@ -487,7 +503,7 @@ window.PK.scenes.oxygen = function (ctx, t, d, info) {
       q.save(); q.translate(px, py); q.scale(1 + 1.6 * u * rise2, .6); glow(q, 0, 0, 40 + 130 * u, '#ffc89a', .2 * Math.pow(1 - u, 1.3) * Math.min(1, u * 12) * I * (1 + .8 * strug)); q.restore();
     }
     q.save(); q.translate(Lc[0], Lc[1] + 22); q.scale(2.6, .3); glow(q, 0, 0, 220, '#ffb57a', .12 * haze * I); q.restore();
-    KN.heart(q, Lp[0], Lp[1], 1.05 * I, bt, 1.2);
+    KN.heart(q, Lp[0], Lp[1], .8 * I, bt, 1.2 * Math.sqrt(1.85 / z));   // (the push-in does not brighten the frame)
   });
   { ctx.save(); ctx.globalCompositeOperation = 'lighter';
     DRIPS.forEach((tf, i) => {
@@ -501,7 +517,8 @@ window.PK.scenes.oxygen = function (ctx, t, d, info) {
   ctx.restore();
 
   // ---- tunnel vision: closes on every inhale, tighter as the air runs out ----
-  const irisK = clamp(.45 + .1 * P(t, 0, s2) + .15 * gone + .2 * strug + .6 * endK);
+  const open = 1 - P(t, 0, .45, E.outQ);                              // opens out of cold's closing tunnel vision
+  const irisK = clamp(.5 + .1 * P(t, 0, s2) + .15 * gone + .2 * strug + .6 * endK + .4 * open);
   KN.iris(ctx, irisK, inh * (.8 + .8 * strug), LS.x, LS.y - 70);
   // the last beat goes dark but for a faint ember of his light (hard cut to the knocks)
   if (endK > 0) { ctx.fillStyle = `rgba(1,2,3,${(.9 * endK).toFixed(3)})`; ctx.fillRect(0, 0, W, 1290); glow(ctx, LS.x, LS.y, 60, '#ffb347', .35 * endK); }

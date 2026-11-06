@@ -14,18 +14,27 @@ const RMS = [12, 15, 21, 28, 13, 17, 34, 36, 11, 12, 24, 34, 16, 12, 50, 36, 24,
 const WD = { bring: .78, home: 1.16, homeEnd: 1.44, okay: 1.60, end: 2.02 };
 const BELL = { x: 850, y: 540 };
 
-function bellSil(ctx, x, y, s, warm, t) {
+// the diving bell (silhouette from the RV kit: a dome over a flat skirt), hanging on its lift wire
+function bellSil(ctx, x, y, s, warm, cold) {
   ctx.save(); ctx.translate(x, y); ctx.scale(s, s);
-  // lift wire up into the dark
-  const wg = ctx.createLinearGradient(0, -30, 0, -700); wg.addColorStop(0, rgba('#c9b48a', .5)); wg.addColorStop(1, 'rgba(201,180,138,0)');
-  ctx.strokeStyle = wg; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(0, -30); ctx.lineTo(0, -700); ctx.stroke();
-  // body: dark sphere, backlit by its own warm light from the open bottom hatch
-  ctx.fillStyle = rgba('#ffcf8a', .5 * warm); ctx.beginPath(); ctx.arc(-1.5, -1.5, 30, 0, 7); ctx.fill();
-  ctx.fillStyle = '#06090b'; ctx.beginPath(); ctx.arc(0, 0, 29, 0, 7); ctx.fill();
-  ctx.fillRect(-33, -6, 6, 34); ctx.fillRect(27, -6, 6, 34);               // frame / ballast
-  ctx.fillRect(-10, -36, 20, 8);                                            // padeye
-  ctx.fillStyle = rgba('#ffd9a0', .55 + .4 * warm); ctx.beginPath(); ctx.ellipse(0, 27, 12, 4, 0, 0, 7); ctx.fill();   // lit hatch
-  ctx.fillStyle = rgba('#ffd9a0', .35 + .4 * warm); ctx.beginPath(); ctx.arc(9, -6, 6, 0, 7); ctx.fill();   // one side porthole
+  // lift wire up into the dark: it fades out before the title band (screen y 470)
+  const M = ctx.getTransform(), yTop = (470 - M.f) / (M.d || 1);
+  if (yTop < -50) {
+    const wg = ctx.createLinearGradient(0, -44, 0, yTop); wg.addColorStop(0, rgba('#c9b48a', .5)); wg.addColorStop(1, 'rgba(201,180,138,0)');
+    ctx.strokeStyle = wg; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(0, -44); ctx.lineTo(0, yTop); ctx.stroke();
+  }
+  const p = PK.RV.bellPath();
+  // warm rim: backlit by its own light from the open bottom hatch
+  ctx.strokeStyle = rgba('#ffcf8a', .45 * warm); ctx.lineWidth = 3; ctx.lineJoin = 'round'; ctx.stroke(p);
+  ctx.fillStyle = '#06090b'; ctx.fill(p);
+  ctx.fillRect(-7, -44, 14, 7);                                             // padeye
+  ctx.fillRect(-40, 22, 80, 5);                                             // skirt ring
+  // the diver's cold lamp catching its lower-left flank (metal, not a flat cut-out)
+  if (cold > .01) { ctx.save(); ctx.clip(p); const cg = ctx.createLinearGradient(-36, 20, 6, -10); cg.addColorStop(0, rgba('#cfeaff', .22 * cold)); cg.addColorStop(1, 'rgba(207,234,255,0)'); ctx.fillStyle = cg; ctx.fillRect(-40, -40, 80, 66); ctx.restore(); }
+  // a faint structural seam across the dome (unlit: no 'eyes')
+  ctx.strokeStyle = rgba('#c9b48a', .12 + .08 * warm); ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(-27, -6); ctx.lineTo(27, -6); ctx.stroke();
+  // lit hatch: a thin flat line of warm light under the skirt
+  ctx.fillStyle = rgba('#ffd9a0', .55 + .4 * warm); ctx.beginPath(); ctx.ellipse(0, 28, 16, 2, 0, 0, 7); ctx.fill();
   ctx.restore();
 }
 function arcsDown(ctx, tc, list, A, B, color) {
@@ -42,6 +51,7 @@ function arcsDown(ctx, tc, list, A, B, color) {
 let LIST = null;
 
 window.PK.scenes.home = function (ctx, t, d, info) {
+  if (PK.RV.hiddenInCut(t, d, info)) return;                      // the other side of a hard cut is on screen
   const HG = PK.HG, RV = PK.RV, { beat, souls } = PK, D = info.sc.data || {};
   const { HC, OK } = PK.RVN || { HC: { x: 282, y: 700 }, OK: { x: 772, y: 968 } };
   const loud = RV._homeLoud || (RV._homeLoud = RV.env(RMS));
@@ -79,7 +89,7 @@ window.PK.scenes.home = function (ctx, t, d, info) {
     HG.heart(q, ok.x, ok.y, .85 + .2 * bellA, bt, 1.3);
   });
   HG.silt(ctx, t * .8 + 4.4, b, { n: 140, seed: 23, area: [-60, 200, 1200, 1000], ambient: .025 });
-  bellSil(ctx, BELL.x, BELL.y, 1.25, bellA, t);
+  bellSil(ctx, BELL.x, BELL.y, 1.25, bellA, .3 + .7 * P(t, .35, 1.4, E.inOutQ));
   arcsDown(ctx, tc, LIST, { x: BELL.x, y: BELL.y + 20 }, mid, '#ffe1b0');
   // umbilical from the helmet back up toward the bell
   ctx.save(); ctx.lineCap = 'round';

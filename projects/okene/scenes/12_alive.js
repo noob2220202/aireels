@@ -27,6 +27,15 @@ RV.card = function (ctx, t, d, D, lv) {
   PK.sourceCard(ctx, D.who || '', D.where || '', ca, 1185);
   if (ca > 0 && lv > .05) { ctx.save(); ctx.strokeStyle = rgba('#ff6a6f', ca * .55 * clamp(lv)); ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(540 - 380 + 34, 1185, 13 + 10 * clamp(lv), 0, 7); ctx.stroke(); ctx.restore(); }
 };
+// inside a 'cut' transition window the player draws both scenes but shows only one (the outgoing one before the
+// boundary, the incoming one after it): true when this scene is the hidden one, so it can skip its (wasted) drawing
+RV.hiddenInCut = function (t, d, info) {
+  const S = info && info.TL && info.TL.scenes, sc = info && info.sc;
+  if (!S || !sc) return false;
+  if (t < -1e-4) return !!(sc.trans && sc.trans.type === 'cut');
+  if (t > d + 1e-4) { const i = S.findIndex(s => s.id === sc.id), nx = i >= 0 ? S[i + 1] : null; return !!(nx && nx.trans && nx.trans.type === 'cut'); }
+  return false;
+};
 // low-frequency shake (max ~8 px per frame at k = .45)
 RV.shake = (t, k, seed = 1) => [k * (nz(t * 6, seed) * 16 + nz(t * 17, seed + 5) * 2), k * (nz(t * 6, seed + 2) * 16 + nz(t * 17, seed + 7) * 2), k * nz(t * 4, seed + 3) * .007];
 // radio static: horizontal tears (copies of the frame shifted), bright scan lines and grain inside rect [x, y, w, h]
@@ -93,6 +102,17 @@ RV.helmet = function (ctx, x, y, s, { ang = 0, body = null, rx = x + 400, ry = y
   ctx.restore();
   const ca = Math.cos(ang), sa = Math.sin(ang);
   return { x: x + (58 * ca - (-67) * sa) * s, y: y + (58 * sa + (-67) * ca) * s, ang };
+};
+// diving bell silhouette (home, chamber): a dome that widens to a flat skirt, so it reads as a bell and not as a round
+// head. Local units: crown at y = -38, skirt lip at y = +25, half width 36; padeye -44..-37, skirt ring 22..27.
+RV.bellPath = function () {
+  if (RV._bp) return RV._bp;
+  const p = new Path2D();
+  p.moveTo(-36, 25); p.lineTo(-35, 17);
+  p.bezierCurveTo(-31, 9, -27, -2, -26, -14);
+  p.quadraticCurveTo(-25, -38, 0, -38); p.quadraticCurveTo(25, -38, 26, -14);
+  p.bezierCurveTo(27, -2, 31, 9, 35, 17); p.lineTo(36, 25); p.closePath();
+  RV._bp = p; return p;
 };
 // scanline pattern
 function scanTex() {
@@ -201,6 +221,7 @@ function radio(ctx, t, tc, a, hot) {
 }
 
 window.PK.scenes.alive = function (ctx, t, d, info) {
+  if (PK.RV.hiddenInCut(t, d, info)) return;                      // the other side of a hard cut is on screen
   const HG = PK.HG, D = info.sc.data || {};
   const v0 = info.sc.voice_t - info.sc.t0, w = k => v0 + WD[k], tc = t - v0;
   const { dH, tI } = handInfo(info);

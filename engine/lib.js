@@ -305,7 +305,13 @@ function subtitles(ctx, t, chunks, { y = 1270, size = 74, maxW = 900, color = '#
   if (c.en) {
     setFont(ctx, size * .44, FONT.sub, 600); ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.lineWidth = size * .08; ctx.strokeStyle = 'rgba(0,0,0,.85)'; ctx.lineJoin = 'round';
-    const en = c.en.length > 58 ? c.en.slice(0, c.en.lastIndexOf(' ', 58)) + '\n' + c.en.slice(c.en.lastIndexOf(' ', 58) + 1) : c.en;
+    // long English lines wrap in two balanced halves (split at the space nearest the middle, so no orphaned last word)
+    let en = c.en;
+    if (en.length > 58) {
+      const mid = en.length / 2; let k = -1;
+      for (let i = 0; i < en.length; i++) if (en[i] === ' ' && (k < 0 || Math.abs(i - mid) < Math.abs(k - mid))) k = i;
+      if (k > 0) en = en.slice(0, k) + '\n' + en.slice(k + 1);
+    }
     en.split('\n').forEach((s, i) => { const yy = half + size * (.42 + i * .56); ctx.strokeText(s, 0, yy); ctx.fillStyle = 'rgba(207,232,255,.62)'; ctx.fillText(s, 0, yy); });
   }
   ctx.restore();

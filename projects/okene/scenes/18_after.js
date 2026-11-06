@@ -1,6 +1,7 @@
 // after (≈96.14-101.72): "다시는 바다로 돌아가지 않겠다던 그는, 몇 년 뒤 직업 잠수사가 됐습니다."
-// Fades in from whyme: his small warm light keeps its place while the night sea dissolves into deep water that slowly lightens.
-// '다시는' -> chip 1 (2013, AP) types on. '돌아가지' -> a guideline drops in from above beside him. '몇 년 뒤' -> chip 2 and
+// Fades in from whyme: his warm light keeps its place (540, 926) and size while the night sea dissolves into deep water that
+// slowly lightens; from the first frame the silt drifts upward (we are sinking) and the view pushes in slowly toward him.
+// '다시는' -> chip 1 (2013, AP) types on and a guideline drops in from above beside him. '몇 년 뒤' -> chip 2 and
 // time passing: the silt streaks upward, the line's tags run past, the water lifts a shade. '직업' -> a faceless, helmeted diver
 // silhouette forms around his light (top to bottom; the warm light stays in the chest, beating calmly), one gloved hand on the
 // line. '잠수사가' -> chip 3 lifts in, the helmet lamp comes on (a cold-white beam down the line), a shimmer runs over the rim.
@@ -60,9 +61,12 @@ function diverShape(c, o) {
   // near arm (hand on the line when reaching)
   part(() => capsule(c, na.sh[0], na.sh[1], na.el[0], na.el[1], 32, 28)); part(() => capsule(c, na.el[0], na.el[1], na.ha[0], na.ha[1], 28, 23));
   part(() => c.ellipse(na.ha[0] + 2, na.ha[1] - 2, 14, 17, .2, 0, 7));
-  // umbilical: from the back of the helmet up out of the frame
-  c.lineWidth = 11; c.lineCap = 'round'; c.beginPath(); c.moveTo(-28, -128);
-  c.bezierCurveTo(-74 + o.sway * 10, -190, -40 + o.sway * 30, -330, -96 + o.sway * 50, -520); c.bezierCurveTo(-130 + o.sway * 60, -640, -90, -800, -150, -1100); c.stroke();
+  // umbilical: from the back of the helmet up out of the frame (the part above the mask buffer is stroked by diver())
+  c.lineWidth = 11; c.lineCap = 'round'; umbilical(c, o); c.stroke();
+}
+function umbilical(c, o) {
+  c.beginPath(); c.moveTo(-28, -128);
+  c.bezierCurveTo(-74 + o.sway * 10, -190, -40 + o.sway * 30, -330, -96 + o.sway * 50, -520); c.bezierCurveTo(-130 + o.sway * 60, -640, -90, -800, -150, -1100);
 }
 // details painted inside the silhouette (clipped by 'source-atop')
 function diverDetails(c, o, rim, k) {
@@ -96,6 +100,16 @@ function diver(ctx, t, o) {
   rx.clearRect(0, 0, BW, BH); rx.drawImage(mb, 0, 0); rx.globalCompositeOperation = 'source-in'; rx.fillStyle = o.rim; rx.fillRect(0, 0, BW, BH);
   const X0 = o.x - AX, Y0 = o.y - AY;
   ctx.save();
+  // the umbilical above the mask buffer is stroked straight onto ctx, so the hose runs on up out of the frame instead of
+  // ending in a flat cut: its rim copies under the composite (clipped a few px into the buffer), its body colour over the
+  // composite but only above the buffer's first row (which also hides the rim copies' flat top edge at the seam)
+  const hoseOut = Y0 > -40;
+  const hose = (col, a, dx, dy, yb) => {
+    if (a <= 0) return; ctx.save(); ctx.beginPath(); ctx.rect(-100, -100, W + 200, yb + 100); ctx.clip();
+    ctx.translate(o.x + dx, o.y + dy); ctx.rotate(o.rot); ctx.scale(o.s, o.s);
+    ctx.globalAlpha = clamp(a); ctx.strokeStyle = col; ctx.lineWidth = 11; ctx.lineCap = 'round'; umbilical(ctx, o); ctx.stroke(); ctx.restore();
+  };
+  if (hoseOut) { hose(o.rim, o.rim2A * o.a, o.rim2[0], o.rim2[1], Y0 + 4); hose(o.rim, o.rimA * o.a, o.rimOff[0], o.rimOff[1], Y0 + 4); }
   if (o.halo > 0) {   // soft halo: the rim mask shrunk in steps and drawn back up (cheap blur, no ctx.filter)
     const [h1, h1x] = L.buf('finDivH1', BW / 4, BH / 4), [h2, h2x] = L.buf('finDivH2', BW / 8, BH / 8);
     h1x.clearRect(0, 0, BW / 4, BH / 4); h1x.drawImage(rbuf, 0, 0, BW / 4, BH / 4); h2x.clearRect(0, 0, BW / 8, BH / 8); h2x.drawImage(h1, 0, 0, BW / 8, BH / 8);
@@ -105,6 +119,7 @@ function diver(ctx, t, o) {
   ctx.globalAlpha = clamp(o.rim2A * o.a); ctx.drawImage(rbuf, X0 + o.rim2[0], Y0 + o.rim2[1]);
   ctx.globalAlpha = clamp(o.rimA * o.a); ctx.drawImage(rbuf, X0 + o.rimOff[0], Y0 + o.rimOff[1]);
   ctx.globalAlpha = clamp(o.a); ctx.drawImage(fbuf, X0, Y0);
+  ctx.globalAlpha = 1; if (hoseOut) hose(o.fill, o.a, 0, 0, Y0 + 1);
   ctx.restore();
 }
 // local -> screen for a diver drawn with (x, y, s, rot)
@@ -168,7 +183,10 @@ window.PK.scenes.after = function (ctx, t, d, info) {
   const pass = P(t, tMyeot - .15, tMyeot + .95, E.inOutQ);   // time passing (years)
   const rev = P(t, tJik - .08, tJik + .75, E.inOutQ);       // the diver forms around his light
   const lamp = P(t, tJam - .02, tJam + .12) * (.92 + .08 * FIN.nz(t * 5, 9));
-  const desc = t * 34 + pass * 900 + P(t, tDw - .3, d + .5) * 60;     // how far down the line we've come (world px)
+  // sinking speed (px/s): a slow drift that builds from the first frame, eases off once he is a diver again
+  const vSink = u => 34 + 180 * P(u, 0, tMyeot, E.inOutQ) * (1 - .8 * P(u, tJik, tDw + .4, E.inOutQ));
+  let sunk = 0; { const n = Math.max(0, Math.ceil(t * 30)), h = n ? t / n : 0; for (let k = 0; k < n; k++) sunk += vSink((k + .5) * h) * h; }
+  const desc = Math.min(0, t) * 34 + sunk + pass * 900 + P(t, tDw - .3, d + .5) * 60;     // how far down the line we've come (world px)
 
   // ---- water ----
   const top = PK.lerp2('#03121a', '#0f4d68', lite * .85 + .1 * pass), mid = PK.lerp2('#020a0f', '#073047', lite * .8 + .1 * pass), bot = PK.lerp2('#010203', '#03121a', lite);
@@ -178,9 +196,14 @@ window.PK.scenes.after = function (ctx, t, d, info) {
   const sh = .02 + .1 * lite + .05 * P(t, tJam, d);
   ctx.save(); ctx.translate(560, 120); ctx.scale(2.4, 1); glow(ctx, 0, 0, 520, '#6fd0ea', .1 + .2 * lite, 'lighter'); ctx.restore();
   PK.shafts(ctx, t, sh, 8);
-  // silt: drifts, then streaks upward while the years pass
-  ctx.save(); ctx.globalCompositeOperation = 'lighter';
-  const vel = 34 + 1500 * Math.sin(Math.PI * pass) * .55;
+  // ---- the diver's place (his light in whyme ended at (540, 926)) ----
+  const DV = FIN.DV, rest = P(t, 0, tJik, E.inOutQ);
+  const kd = .15 + .85 * P(t, 0, 1.2, E.inOutQ);            // drift builds up after the hand-off from whyme
+  const ox = lerp(540, DV.x, rest) + fb(t * .3, 181) * 6 * kd, oy = lerp(926, DV.y, rest) + fb(t * .27, 182) * 6 * kd + Math.sin(t * 1.1) * 3;
+  // silt: drifts upward from the start, then streaks while the years pass; the view pushes in on him (1 -> 1.25) until '직업'
+  const zc = lerp(1, 1.25, P(t, 0, tJik, E.inOutQ));
+  ctx.save(); ctx.translate(ox, oy); ctx.scale(zc, zc); ctx.translate(-ox, -oy); ctx.globalCompositeOperation = 'lighter';
+  const vel = vSink(t) + 1500 * Math.sin(Math.PI * pass) * .55;
   for (let i = 0; i < 110; i++) {
     const z = .35 + .65 * hi(i * 7 + 1), x = hi(i * 3 + 2) * (W + 80) - 40 + fb(t * .2 + i, 5) * 30;
     const y = ((hi(i * 5 + 3) * 1700 - desc * z) % 1700 + 1700) % 1700 + 120, ln = Math.max(2.2 * z, vel * z * .05);
@@ -188,12 +211,9 @@ window.PK.scenes.after = function (ctx, t, d, info) {
   }
   ctx.restore();
 
-  // ---- the diver's place (his light in whyme ended near (540, 926)) ----
-  const DV = FIN.DV, rest = P(t, 0, tJik, E.inOutQ);
-  const ox = lerp(540, DV.x, rest) + fb(t * .3, 181) * 6, oy = lerp(926, DV.y, rest) + fb(t * .27, 182) * 6 + Math.sin(t * 1.1) * 3;
   const o = { x: ox, y: oy, s: DV.s, rot: -.03 + .02 * Math.sin(t * .4), t };
-  // the guideline drops in from above on '돌아가지'
-  const [lnx] = dpt(o, 92, 0), drop = P(t, tDol - .1, tDol + .9, E.inOutC);
+  // the guideline drops in from above on '다시는'
+  const [lnx] = dpt(o, 92, 0), drop = P(t, tDa + .12, tDa + 1.1, E.inOutC);
   if (drop > 0) {
     const yEnd = lerp(-40, H + 40, drop);
     ctx.save(); ctx.strokeStyle = rgba('#cfe3ea', .55 + .2 * lite); ctx.lineWidth = 3.2; ctx.beginPath();
@@ -215,9 +235,9 @@ window.PK.scenes.after = function (ctx, t, d, info) {
   // exhaled bubbles once he breathes from the helmet
   const [ex, ey] = dpt(o, EXH[0], EXH[1]);
   if (rev > .6) { ctx.save(); ctx.beginPath(); ctx.rect(0, 712, W, H); ctx.clip(); exhale(ctx, t, [tJam + .55, tJam + 1.85, tJam + 3.1], ex, ey, .8 * P(rev, .6, 1)); ctx.restore(); }
-  // his light: the same warm heartbeat, now in the chest
+  // his light: the same warm heartbeat (whyme's size: souls s 2.6), growing a little with the push, then settling into the chest
   const [hx, hy] = dpt(o, 10 * rev, -4 * rev);
-  heart(ctx, t, hx, hy, 1 - .25 * rev, lerp(58, 64, rest), lerp(1.25, .95, rev));
+  heart(ctx, t, hx, hy, 1 - .25 * rev, lerp(58, 64, rest), lerp(2.08 * (1 + .12 * P(t, 0, tJik, E.inOutQ)), .95, E.inOutQ(rev)));
 
   // ---- chips (timeline), typed in order ----
   const Y = [520, 594, 668], T = [tDa + .02, tMyeot - .02, tJam - .04];
@@ -231,6 +251,7 @@ window.PK.scenes.after = function (ctx, t, d, info) {
   });
   // a soft top under the title and the quiet subtitle band
   { const g2 = ctx.createLinearGradient(0, 0, 0, 470); g2.addColorStop(0, 'rgba(1,3,5,.7)'); g2.addColorStop(1, 'rgba(1,3,5,0)'); ctx.fillStyle = g2; ctx.fillRect(0, 0, W, 470); }
-  FIN.subBand(ctx, .82, 1150);
+  // the subtitle band: legs, line and lamp beam fade out between y 1170 and 1250, nothing but dark behind the subtitle
+  FIN.subBand(ctx, .95, 1170, 1250);
 };
 })();

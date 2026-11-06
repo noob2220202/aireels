@@ -63,6 +63,7 @@ function arcs(ctx, t, tc, list, A, B, who, color) {
 function recv(tc, list, who, D) { let s = 0; for (const r of list) { if (r.w !== who) continue; const ta = r.te + (D - R0) / V; if (tc > ta) s += r.s * Math.exp(-(tc - ta) * 5); } return clamp(s * .55); }
 
 window.PK.scenes.name = function (ctx, t, d, info) {
+  if (PK.RV.hiddenInCut(t, d, info)) return;                      // the other side of a hard cut is on screen
   const HG = PK.HG, RV = PK.RV, { beat, souls } = PK, D = info.sc.data || {};
   const loud = RV._nameLoud || (RV._nameLoud = RV.env(RMS));
   const v0 = info.sc.voice_t - info.sc.t0, tc = t - v0, list = rings(loud);

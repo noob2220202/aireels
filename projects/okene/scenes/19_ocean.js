@@ -1,8 +1,8 @@
 // ocean (clip, BBC 2023 — Okene: "But today I found myself still in the ocean, and I know it's where I'm made to be."):
 // Match cut from "after": the same diver silhouette at the same place, but the water is now calm, shallow and sunlit —
 // a bright wavering surface overhead, daylight shafts, plankton, caustics dancing on the sand far below. His warm light
-// still beats calmly in the chest. 'still in the ocean' -> he lets go of the line and hovers free while the camera eases
-// back to show the open water around him; 'where I'm made to be' -> he lifts his head a little toward the light, his breath
+// still beats calmly in the chest. 'still in the ocean' -> he lets go of the line and hovers free while the camera pushes in
+// slowly and sinks with him (the surface, shafts, silt and sand rise past him); 'where I'm made to be' -> he lifts his head a little toward the light, his breath
 // rises in a slow column of bubbles that sparkle as they near the surface, the shafts brighten. The attribution card (with a
 // small live waveform) stays up while the voice plays; the frame stays calm and uncluttered for the real voice.
 (function () {
@@ -37,10 +37,10 @@ window.PK.scenes.ocean = function (ctx, t, d, info) {
   const free = P(t, s1 + .5, s1 + 1.6, E.inOutQ);              // lets go of the line
   const up = P(t, s2 - .1, s2 + 2.2, E.inOutQ);                // lifts his head toward the light
   const glowUp = P(t, s2, v1, E.inOutQ);
-  // camera: from the after scene's framing, easing back to show the open water
-  const z = lerp(1, .95, P(t, s1, v1 + .3, E.inOutQ));
+  // camera: from the after scene's framing, a slow push in while it sinks with him (the world rises ~40 px past him)
+  const zp = P(t, 0, d, E.inOutQ), z = lerp(1, 1.1, zp), rise = -40 * zp;
   const dr = { x: fb(t * .25, 191) * 7, y: fb(t * .22, 192) * 6 };
-  const SX = x => 540 + (x - 540) * z + dr.x, SY = y => 892 + (y - 892) * z + dr.y;
+  const SX = x => 540 + (x - 540) * z + dr.x, DY = y => 892 + (y - 892) * z + dr.y, SY = y => DY(y) + rise;   // SY: the world, DY: the diver
 
   // ---- water: sunlit, shallow ----
   const g = ctx.createLinearGradient(0, 0, 0, H);
@@ -79,15 +79,15 @@ window.PK.scenes.ocean = function (ctx, t, d, info) {
     }
     ctx.restore(); }
   // plankton / motes in the light
-  L.motes(ctx, t, { n: 80, color: '#e6fbff', a: .3, size: 2, speed: 7, seed: 93, area: [0, SURF + 60, W, 900] });
+  ctx.save(); ctx.translate(0, rise); L.motes(ctx, t, { n: 80, color: '#e6fbff', a: .3, size: 2, speed: 7, seed: 93, area: [0, SURF + 60, W, 900] }); ctx.restore();
 
   // ---- the diver: same framing as the end of "after" ----
   const DV = FIN.DV;
-  const o = { x: SX(DV.x) + Math.sin(t * .6) * 4, y: SY(DV.y) - 10 * up + Math.sin(t * .9) * 5, s: DV.s * z, rot: lerp(-.03, -.13, up) + .015 * Math.sin(t * .5), t };
+  const o = { x: SX(DV.x) + Math.sin(t * .6) * 4, y: DY(DV.y) - 10 * up + Math.sin(t * .9) * 5, s: DV.s * z, rot: lerp(-.03, -.13, up) + .015 * Math.sin(t * .5), t };
   // the line he lets go of (it drifts out of the frame)
   const lineA = 1 - P(t, s1 + .8, s1 + 2.4, E.inOutQ);
   if (lineA > 0) {
-    const [lnx] = FIN.dpt({ x: SX(DV.x), y: SY(DV.y), s: DV.s * z, rot: -.03 }, 92, 0), lx = lnx + 60 * (1 - lineA) * (1 - lineA);
+    const [lnx] = FIN.dpt({ x: SX(DV.x), y: DY(DV.y), s: DV.s * z, rot: -.03 }, 92, 0), lx = lnx + 60 * (1 - lineA) * (1 - lineA);
     ctx.save(); ctx.globalAlpha = lineA; ctx.strokeStyle = 'rgba(214,236,242,.6)'; ctx.lineWidth = 3; ctx.beginPath();
     for (let y = -20; y <= H; y += 40) { const x = lx + Math.sin(y * .004 + t * .6) * 3; y === -20 ? ctx.moveTo(x, y) : ctx.lineTo(x, y); } ctx.stroke(); ctx.restore();
   }

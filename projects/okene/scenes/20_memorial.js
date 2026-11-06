@@ -1,9 +1,10 @@
 // memorial (≈106.94-112.92): "재스콘 4호 선원 열한 분의 명복을 빕니다." (no subtitles here: the scene carries its own text)
-// Dawn at sea, seen at the waterline: the sky above slowly paling toward a warm horizon, the water below. Eleven small warm
-// places (the same row spacing as in "eleven"; the empty one still a dotted outline) rise slowly, unhurried and not in order,
-// from the dark below. '재스콘' -> they begin to rise; '선원' -> 'In memoriam · 재스콘 4호 선원 11명 · 2013.5.26' fades in
-// below; '열한 분의' -> the first ones reach the surface, each laying a soft ring on the water; '명복을' (bell) -> the last
-// settles, the row is complete on the surface, '고인들의 명복을 빕니다' comes up and the horizon warms. Then stillness: the
+// Dawn at sea, seen at the waterline: the sky above slowly paling toward a warm horizon, the water below. Eleven warm lights
+// (the same row spacing as in "eleven"; all eleven equally warm, the one never found marked only by a faint dotted halo around
+// his light) rise slowly, unhurried and not in order, from the dark below. '재스콘' -> they begin to rise and
+// 'In memoriam · 재스콘 4호 선원 11명 · 2013.5.26' fades in below (the scene carries the dedication for sound-off viewers);
+// '열한 분의' -> the first ones reach the surface, each laying a soft ring on the water, and '고인들의 명복을 빕니다' comes up;
+// '명복을' (bell) -> the last settles, the row is complete on the surface and the horizon warms. Then stillness: the
 // lights float with the swell while the view drifts very slowly closer. No names (not reliably published).
 (function () {
 'use strict';
@@ -72,13 +73,10 @@ window.PK.scenes.memorial = function (ctx, t, d, info) {
     if (ring > 0 && ring < 2.6) {          // a soft ring on the water as it arrives
       const q = ring / 2.6; ctx.save(); ctx.strokeStyle = rgba('#ffd9a8', .32 * (1 - q) * (1 - q)); ctx.lineWidth = 1.6; ctx.beginPath(); ctx.ellipse(x, sy + 1, 14 + E.outC(q) * 120, 2.5 + E.outC(q) * 9, 0, 0, 7); ctx.stroke(); ctx.restore();
     }
-    if (i === ROW.empty) {
-      FIN.crewRing(ctx, t, x, y, lerp(.5, .9, u), 1.2);
-      if (settled > 0) glow(ctx, x, y, 60, '#ffb347', .07 * settled);
-      continue;
-    }
+    // every place is the same warm light; the one never found keeps only a faint dotted halo around his
     const a = lerp(.4, 1, u) * (1 + .05 * Math.sin(t * 1.1 + i * 1.7) + .03 * nz(t * 2, 60 + i));
-    FIN.crewLight(ctx, x, y, a, lerp(.78, .9, u));
+    FIN.crewLight(ctx, x, y, a, lerp(.95, 1.1, u));
+    if (i === ROW.empty) FIN.crewRing(ctx, t, x, y, .35 * lerp(.6, 1, u), 1.75);
     // on the surface: warm light laid on the water, above and below
     if (settled > 0) {
       ctx.save(); ctx.translate(x, sy + 3); ctx.scale(1, .22); glow(ctx, 0, 0, 90, '#ffb347', .2 * settled); ctx.restore();
@@ -92,15 +90,16 @@ window.PK.scenes.memorial = function (ctx, t, d, info) {
   // keep the lower frame dark
   { const g = ctx.createLinearGradient(0, 1100, 0, 1300); g.addColorStop(0, 'rgba(1,2,3,0)'); g.addColorStop(1, 'rgba(1,2,3,.85)'); ctx.fillStyle = g; ctx.fillRect(0, 1100, W, 200); ctx.fillStyle = 'rgba(1,2,3,.85)'; ctx.fillRect(0, 1300, W, H - 1300); }
 
-  // ---- text ----
-  const line = D.line || '', rip = D.rip || '';
-  const am = P(t, tS - .1, tS + .8, E.outQ);
+  // ---- text (subtitles are off here, so the dedication is carried from the first word) ----
+  const line = D.line || '', rip = D.rip || '', v0 = info.sc.voice_t - info.sc.t0;
+  const am = P(t, v0 - .05, v0 + .75, E.outQ);
   if (line && am > 0) {
-    const w = measure(ctx, line, 28, FONT.sub, 700, 2);
-    ctx.save(); ctx.globalAlpha = am * .55; ctx.fillStyle = '#9fb6c4'; ctx.fillRect(540 - w / 2 - 70, MEMY, 50, 1.5); ctx.fillRect(540 + w / 2 + 20, MEMY, 50, 1.5); ctx.restore();
-    text(ctx, line, 540, MEMY + 1, { size: 28, weight: 700, color: '#b3c6d2', alpha: am * .95, ls: 2 });
+    let ls = 38; while (ls > 30 && measure(ctx, line, ls, FONT.sub, 700, 2) > 900) ls--;
+    const w = measure(ctx, line, ls, FONT.sub, 700, 2), bl = Math.max(0, Math.min(50, (1040 - w) / 2 - 24));
+    if (bl > 8) { ctx.save(); ctx.globalAlpha = am * .6; ctx.fillStyle = '#b4c8d4'; ctx.fillRect(540 - w / 2 - 20 - bl, MEMY, bl, 1.5); ctx.fillRect(540 + w / 2 + 20, MEMY, bl, 1.5); ctx.restore(); }
+    text(ctx, line, 540, MEMY + 1, { size: ls, weight: 700, color: '#d2dee6', alpha: am, ls: 2, shadow: { color: 'rgba(0,0,0,.55)', blur: 10, y: 2 } });
   }
-  const ar = P(t, tM - .05, tM + 1.2, E.inOutQ);
-  if (rip && ar > 0) text(ctx, rip, 540, RIPY + 10 * (1 - ar), { size: 50, family: FONT.serif, weight: 900, color: '#f3e8d8', alpha: ar, ls: lerp(10, 4, ar), shadow: { color: 'rgba(0,0,0,.6)', blur: 18, y: 4 } });
+  const ar = P(t, tY - .05, tY + 1.1, E.inOutQ);
+  if (rip && ar > 0) text(ctx, rip, 540, RIPY + 10 * (1 - ar), { size: 60, family: FONT.serif, weight: 900, color: '#f3e8d8', alpha: ar, ls: lerp(10, 4, ar), shadow: { color: 'rgba(0,0,0,.6)', blur: 18, y: 4 } });
 };
 })();

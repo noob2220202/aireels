@@ -34,8 +34,10 @@ window.PK.scenes.signal = function (ctx, t, d, info) {
 
   const rings = prev.map(tk => ({ x: S.x, y: S.y, t0: tk, v: 1050, life: 1.9, col: '#dff3ff', a: .8, band: 34, wa: .8 }))
     .concat(K.map(tk => ({ x: C.x + 6, y: C.y, t0: tk, v: 430, life: 3.4, col: '#ffd39a', a: 1, band: 30, wa: .7, dustA: .7 })));
-  // 'for him to know I'm still alive': each heartbeat (100 bpm from here on) sends a soft warm pulse out through the hull
-  for (let k = Math.ceil((s2 - .3) / .6); k * .6 < d - 1.05; k++) rings.push({ x: REST.x, y: REST.y, t0: k * .6, v: 380, life: 1.4, col: '#ffb347', a: .34, band: 20, wa: .2, dust: 0 });
+  // 'for him to know I'm still alive': each heartbeat (100 bpm from here on) sends a soft warm pulse out through the hull,
+  // far enough to reach the lamp
+  const HB = [], HV = 600; for (let k = Math.ceil((s2 - .9) / .6); k * .6 < d - 1.05; k++) HB.push(k * .6);
+  HB.forEach(tk => rings.push({ x: REST.x, y: REST.y, t0: tk, v: HV, life: 1.6, col: '#ffb347', a: .34, band: 20, wa: .2, dust: 0 }));
 
   // his light + the cartridge: lift, three strikes, back down onto the mattresses
   const ready = P(t, .02, K[0] - .24, E.inOutQ) * (1 - P(t, K[2] + .35, K[2] + 1.25, E.inOutQ));
@@ -48,9 +50,10 @@ window.PK.scenes.signal = function (ctx, t, d, info) {
   const bpm = lerp(124, 100, P(t, K[2], s2, E.inOutQ)), bt = beat(t, bpm);
   const I = .92 + .08 * nz(t * 6, 32) + .25 * Math.min(1, hit) + .2 * alive * bt;
 
-  // camera: close on the wall -> pull back with the rings to the lamp -> settle into the hand scene's cabin framing
+  // camera: close on the wall -> pull back with the rings to hold his light and the lamp together -> settle into the hand
+  // scene's cabin framing
   const pull = P(t, K[2] + .12, K[2] + 1.25, E.inOutC), settle = P(t, d - 1.15, d - .02, E.inOutQ);
-  let cx = lerp(880, 975, pull), cy = lerp(712, 768, pull), z = lerp(lerp(1.8, 1.9, P(t, 0, K[2], E.inOutQ)), lerp(.88, .94, P(t, K[2] + 1.25, d - 1.15)), pull);
+  let cx = lerp(880, 1090, pull), cy = lerp(712, 728, pull), z = lerp(lerp(1.8, 1.9, P(t, 0, K[2], E.inOutQ)), lerp(1.02, 1.08, P(t, K[2] + 1.25, d - 1.15)), pull);
   cx = lerp(cx, 590, settle); cy = lerp(cy, 790, settle); z = lerp(z, 1.261, settle);
   const dr = { x: fb(t * .35, 311) * 12 * (1 - settle), y: fb(t * .3, 312) * 12 * (1 - settle), r: fb(t * .25, 313) * .005 * (1 - settle) };
   const [jx, jy, jr] = KN.jolt(t, K.concat(prev), 6, 9);
@@ -58,9 +61,11 @@ window.PK.scenes.signal = function (ctx, t, d, info) {
   ctx.save();
   ctx.translate(540 + dr.x + jx, 860 + dr.y + jy); ctx.rotate(dr.r + jr); ctx.scale(z, z); ctx.translate(-cx, -cy);
   KN.hull(ctx, t, {});
-  // the lamp out in the sea: it glimmers as the rings reach it, then holds
-  const arr = K.map(tk => tk + Math.hypot(LMP.x - C.x, LMP.y - C.y) / 430);
-  const lampI = clamp(P(t, arr[0] - .5, arr[0] + .4) * .4 + arr.reduce((a, ta) => a + (t > ta ? .45 * Math.exp(-(t - ta) * 2.2) : 0), 0) + .3 * alive) * (.85 + .15 * nz(t * 4, 33));
+  // the lamp out in the sea: it comes up as the first ring reaches it and swells each time one of his rings arrives
+  // (the three strikes, then the softer heartbeat pulses), then holds
+  const arr = K.map(tk => tk + Math.hypot(LMP.x - C.x, LMP.y - C.y) / 430), arrH = HB.map(tk => tk + Math.hypot(LMP.x - REST.x, LMP.y - REST.y) / HV);
+  const swell = arr.reduce((a, ta) => a + (t > ta ? Math.exp(-(t - ta) * 2.6) : 0), 0) + .6 * arrH.reduce((a, ta) => a + (t > ta ? Math.exp(-(t - ta) * 4) : 0), 0), sw = Math.min(1, swell);
+  const lampI = clamp(P(t, arr[0] - .5, arr[0] + .4) * .5 + .3 * alive + .3 * sw) * (.88 + .12 * nz(t * 4, 33));
   const warm = .5 + .25 * bt * (.4 + .6 * alive) + .15 * Math.min(1, hit);
   KN.cabin(ctx, t, { warm, lx, ly, rings });
   KN.rings(ctx, t, rings);
@@ -70,10 +75,11 @@ window.PK.scenes.signal = function (ctx, t, d, info) {
     K.forEach(tk => { const u = t - tk; if (u < 0 || u > .7) return; const e = Math.exp(-u * 9); glow(q, C.x, C.y, 150, '#ffcf8a', .55 * e); glow(q, C.x, C.y, 40, '#fff6e6', .9 * e); });
     prev.forEach(tk => { const u = t - tk; if (u < 0 || u > .8) return; glow(q, S.x + 6, S.y - 6, 95, '#bfe6ff', .35 * Math.exp(-u * 7)); });
     if (lampI > 0) {
-      const a0 = Math.PI - .55 + .2 * Math.sin(t * .45), sp = .24, len = 560;   // faint cone, searching down along the hull
-      const g = q.createRadialGradient(LMP.x, LMP.y, 0, LMP.x, LMP.y, len); g.addColorStop(0, rgba('#e8f6ff', .3 * lampI)); g.addColorStop(.4, rgba('#9fd8ff', .08 * lampI)); g.addColorStop(1, 'rgba(120,200,255,0)');
+      const a0 = Math.PI - .55 + .12 * Math.sin(t * .45), sp = .26, len = 470;  // cold cone, pointed down at the hull
+      const g = q.createRadialGradient(LMP.x, LMP.y, 0, LMP.x, LMP.y, len); g.addColorStop(0, rgba('#e8f6ff', .42 * lampI)); g.addColorStop(.45, rgba('#9fd8ff', .12 * lampI)); g.addColorStop(1, 'rgba(120,200,255,0)');
       q.fillStyle = g; q.beginPath(); q.moveTo(LMP.x, LMP.y); q.arc(LMP.x, LMP.y, len, a0 - sp, a0 + sp); q.closePath(); q.fill();
-      glow(q, LMP.x, LMP.y, 170, '#9fd8ff', .3 * lampI); glow(q, LMP.x, LMP.y, 34, '#ffffff', .85 * lampI);
+      glow(q, LMP.x + Math.cos(a0) * 440, LMP.y + Math.sin(a0) * 440, 110, '#9fd8ff', .1 * lampI);           // where it lands on the plating
+      glow(q, LMP.x, LMP.y, 300 * (1 + .45 * sw), '#9fd8ff', .3 * lampI * (1 + sw)); glow(q, LMP.x, LMP.y, 60 * (1 + .3 * sw), '#ffffff', .85 * lampI);
     }
   });
   // silt drifting in the lamp's light
@@ -83,7 +89,15 @@ window.PK.scenes.signal = function (ctx, t, d, info) {
     ctx.restore(); }
   // the diver's umbilical, rising from the lamp into the dark
   if (lampI > .02) { const ug = ctx.createLinearGradient(0, LMP.y, 0, LMP.y - 520); ug.addColorStop(0, rgba('#9fc6d8', .35 * lampI)); ug.addColorStop(1, 'rgba(159,198,216,0)');
-    ctx.strokeStyle = ug; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(LMP.x + 6, LMP.y - 10); ctx.bezierCurveTo(LMP.x + 40, LMP.y - 180, LMP.x - 20 + 20 * Math.sin(t * .5), LMP.y - 330, LMP.x + 30, LMP.y - 560); ctx.stroke(); }
+    ctx.strokeStyle = ug; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(LMP.x + 44, LMP.y + 10); ctx.bezierCurveTo(LMP.x + 70, LMP.y - 170, LMP.x - 10 + 20 * Math.sin(t * .5), LMP.y - 330, LMP.x + 40, LMP.y - 560); ctx.stroke(); }
+  // a faint, faceless helmeted silhouette behind the lamp, seen only as far as the lamp and his rings light it
+  const RV = PK.RV, hA = .55 * clamp(lampI * 1.2);
+  if (RV && RV.helmet && hA > .02) {
+    const hs = .62; ctx.save(); ctx.translate(LMP.x + 33 * hs, LMP.y + 67 * hs); ctx.scale(-1, 1);
+    RV.helmet(ctx, 0, 0, hs, { a: hA, rim: '#ffb36b', rimA: .2 * clamp(lampI), cold: .2, t });
+    ctx.restore();
+    glow(ctx, LMP.x, LMP.y, 22, '#ffffff', .8 * lampI);
+  }
   // his light holding the cartridge
   ctx.save(); ctx.globalAlpha = 1 - settle; cartridge(ctx, lx + Math.cos(ang) * 6, ly + Math.sin(ang) * 6, ang, I, LEN); ctx.restore();
   souls(ctx, t, [{ x: lx, y: ly, a: 1, s: (1.75 + .3 * Math.min(1, hit) + .25 * alive * bt) * lerp(1, 1.4, pull * (1 - settle)) }], { bpm });
@@ -91,7 +105,8 @@ window.PK.scenes.signal = function (ctx, t, d, info) {
   ctx.restore();
 
   KN.iris(ctx, lerp(lerp(.3, .22, pull), .32, settle), .4 * bt, lerp(LS.x, 560, settle), lerp(LS.y - 60, 860, settle));
-  KN.subBand(ctx);
+  KN.topMask(ctx, .88);            // the keel / double-bottom grid stays out from behind the title
+  KN.subBand(ctx, .95, 1250, 1110);  // and the hull side plating (it flares with every ring) out of the subtitle band
   sourceCard(ctx, D.who || '', D.where || '', P(t, .03, .28, E.outQ) * (1 - P(t, d - .3, d - .02, E.inQ)));
 };
 })();

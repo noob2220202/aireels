@@ -21,7 +21,7 @@
   "l2": "60시간을 버틴 요리사"
  },
  "meta": {
-  "warning": "※ 실제 구조 무전·생존자 음성 포함"
+  "warning": "※ 실제 구조 무전·생존자·잠수부 음성 포함"
  },
  "scenes": [
   {
@@ -61,7 +61,7 @@
     }
    ],
    "data": {
-    "warning": "※ 실제 구조 무전·생존자 음성 포함"
+    "warning": "※ 실제 구조 무전·생존자·잠수부 음성 포함"
    }
   },
   {
@@ -88,12 +88,18 @@
     "subs": [
      {
       "src0": 1367.45,
-      "src1": 1370.8,
-      "text": "그가 손을 뻗어 제 손을 잡은 순간이",
-      "en": "The exact moment when he stuck his hand out to grab my hand"
+      "src1": 1369.48,
+      "text": "그가 손을 뻗어",
+      "en": "The exact moment when he stuck his hand out"
      },
      {
-      "src0": 1371.3,
+      "src0": 1369.48,
+      "src1": 1370.9,
+      "text": "제 손을 잡은 순간이",
+      "en": "to grab my hand"
+     },
+     {
+      "src0": 1370.9,
       "src1": 1374.92,
       "text": "제 경력에서 가장 무서운 순간이었어요",
       "en": "was the most terrifying moment of my career."
@@ -147,7 +153,7 @@
    "data": {
     "date": "2013.5.26",
     "place": "에스크라보스 앞바다 · 해안에서 약 30km",
-    "note": "셰브런 원유 선적 부이 · 유조선 계류 작업"
+    "note": "셰브런 원유 선적 부이 · 유조선 장력 예인 작업"
    }
   },
   {
@@ -357,9 +363,15 @@
     "subs": [
      {
       "src0": 1283.0,
+      "src1": 1285.55,
+      "text": "공기주머니 속 산소가",
+      "en": "The oxygen in the air pockets,"
+     },
+     {
+      "src0": 1286.85,
       "src1": 1288.8,
-      "text": "공기주머니 속 산소가 거의 다 떨어졌어요",
-      "en": "The oxygen in the air pockets, it was almost gone"
+      "text": "거의 다 떨어졌어요",
+      "en": "it was almost gone"
      },
      {
       "src0": 1290.3,
@@ -570,7 +582,7 @@
     }
    ],
    "data": {
-    "who": "구조팀 무전 (수면)",
+    "who": "구조팀 무전",
     "where": "DCN Diving 헬멧 카메라 영상 속 무전 (2013)"
    }
   },
@@ -698,7 +710,7 @@
     }
    ],
    "data": {
-    "gauge": "수심 30m ≈ 약 4기압",
+    "gauge": "수심 30m · 약 4기압",
     "dur": "약 60시간 (보도에 따라 2~3일)"
    }
   },
@@ -749,15 +761,15 @@
      {
       "t0": 1.6,
       "t1": 3.2,
-      "text": "'왜 저만입니까?",
-      "en": "'Why only me?",
+      "text": "왜 저만입니까?",
+      "en": "Why only me?",
       "who": "해리슨 오케네"
      },
      {
       "t0": 3.2,
       "t1": 5.8,
-      "text": "왜 제 동료들은 죽어야 했습니까?'",
-      "en": "Why did my colleagues have to die?'",
+      "text": "왜 제 동료들은 죽어야 했습니까?",
+      "en": "Why did my colleagues have to die?",
       "who": "해리슨 오케네"
      }
     ]
@@ -846,7 +858,7 @@
    "max_pause": 1.0,
    "trans": {
     "type": "dip",
-    "dur": 0.8
+    "dur": 0.6
    },
    "sfx": [
     {

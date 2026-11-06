@@ -1,10 +1,11 @@
 // whyme (text hold, ≈89.86-96.14; the subtitles type his words with the label '해리슨 오케네'):
 // '매주 (하나님께) 묻습니다.' / ''왜 저만입니까?' / '왜 제 동료들은 죽어야 했습니까?''
 // Picks up eleven's row of places exactly where it ended; the hull dissolves, and the row slowly recedes to the horizon of a
-// still, dark sea at night: eleven faint warm places far away (the empty one still a dotted outline). In the foreground one
-// small warm light (him), alive: a calm heartbeat, its reflection trembling on the water. '왜 저만입니까?' -> one stronger beat,
-// a ring spreads from him across the water. '왜 제 동료들은…' -> the camera lifts a little toward the horizon; a second, wider
-// ring travels out to the far row and the places glimmer as it reaches them. A document card (badge + AP source) sits right
+// still, dark sea at night: eleven warm places far away, all still lit (the one never found keeps its dotted outline around
+// a warm core). In the foreground one warm light (him), alive: a calm heartbeat, its reflection trembling on the water; the
+// camera keeps pushing in slowly. '왜 저만입니까?' -> one stronger beat, a ring spreads from him across the water. '왜 제
+// 동료들은…' -> the camera lifts a little toward the horizon; a second, wider ring travels out to the far row and the places
+// glimmer as it reaches them. His light ends at (540, 926), where "after" picks it up. A document card (badge + AP source) sits right
 // above the subtitle lines, like the previous reel's transcript card. The calm piano coda starts here.
 (function () {
 'use strict';
@@ -75,10 +76,10 @@ window.PK.scenes.whyme = function (ctx, t, d, info) {
   const seaK = P(t, .1, 1.5, E.inOutQ);
   const bpm = 58, bt = PK.beat(t, bpm);
   const swell = Math.exp(-Math.pow((t - tB - .25) / .35, 2));   // one stronger beat on '왜 저만입니까?'
-  // camera: slow push toward him, then a slight lift toward the horizon on the last line
+  // camera: slow push toward him, then a slight lift toward the horizon on the last line (ends with his light at (540, 926))
   const lift = P(t, tC - .2, tC + 2.2, E.inOutQ);
-  const z = lerp(1, 1.05, P(t, .2, d + .3, E.inOutQ)), cx = 540, cy = lerp(850, 812, lift);
-  const dk = P(t, 0, 1.2, E.inOutQ);
+  const z = lerp(1, 1.22, P(t, .2, d + .3, E.inOutQ)), cx = 540, cy = lerp(850, 822, lift);
+  const dk = P(t, 0, 1.2, E.inOutQ) * (1 - .85 * P(t, d - 1.5, d - .1, E.inOutQ));   // drift calms for the hand-off to after
   const dr = { x: fb(t * .28, 171) * 8 * dk, y: fb(t * .24, 172) * 6 * dk, r: fb(t * .2, 173) * .0025 * dk };
 
   ctx.fillStyle = '#010203'; ctx.fillRect(0, 0, W, H);
@@ -96,32 +97,35 @@ window.PK.scenes.whyme = function (ctx, t, d, info) {
   const lA = P(t, .3, 1, E.outQ);
   ctx.save(); ctx.globalCompositeOperation = 'lighter';
   for (let k = 0; k < 14; k++) {
-    const yy = wy + 4 + k * 11, ww = (26 - k * 1.4) * (.55 + .45 * Math.sin(t * 2 + k * 1.3));
-    ctx.fillStyle = rgba('#ffb347', (.22 + .1 * bt + .15 * swell) * (1 - k / 14) * lA * seaK); ctx.fillRect(LX - ww + Math.sin(t * 1.4 + k * .8) * 4, yy, ww * 2, 2.4);
+    const yy = wy + 6 + k * 12, ww = (42 - k * 2.2) * (.55 + .45 * Math.sin(t * 2 + k * 1.3));
+    ctx.fillStyle = rgba('#ffb347', (.22 + .1 * bt + .15 * swell) * (1 - k / 14) * lA * seaK); ctx.fillRect(LX - ww + Math.sin(t * 1.4 + k * .8) * 6, yy, ww * 2, 3.4);
   }
   ctx.restore();
   ctx.restore();
 
   // ---- the row: from eleven's end positions to the far horizon (screen space mapped through this scene's camera) ----
+  // all eleven stay warm and lit as they recede (no outlines that could read as switched-off bulbs)
   const toS = (x, y) => [540 + dr.x + (x - cx) * z, 850 + dr.y + (y - cy) * z];
+  const ls0 = (END.ls || .84) * END.z;
   for (let i = 0; i < ROW.n; i++) {
     const x0 = 540 + (ROW.x(i) - END.cx) * END.z, y0 = 850 + (ROW.y - END.cy) * END.z;          // eleven's last frame (screen)
     const [x1, y1] = toS(540 + (i - 5) * 50, HZ - 8);
     const e = rec, x = lerp(x0, x1, e), y = lerp(y0, y1, E.inOutQ(e)) + Math.sin(t * .6 + i * 1.3) * 2.2 * (1 - e);
-    const s = lerp(.84 * END.z, .36, e);
+    const s = lerp(ls0, .52, e), sh = 1 + .04 * Math.sin(t * 1.05 + i * 1.7);
     const gl = reach * Math.exp(-Math.pow((i - 5) / 3.5, 2) * .2) * (.6 + .4 * Math.sin(t * 6 + i));
-    if (i === ROW.empty) { FIN.crewRing(ctx, t, x, y, lerp(.92, .6, e) + .3 * gl, lerp(1.25 * END.z, .74, e)); continue; }
-    FIN.crewLight(ctx, x, y, lerp(.95, .4, e) + .35 * gl, s);
-    if (e > .3) { ctx.save(); ctx.globalAlpha = .32 * P(e, .3, 1) + .3 * gl; ctx.strokeStyle = '#ffd9a8'; ctx.lineWidth = 1.3; ctx.beginPath(); ctx.arc(x, y, 11, 0, 7); ctx.stroke(); ctx.restore(); }
-    // tiny reflection under each far place
-    if (e > .5) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = rgba('#ffb347', .12 * P(e, .5, 1)); ctx.fillRect(x - 5, y + 12, 10, 1.6); ctx.fillRect(x - 3, y + 17, 6, 1.4); ctx.restore(); }
+    if (i === ROW.empty) {        // the one never found: his dotted outline around a warm core of its own
+      FIN.crewRing(ctx, t, x, y, lerp(.92, .7, e) + .3 * gl, lerp(1.25 * END.z, 1, e));
+      FIN.crewLight(ctx, x, y, (lerp(.45, .6, e) + .3 * gl) * sh, lerp(.8 * ls0, .46, e));
+    } else FIN.crewLight(ctx, x, y, (lerp(.95, .75, e) + .35 * gl) * sh, s);
+    // tiny warm reflection under each far place
+    if (e > .5) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = rgba('#ffb347', .16 * P(e, .5, 1)); ctx.fillRect(x - 7, y + 15, 14, 2); ctx.fillRect(x - 4, y + 21, 8, 1.6); ctx.restore(); }
   }
 
-  // ---- him: one small warm light, alive ----
+  // ---- him: one warm light, alive (size handed on to "after": souls s 2.6 at (540, 926)) ----
   const [sx, sy] = toS(LX, LY + Math.sin(t * .9) * 2.5);
   if (lA > 0) {
-    glow(ctx, sx, sy, 380 * (1 + .1 * bt), '#ff9a3c', (.09 + .05 * bt + .08 * swell) * lA);
-    PK.souls(ctx, t, [{ x: sx, y: sy, a: lA, s: 1.6 + .4 * swell }], { bpm });
+    glow(ctx, sx, sy, 500 * (1 + .1 * bt), '#ff9a3c', (.1 + .05 * bt + .08 * swell) * lA);
+    PK.souls(ctx, t, [{ x: sx, y: sy, a: lA, s: 2.6 + .6 * swell }], { bpm });
   }
 
   // ---- quiet frame + document card ----

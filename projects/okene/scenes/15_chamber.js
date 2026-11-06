@@ -1,7 +1,7 @@
 // chamber: "곧장 올라오면 위험했기에, 그는 감압 챔버에서 약 60시간을 더 보내야 했습니다."
 // Calmer, a clean side-view diagram (the audio un-muffles here): the sea column from the surface down to the seabed, the
 // overturned hull lying on it, the diving bell hanging on its wire from the support vessel's moonpool, and on deck above it
-// the decompression chamber. A pressure gauge (HUD, lower left) reads '수심 30m ≈ 약 4기압'.
+// the decompression chamber. A pressure gauge (HUD, lower left) with its label from data.gauge.
 // '곧장 올라오면' -> a dashed arrow shoots from his warm light straight up to the surface; '위험했기에' -> a red X stamps on
 // it, the arrow turns red, the gauge needle trembles in its red zone. '그는' -> a small helmet lamp leads his light to the
 // bell ('잠수종'); '감압' -> the bell rises up its wire, the camera following; '챔버에서' -> '감압 챔버' appears and the bell
@@ -97,19 +97,20 @@ function vessel(ctx, t, o) {
   ctx.strokeStyle = 'rgba(20,28,32,.8)'; ctx.lineWidth = 3; for (const dx of [-CH.hl + 6, CH.hl - 6]) { ctx.beginPath(); ctx.moveTo(CH.x + dx, CH.y - CH.r + 2); ctx.lineTo(CH.x + dx, CH.y + CH.r - 2); ctx.stroke(); }
   ctx.restore();
 }
-// closed diving bell (side view). warm: its viewports / hatch lit by the light inside
+// closed diving bell (side view): the same dome-over-skirt silhouette as in home (RV kit), here in lit grey metal.
+// Scaled so its crown + padeye stay BELL_R + 6 above the centre (it still mates flush under the trunk).
+// warm: its bottom hatch lit by the light inside
 function bell(ctx, x, y, warm, hot) {
-  ctx.save(); ctx.translate(x, y);
-  ctx.fillStyle = '#1a2328'; ctx.fillRect(-BELL_R - 7, -8, 7, 36); ctx.fillRect(BELL_R, -8, 7, 36);           // frame / ballast
-  ctx.fillRect(-BELL_R - 9, 26, BELL_R * 2 + 18, 6);
-  const bg = ctx.createRadialGradient(-10, -12, 4, 0, 0, BELL_R + 4); bg.addColorStop(0, '#8d9ca3'); bg.addColorStop(.5, '#4b5960'); bg.addColorStop(1, '#1b2328');
-  ctx.fillStyle = bg; ctx.beginPath(); ctx.arc(0, 0, BELL_R, 0, 7); ctx.fill();
-  ctx.strokeStyle = rgba('#e8f6ff', .45 + .4 * hot); ctx.lineWidth = 2; ctx.stroke();
-  ctx.fillStyle = '#2a353c'; ctx.fillRect(-8, -BELL_R - 6, 16, 8);                                          // padeye
-  ctx.fillStyle = '#0b1013'; ctx.fillRect(-11, BELL_R - 4, 22, 9);                                            // bottom hatch
-  ctx.fillStyle = rgba('#ffd9a0', .15 + .75 * warm); ctx.fillRect(-9, BELL_R - 2, 18, 5);
-  ctx.fillStyle = '#05080a'; ctx.beginPath(); ctx.arc(10, -6, 8, 0, 7); ctx.fill(); ctx.fillStyle = rgba('#ffd9a0', .1 + .8 * warm); ctx.beginPath(); ctx.arc(10, -6, 6, 0, 7); ctx.fill();   // one porthole
-  ctx.strokeStyle = 'rgba(20,28,32,.7)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-BELL_R, 8); ctx.lineTo(BELL_R, 8); ctx.stroke();
+  const k = (BELL_R + 6) / 44, p = PK.RV.bellPath();
+  ctx.save(); ctx.translate(x, y); ctx.scale(k, k);
+  const bg = ctx.createRadialGradient(-12, -18, 4, 0, -4, 46); bg.addColorStop(0, '#8d9ca3'); bg.addColorStop(.5, '#4b5960'); bg.addColorStop(1, '#1b2328');
+  ctx.fillStyle = bg; ctx.fill(p);
+  ctx.strokeStyle = rgba('#e8f6ff', .45 + .4 * hot); ctx.lineWidth = 2 / k; ctx.lineJoin = 'round'; ctx.stroke(p);
+  ctx.fillStyle = '#2a353c'; ctx.fillRect(-7, -44, 14, 8);                                                    // padeye
+  ctx.fillStyle = '#1a2328'; ctx.fillRect(-41, 22, 82, 6);                                                    // skirt ring
+  ctx.strokeStyle = 'rgba(20,28,32,.7)'; ctx.lineWidth = 2 / k; ctx.beginPath(); ctx.moveTo(-27, -6); ctx.lineTo(27, -6); ctx.stroke();   // seam
+  ctx.fillStyle = '#0b1013'; ctx.fillRect(-16, 27, 32, 6);                                                    // bottom hatch
+  ctx.fillStyle = rgba('#ffd9a0', .15 + .75 * warm); ctx.fillRect(-13, 28, 26, 4);
   ctx.restore();
   if (warm > .02) glow(ctx, x, y, 90, '#ffb347', .3 * warm);
 }
@@ -135,7 +136,9 @@ function gauge(ctx, t, x, y, R, v, a, danger, calm, label) {
   ctx.beginPath(); ctx.moveTo(x - Math.cos(q) * 12, y - Math.sin(q) * 12); ctx.lineTo(x + Math.cos(q) * (R - 18), y + Math.sin(q) * (R - 18)); ctx.stroke();
   ctx.shadowBlur = 0; ctx.fillStyle = '#dfe9ef'; ctx.beginPath(); ctx.arc(x, y, 8, 0, 7); ctx.fill();
   ctx.restore();
-  text(ctx, label, x, y + R + 42, { size: 30, weight: 800, color: '#dff1ff', stroke: '#000', strokeW: 6, alpha: a });
+  // label: as large as fits with its left edge at x >= 60 (centred under the gauge when it can be)
+  if (label) { const lw = measure(ctx, label, 34, FONT.sub, 800), lx = Math.max(x, 60 + lw / 2);
+    text(ctx, label, lx, y + R + 44, { size: 34, weight: 800, color: '#dff1ff', stroke: '#000', strokeW: 7, alpha: a }); }
 }
 // the dashed arrow straight up, and the red X
 function upArrow(ctx, x, y0, y1, p, red, a) {
@@ -196,9 +199,10 @@ window.PK.scenes.chamber = function (ctx, t, d, info) {
   if (up > 0) { him = { x: CH.x, y: lerp(bellY, CH.y + 2, up) }; }
   const inChamber = P(t, tDock + .25, tDock + .55);
 
-  // ---- camera: the whole column -> follow the bell up -> close on the chamber ----
+  // ---- camera: close on the bell and the column above him -> follow the bell up -> close on the chamber ----
   const cam1 = P(t, tGa - .05, tDock + .1, E.inOutQ), cam2 = P(t, tDock, d + .3, E.inOutQ);
-  let cx = lerp(600, 560, cam1), cy = lerp(814, 600, cam1), z = lerp(1.12, 1.56, cam1);
+  // opens close on the bell, his light and the way straight up (so the bell, his light and the red X read on a phone)
+  let cx = lerp(600, 560, cam1), cy = lerp(760, 600, cam1), z = lerp(1.35, 1.56, cam1);
   cy = lerp(cy, 605, cam2); z *= lerp(1, 1.08, cam2);
   cy += lerp(-14, 0, P(t, -.3, .6, E.outQ));                                // a slow settle as it fades in
   const [kx, ky, kr] = RV.shake(t, .35 * dock * Math.exp(-Math.max(0, t - tDock) * 5) + .25 * xP * Math.exp(-Math.max(0, t - tWi - .1) * 6), 51);

@@ -28,10 +28,11 @@ window.PK.scenes.divers = function (ctx, t, d, info) {
   const bpm = lerp(62, 128, awake), bt = beat(t, bpm);
   const lx = 812, ly = 746 - 5 * awake - 3 * Math.min(1, fl) + Math.sin(t * 1.1) * 1.5;
 
-  // camera: close on him -> pull back on '선체를' to reveal the hull -> hold through the hits -> push in toward him
+  // camera: close on him -> pull back on '선체를' just far enough to show the hull around the cabin (the cabin still fills the
+  // width, the hit point on the outer skin in frame) -> hold through the hits -> push in toward him
   const pull = P(t, tSe - .05, tSe + .85, E.inOutC), push = P(t, K[3] - .15, d + .3, E.inOutQ);
-  let cx = lerp(800, 604, pull), cy = lerp(715, 786, pull), z = lerp(lerp(1.78, 1.66, P(t, -.2, tSe, E.inOutQ)), .7, pull);
-  cx = lerp(cx, 760, push); cy = lerp(cy, 740, push); z = lerp(z, .98, push);
+  let cx = lerp(800, 735, pull), cy = lerp(715, 742, pull), z = lerp(lerp(1.78, 1.66, P(t, -.2, tSe, E.inOutQ)), .95, pull);
+  cx = lerp(cx, 790, push); cy = lerp(cy, 735, push); z = lerp(z, 1.12, push);
   const dr = { x: fb(t * .35, 211) * 12, y: fb(t * .3, 212) * 12, r: fb(t * .25, 213) * .005 };
   const [jx, jy, jr] = KN.jolt(t, K, 7, 3);
 
@@ -53,6 +54,7 @@ window.PK.scenes.divers = function (ctx, t, d, info) {
   ctx.restore();
 
   KN.iris(ctx, lerp(.58, .26, awake) + .12 * (1 - pull) * (1 - awake) - .06 * Math.min(1, fl), .4 * bt, LS.x, LS.y - 60);
+  KN.topMask(ctx, .85);            // the rings and the keel stay out from behind the title
   KN.subBand(ctx);
 
   // '쿵, 쿵, 쿵 — 오케네 (로이터)': one word per hit, pulsing again on the second set
