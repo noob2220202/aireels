@@ -92,6 +92,9 @@ function makeLab() {
   for (let i = -10; i <= 10; i++) { x.beginPath(); x.moveTo(540 + i * 80, FLOOR); x.lineTo(540 + i * 300, BY0 + BH); x.stroke(); }
   // floor cable from the emitter column
   x.strokeStyle = '#020306'; x.lineWidth = 9; x.beginPath(); x.moveTo(BX0 + BW, 1520); x.bezierCurveTo(1000, 1600, 820, 1460, 640, 1560); x.stroke();
+  // cool pool of light behind the easel (baked; was a per-frame additive glow)
+  { const rg = x.createRadialGradient(CX, CY - 40, 0, CX, CY - 40, 620); rg.addColorStop(0, 'rgba(61,110,168,.26)'); rg.addColorStop(.4, 'rgba(61,110,168,.09)'); rg.addColorStop(1, 'rgba(61,110,168,0)');
+    x.globalCompositeOperation = 'lighter'; x.fillStyle = rg; x.fillRect(CX - 620, CY - 660, 1240, 1240); x.globalCompositeOperation = 'source-over'; }
   // depth-of-field: the whole backdrop is soft
   const [c2, x2] = mk(BW, BH); x2.filter = 'blur(3px)'; x2.drawImage(c, 0, 0); x2.filter = 'none';
   return c2;
@@ -124,8 +127,22 @@ function makeHidden() { // the older painting under the paint: hat + scarf as ra
   const [c2, x2] = mk(600, 700); x2.filter = 'blur(1.6px)'; x2.drawImage(c, 0, 0); x2.filter = 'none';
   return c2;
 }
+function makeRays(spread, len, color, a, n, seed) { // pre-rendered additive light shafts (half-res), origin = top centre, pointing down
+  const k = .5, w = Math.ceil(2 * len * Math.sin(spread / 2 + .14) * k) + 4, h = Math.ceil(len * k);
+  const [c, x] = mk(w, h); x.globalCompositeOperation = 'lighter'; x.scale(k, k); const ox = w / k / 2;
+  for (let i = 0; i < n; i++) {
+    const q = i / (n - 1) - .5, aa = Math.PI / 2 + q * spread, ww = spread / n * (.6 + .5 * hash(i * 13 + seed)), al = a * (.3 + .7 * hash(i * 7 + seed));
+    const g = x.createLinearGradient(ox, 0, ox + Math.cos(aa) * len, Math.sin(aa) * len); g.addColorStop(0, rgba(color, al)); g.addColorStop(1, rgba(color, 0)); x.fillStyle = g;
+    x.beginPath(); x.moveTo(ox, 0); x.lineTo(ox + Math.cos(aa - ww) * len, Math.sin(aa - ww) * len); x.lineTo(ox + Math.cos(aa + ww) * len, Math.sin(aa + ww) * len); x.closePath(); x.fill();
+  }
+  return { c, w: w / k, h: h / k };
+}
+function drawRays(ctx, R, x, y, a) { if (a <= 0) return; ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha *= a; ctx.drawImage(R.c, x - R.w / 2, y, R.w, R.h); ctx.restore(); }
 function makeSoft() { const [c, x] = mk(256, 256); x.filter = 'blur(22px)'; x.fillStyle = '#000'; x.fillRect(52, 52, 152, 152); x.filter = 'none'; return c; }
-function initX() { X = { lab: makeLab(), xr: makeXR(), hid: makeHidden(), soft: makeSoft() }; }
+function initX() {
+  X = { lab: makeLab(), xr: makeXR(), hid: makeHidden(), soft: makeSoft(), rays: [makeRays(.42, 1500, '#9cc8f0', .9, 7, 3), makeRays(.42, 1500, '#9cc8f0', .9, 7, 11)] };
+  const [c, x] = mk(600, 700); x.drawImage(X.xr, 0, 0); x.globalCompositeOperation = 'lighter'; x.globalAlpha = .9; x.drawImage(X.hid, 0, 0); X.xrFull = c; // radiograph with the hidden layer fully revealed
+}
 
 // ---------- drawing pieces (texture space: origin = canvas centre, 600x700 units) ----------
 function softRect(ctx, x, y, w, h, a) { const k = 52, sx = w / 152, sy = h / 152; ctx.save(); ctx.globalAlpha *= a; ctx.drawImage(X.soft, x - k * sx, y - k * sy, 256 * sx, 256 * sy); ctx.restore(); }
@@ -144,21 +161,28 @@ const scarf2 = x => { x.beginPath(); x.moveTo(256, 404); x.bezierCurveTo(268, 47
 const scarf3 = x => { x.beginPath(); x.moveTo(402, 410); x.bezierCurveTo(430, 470, 440, 520, 430, 590); };
 function hiddenOverlay(ctx, t, s) { // s: {hatFill, hatDraw, scarf, full}
   ctx.save(); ctx.translate(-300, -350);
-  const ha = .16 + .74 * s.hatFill;
-  ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha *= ha * (.92 + .08 * Math.sin(t * 7)); ctx.drawImage(X.hid, 0, 0); ctx.restore();
+  if (s.hatFill < 1) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha *= .16 + .74 * s.hatFill; ctx.drawImage(X.hid, 0, 0); ctx.restore(); }
   revealStroke(ctx, brimP, s.hatDraw * 1.25, 860, K.cyan, 4.5);
   revealStroke(ctx, crownP, s.hatDraw * 1.4 - .25, 320, K.cyan, 4.5);
   revealStroke(ctx, bandP, s.hatDraw * 1.6 - .55, 170, K.cyan, 3);
   revealStroke(ctx, scarf1, s.scarf * 1.3, 190, K.cyan, 3.6);
   revealStroke(ctx, scarf2, s.scarf * 1.3 - .2, 180, K.cyan, 3.6);
   revealStroke(ctx, scarf3, s.scarf * 1.3 - .3, 190, K.cyan, 3.6);
+  if (s.spark > 0) { // light pulse travelling around the revealed brim
+    ctx.save(); ctx.globalCompositeOperation = 'lighter';
+    const onBrim = a => [300 + Math.cos(a) * 186 * Math.cos(-.08) - Math.sin(a) * 45 * Math.sin(-.08), 214 + Math.cos(a) * 186 * Math.sin(-.08) + Math.sin(a) * 45 * Math.cos(-.08)];
+    for (let k = 0; k < 7; k++) {
+      const [px, py] = onBrim(t * 3.1 - k * .07);
+      ctx.fillStyle = rgba(k ? K.cyan : '#ffffff', s.spark * (1 - k / 7) * .9); ctx.beginPath(); ctx.arc(px, py, (k ? 6 : 8) * (1 - k / 10), 0, 7); ctx.fill();
+    }
+    const [px, py] = onBrim(t * 3.1);
+    const g = ctx.createRadialGradient(px, py, 0, px, py, 46); g.addColorStop(0, rgba(K.cyan, .45 * s.spark)); g.addColorStop(1, rgba(K.cyan, 0)); ctx.fillStyle = g; ctx.fillRect(px - 46, py - 46, 92, 92);
+    ctx.restore();
+  }
   ctx.restore();
 }
 function drawRadiograph(ctx, t, s) {
-  ctx.drawImage(X.xr, -300, -350);
-  // flowing film noise (cheap: one shifted grain tile)
-  const f = Math.floor(t * 24), g = L.TEX.grain[f % L.TEX.grain.length];
-  ctx.save(); ctx.globalAlpha *= .07; ctx.globalCompositeOperation = 'lighter'; ctx.drawImage(g, (hash(f) * 200) | 0, (hash(f + 7) * 200) | 0, 300, 350, -300, -350, 600, 700); ctx.restore();
+  ctx.drawImage(s.hatFill >= 1 ? X.xrFull : X.xr, -300, -350);
   hiddenOverlay(ctx, t, s);
 }
 function faceLock(ctx, t, p, a = 1) {
@@ -254,7 +278,7 @@ window.KL.scenes.xray = function (ctx, t, d, info) {
   const charge = P(t, tC - .4, tC - .02, E.inQ) * (t < tC ? 1 : 0);
   const ex = t >= tC ? Math.exp(-(t - tC) * 7.5) : 0;
   const sp = P(t, tC + .08, tM + .04, E.inOutQ);                       // scan progress (radiograph wipes down)
-  const st = { hatDraw: P(t, tM - .06, tM + .5, E.inOutQ), hatFill: P(t, tM + .12, tM + .7, E.outQ), scarf: P(t, tM + .3, tW + .12, E.inOutQ) };
+  const st = { hatDraw: P(t, tM - .06, tM + .5, E.inOutQ), hatFill: P(t, tM + .12, tM + .7, E.outQ), scarf: P(t, tM + .3, tW + .12, E.inOutQ), spark: P(t, tM + .45, tM + .7) * (1 - P(t, tH - .3, tH)) };
   const face = P(t, tW - .06, tW + .45);
   const rs = P(t, tH - .1, tCv - .02, E.inOutQ);                        // gold sweep restores the paint layer
   const rj = P(t, rjS, rjE, E.inOutC);
@@ -276,18 +300,15 @@ window.KL.scenes.xray = function (ctx, t, d, info) {
 
   const splitDim = Math.max(rot, clamp(sepRaw * 2)) * (1 - rj * .7);
   ctx.save();
-  ctx.fillStyle = '#04060b'; ctx.fillRect(0, 0, W, H);
-  ctx.translate(W / 2, H / 2); ctx.rotate(dr.r * .6); ctx.translate(-W / 2, -H / 2);
 
   // ---- backdrop (soft, slower parallax) ----
   ctx.save(); layer(.82);
   ctx.drawImage(X.lab, BX0, BY0);
-  const lk = .85 + .15 * fbm(t * 1.7, 2);
-  glow(ctx, CX, CY - 40, 620, '#3d6ea8', .28 * lk);
   ctx.restore();
-  // overhead work light falling on the easel
+  // overhead work light falling on the easel (two cached ray sets cross-fading = shimmer)
+  const lk = .85 + .15 * fbm(t * 1.7, 2), rk = .5 + .5 * Math.sin(t * .9), ra = .06 * lk * (1 - .6 * Math.max(rot, sep));
   ctx.save(); layer(.92);
-  godrays(ctx, CX - 20, 150, Math.PI / 2 + .02, .42, 1500, '#9cc8f0', .055 * lk * (1 - .6 * Math.max(rot, sep)), t, 7);
+  drawRays(ctx, X.rays[0], CX - 20, 150, ra * rk); drawRays(ctx, X.rays[1], CX - 20, 150, ra * (1 - rk));
   ctx.restore();
 
   // ---- mid layer: easel, canvas layers, emitter ----
@@ -304,7 +325,8 @@ window.KL.scenes.xray = function (ctx, t, d, info) {
 
   // layer transforms (oblique 3/4 turn + depth split)
   const th = -.56 * rot, ca = Math.cos(th), sb = Math.sin(th) * .34;
-  const offB = [150 * sep, -98 * sep], offF = [-140 * sep, 88 * sep];
+  const fl1 = Math.sin(t * 2.3) * 7 * clamp(sep), fl2 = Math.sin(t * 2.3 + 1.7) * 7 * clamp(sep);
+  const offB = [150 * sep, -98 * sep + fl1], offF = [-140 * sep, 88 * sep + fl2];
   const sB = CS * (1 - .05 * sep), sF = CS;
   const LT = (o, s) => [CX + o[0], CY + o[1], s];
   const [bxC, byC, bS] = LT(offB, sB), [fxC, fyC, fS] = LT(offF, sF);
@@ -315,8 +337,11 @@ window.KL.scenes.xray = function (ctx, t, d, info) {
   softRect(ctx, CX - CW / 2 + 22, CY - CH / 2 + 34, CW, CH, .75);
   // back layer: original canvas on its stretcher, carries the older painting (radiograph)
   ctx.save(); applyL(bxC, byC, bS);
-  ctx.fillStyle = '#4e3b27'; ctx.fillRect(-309, -359, 618, 718); ctx.fillStyle = '#b9ab8c'; ctx.fillRect(-304, -354, 608, 708);
-  if (sep > .002) {
+  if (sep <= .002) { // only the stretcher rim shows around the paint: draw strips, not full fills
+    ctx.fillStyle = '#4e3b27'; ctx.fillRect(-309, -359, 618, 9); ctx.fillRect(-309, 350, 618, 9); ctx.fillRect(-309, -350, 9, 700); ctx.fillRect(300, -350, 9, 700);
+    ctx.fillStyle = '#b9ab8c'; ctx.fillRect(-304, -354, 608, 4); ctx.fillRect(-304, 350, 608, 4); ctx.fillRect(-304, -350, 4, 700); ctx.fillRect(300, -350, 4, 700);
+  } else {
+    ctx.fillStyle = '#4e3b27'; ctx.fillRect(-309, -359, 618, 718); ctx.fillStyle = '#b9ab8c'; ctx.fillRect(-304, -354, 608, 708);
     drawRadiograph(ctx, t, { hatDraw: 1, hatFill: 1, scarf: 1 });
     ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha *= .5 * clamp(sep); ctx.drawImage(T.ghost, -300, -350); ctx.restore();
     ctx.strokeStyle = rgba(K.cyan, .8 * clamp(sep)); ctx.lineWidth = 3 / bS; ctx.strokeRect(-304, -354, 608, 708);
@@ -340,8 +365,8 @@ window.KL.scenes.xray = function (ctx, t, d, info) {
   // front layer: the visible paint (+ radiograph overlay while scanning)
   const vBot = lerp(-372, 372, sp), vTop = lerp(-372, 372, rs);
   ctx.save(); applyL(fxC, fyC, fS);
-  if (sep > .02) { ctx.save(); ctx.shadowColor = 'rgba(0,0,0,.6)'; ctx.shadowBlur = 40 * sep; ctx.shadowOffsetY = 20 * sep; ctx.fillStyle = '#000'; ctx.fillRect(-300, -350, 600, 700); ctx.restore(); }
-  ctx.drawImage(T.portrait, -300, -350);
+  if (sep > .02) softRect(ctx, -300, -350 + 26 * sep, 600, 700, .7 * clamp(sep));
+  if (!(vTop <= -350 && vBot >= 350)) ctx.drawImage(T.portrait, -300, -350);
   if (vBot > vTop) {
     ctx.save(); ctx.beginPath(); ctx.rect(-300, Math.max(-350, vTop), 600, Math.min(350, vBot) - Math.max(-350, vTop)); ctx.clip();
     drawRadiograph(ctx, t, st);
@@ -402,7 +427,7 @@ window.KL.scenes.xray = function (ctx, t, d, info) {
     const press = tri(t, tC - .12, tC + .16);
     const armR = [.06 + .1 * press, 2.3 - .25 * press + .03 * Math.sin(t * 1.4)];
     const lean = .012 * Math.sin(t * 1.1) + .02 * press - .02 * P(t, tC + .1, tC + .7, E.outQ);
-    const o = { coat: true, coatLen: 2.6, glasses: true, face: 1, armR, armL: [-.06, -.14], lean, shadow: false, fill: '#020306', headTurn: .5, glint: Math.max(ex, .15 * charge) };
+    const o = { coat: true, coatLen: 2.6, glasses: true, face: 1, armR, armL: [-.06, -.14], lean, shadow: false, fill: '#020306', headTurn: .5, glint: .55 * ex * ex };
     F.figure(ctx, TECH.x + 5, TECH.y - 3, TECH.h, Object.assign({}, o, { fill: rgba('#7fc8ff', .55 + .45 * ex), glint: 0 }));
     const fi = F.figure(ctx, TECH.x, TECH.y, TECH.h, o);
     // hand switch + coiled cable
