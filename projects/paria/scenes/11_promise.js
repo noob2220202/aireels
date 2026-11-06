@@ -60,7 +60,7 @@ function hisPath(v0, t) {
   const xPre = 252 - 82 * E.inOutQ(P(t, -.3, v0 + .55)) - 4 * Math.sin(P(t, v0 + .55, v0 + 3.3) * Math.PI);
   const dv = P(t, v0 + 3.42, v0 + 4.5, E.inOutQ), dvY = P(t, v0 + 3.5, v0 + 4.55, E.inOutC);
   const pre = Math.sin(P(t, v0 + 3.15, v0 + 3.55) * Math.PI);            // a breath before going under
-  let x = lerp(xPre, 20, dv);
+  let x = lerp(xPre, 36, dv);
   const strokes = [[v0 + 4.55, .55, -48], [v0 + 5.2, .55, -54], [v0 + 5.85, .55, -56], [v0 + 6.45, .55, -50]];
   let mv = 0; for (const [a, d, dx] of strokes) { const q = clamp((t - a) / d); x += dx * E.inOutQ(q); mv = Math.max(mv, Math.sin(q * Math.PI)); }
   const y = lerp(hy(xPre) - 5 * pre, topAt(x) + 58, dvY);
@@ -95,8 +95,8 @@ window.PK.scenes.promise = function (ctx, t, d, info) {
   const push = P(t, d - .95, d + .2, E.inQ);
   const zoom = lerp(1.3, 1.04, P(t, -.2, v0 + 1.1, E.inOutQ)) - .3 * P(t, v0 + 2.6, v0 + 5.9, E.inOutQ) + .05 * push;
   let bs = 0; for (let k = 0; k < 6; k++) bs += hisPath(v0, t - k * .14).x; bs /= 6;
-  let camX = lerp(395, 500, P(t, -.2, v0 + 1.2, E.inOutQ));
-  camX = lerp(camX, bs + 420, P(t, v0 + 2.9, v0 + 5.6, E.inOutQ));
+  let camX = lerp(380, 470, P(t, -.2, v0 + 1.2, E.inOutQ));
+  camX = lerp(camX, bs + 400, P(t, v0 + 2.6, v0 + 5.3, E.inOutQ));
   camX = lerp(camX, B.x + 330, push * .4);
   const yScr = lerp(735, 700, P(t, v0 + 2.6, d, E.inOutQ));
   const camY = LYP + (960 - yScr) / zoom;

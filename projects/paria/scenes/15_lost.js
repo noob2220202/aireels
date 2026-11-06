@@ -10,17 +10,17 @@ const hi = n => { n = Math.floor(n) | 0; n = Math.imul(n ^ (n >>> 16), 0x45d9f3b
 const nz = (x, s = 0) => { const i = Math.floor(x), f = x - i, u = f * f * (3 - 2 * f); return lerp(hi(i + s * 7919), hi(i + 1 + s * 7919), u) * 2 - 1; };
 const fb = (x, s = 0, o = 3) => { let v = 0, a = .5, f = 1; for (let k = 0; k < o; k++) { v += a * nz(x * f, s + k * 7); a *= .5; f *= 2; } return v; };
 function sheenTexL() {
-  if (window.PK._sheenLite) return window.PK._sheenLite;
+  if (window.PK._sheenRB) return window.PK._sheenRB;
   const c = document.createElement('canvas'); c.width = 270; c.height = 480; const x = c.getContext('2d');
   const id = x.createImageData(270, 480);
   for (let j = 0; j < 480; j++) for (let i = 0; i < 270; i++) {
     const u = i / 270, v = j / 480; const n = fbm(u * 3.1 + fbm(v * 2.3, 4) * 1.4, 7) + fbm(v * 4.2 + u, 9) * .7;
     const band = Math.sin(n * 9.0); const k = Math.pow(Math.max(0, band), 3);
-    const hue = (n * 360 * 1.3 + 200) % 360; const h6 = hue / 60, f = h6 - Math.floor(h6);
+    const hue = ((n * 360 * 1.3 + 200) % 360 + 360) % 360; const h6 = hue / 60, f = h6 - Math.floor(h6);
     const rgb = [[1, f, 0], [1 - f, 1, 0], [0, 1, f], [0, 1 - f, 1], [f, 0, 1], [1, 0, 1 - f]][Math.floor(h6) % 6];
     const o = (j * 270 + i) * 4; id.data[o] = 40 + 160 * rgb[0] * k; id.data[o + 1] = 40 + 150 * rgb[1] * k; id.data[o + 2] = 50 + 170 * rgb[2] * k; id.data[o + 3] = 255 * (.15 + .85 * k);
   }
-  x.putImageData(id, 0, 0); window.PK._sheenLite = c; return c;
+  x.putImageData(id, 0, 0); window.PK._sheenRB = c; return c;
 }
 function darkFastL(ctx, t, k, seed) {
   const [b, x] = L.buf('rbDarkL', 270, 480);
@@ -44,6 +44,20 @@ const TB = { cy: 830, r: 190, wall: 18, X0: 560, SL: -.022 };
 const yc = x => TB.cy + TB.SL * (x - TB.X0), topY = x => yc(x) - TB.r, botY = x => yc(x) + TB.r;
 const S0 = TB.cy + TB.r - .8 * 2 * TB.r;
 const LX = [392, 486, 604, 712], ORDER = [1, 3, 0, 2];
+// streaked, oily steel of the inner wall (cached), used to texture the light in the air gap
+let WALL = null;
+function wallTexL() {
+  if (WALL) return WALL;
+  const c = document.createElement('canvas'); c.width = 512; c.height = 128; const x = c.getContext('2d');
+  const id = x.createImageData(512, 128);
+  for (let j = 0; j < 128; j++) for (let i = 0; i < 512; i++) {
+    const u = i / 512, v = j / 128;
+    const n = fb(v * 12 + fb(u * 3, 13) * 1.2, 17, 4) * .9 + fb(u * 22 + v * 4, 19) * .35 + (hi(i * 3 + j * 1013) - .5) * .16;
+    const val = Math.round(255 * clamp(.5 + n * 1.1)), o = (j * 512 + i) * 4;
+    id.data[o] = val; id.data[o + 1] = Math.round(val * .92); id.data[o + 2] = Math.round(val * .84); id.data[o + 3] = 255;
+  }
+  x.putImageData(id, 0, 0); WALL = c; return c;
+}
 function band(ctx, x0, x1, f0, f1) { ctx.beginPath(); ctx.moveTo(x0, f0(x0)); ctx.lineTo(x1, f0(x1)); ctx.lineTo(x1, f1(x1)); ctx.lineTo(x0, f1(x0)); ctx.closePath(); }
 
 window.PK.scenes.lost = function (ctx, t, d, info) {
@@ -54,7 +68,7 @@ window.PK.scenes.lost = function (ctx, t, d, info) {
   const lightSum = A.reduce((a, b) => a + b, 0) / (4 * .64);
   const surf = x => S0 + Math.sin(x * .021 - t * 1.1) * 1.6 + Math.sin(x * .057 + t * .8) * 1.1;
 
-  const z = lerp(1.3, 1.14, P(t, -.4, d + .3, E.inOutQ)), cx = 552 + fb(t * .3, 7) * 10, cy = 790 + fb(t * .25, 8) * 8;
+  const z = lerp(1.56, 1.36, P(t, -.4, d + .3, E.inOutQ)), cx = 552 + fb(t * .3, 7) * 10, cy = 738 + fb(t * .25, 8) * 8;
   darkFastL(ctx, t, .28 * (.4 + .6 * lightSum), 23);
   ctx.save();
   ctx.translate(540, 850); ctx.rotate(fb(t * .22, 9) * .004); ctx.scale(z, z); ctx.translate(-cx, -cy);
@@ -67,7 +81,7 @@ window.PK.scenes.lost = function (ctx, t, d, info) {
   // the oil / water body
   ctx.save(); band(ctx, x0, x1, topY, botY); ctx.clip();
   ctx.beginPath(); ctx.moveTo(x0, botY(x0) + 4); for (let x = x0; x <= x1 + 10; x += 10) ctx.lineTo(x, surf(x)); ctx.lineTo(x1, botY(x1) + 4); ctx.closePath();
-  const gf = ctx.createLinearGradient(0, S0, 0, TB.cy + TB.r); gf.addColorStop(0, rgba('#16323a', .6)); gf.addColorStop(.15, rgba('#0b1c22', .75)); gf.addColorStop(1, rgba('#020405', .95));
+  const ov = .3 + .7 * lightSum, gf = ctx.createLinearGradient(0, S0, 0, TB.cy + TB.r); gf.addColorStop(0, rgba('#16323a', .6 * ov)); gf.addColorStop(.15, rgba('#0b1c22', .75 * ov)); gf.addColorStop(1, rgba('#020405', .95));
   ctx.fillStyle = gf; ctx.fill();
   ctx.globalCompositeOperation = 'lighter';
   for (let i = 0; i < 4; i++) {
@@ -81,6 +95,17 @@ window.PK.scenes.lost = function (ctx, t, d, info) {
     for (let s = 0; s < 4; s++) { const w = (17 - s * 3.5) * (.7 + .3 * Math.sin(t * 2.2 + s * 1.9 + lx)); ctx.fillStyle = rgba('#ffc477', a * .16 * (1 - s / 4)); ctx.fillRect(lx - w + Math.sin(t * 1.6 + s) * 3, surf(lx) + 4 + s * 10, w * 2, 1.6); }
   }
   ctx.globalCompositeOperation = 'source-over';
+  // the lights fill the thin air gap with a warm haze, textured by the streaked steel behind it
+  ctx.save(); band(ctx, x0, x1, topY, x => surf(x) + 1); ctx.clip();
+  ctx.globalCompositeOperation = 'lighter';
+  for (let i = 0; i < 4; i++) {
+    const a = A[i]; if (a < .01) continue; const lx = LX[i], ly = (topY(lx) + S0) / 2;
+    ctx.save(); ctx.translate(lx, ly); ctx.scale(1, .45); const rg = ctx.createRadialGradient(0, 0, 0, 0, 0, 230);
+    rg.addColorStop(0, rgba('#ff9a3c', .24 * a)); rg.addColorStop(.5, rgba('#ff9a3c', .06 * a)); rg.addColorStop(1, 'rgba(255,154,60,0)'); ctx.fillStyle = rg; ctx.fillRect(-230, -230, 460, 460); ctx.restore();
+  }
+  ctx.globalCompositeOperation = 'multiply'; ctx.globalAlpha = .7;
+  ctx.drawImage(wallTexL(), -120, topY(560) - 14, 1360, S0 - topY(560) + 28);
+  ctx.restore();
   ctx.strokeStyle = rgba('#8fd3e8', .05 + .14 * lightSum); ctx.lineWidth = 1.5; ctx.beginPath();
   for (let x = x0; x <= x1 + 10; x += 10) { const y = surf(x); x === x0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y); } ctx.stroke();
   // a few specks in the air gap, barely moving
@@ -98,7 +123,8 @@ window.PK.scenes.lost = function (ctx, t, d, info) {
     souls(ctx, t + ph[i], [{ x: lx, y: ly, a, s: .8 + .2 * (a / .64) }], { bpm: 60 });
   }
   ctx.restore();
-  iris(ctx, .5 + .1 * P(t, tK, d), .5 + .5 * Math.sin(t * Math.PI * 2 * .3), 540, 820);
+  { const g = ctx.createLinearGradient(0, 1060, 0, 1250); g.addColorStop(0, 'rgba(1,2,3,0)'); g.addColorStop(1, 'rgba(1,2,3,.9)'); ctx.fillStyle = g; ctx.fillRect(0, 1060, W, 190); ctx.fillStyle = 'rgba(1,2,3,.9)'; ctx.fillRect(0, 1250, W, H - 1250); }
+  iris(ctx, .5 + .1 * P(t, tK, d), .5 + .5 * Math.sin(t * Math.PI * 2 * .3), 540, 790);
   // come up from the dip; settle into near-black at the end
   ctx.save(); ctx.fillStyle = `rgba(1,2,3,${(.55 * P(t, d - .9, d + .2, E.inOutQ)).toFixed(3)})`; ctx.fillRect(0, 0, W, H); ctx.restore();
 };

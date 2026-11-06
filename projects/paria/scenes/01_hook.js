@@ -1,7 +1,39 @@
 // hook: a 30-inch pipe mouth swallows the water; five lights are pulled into the dark; 5 -> 1, one light comes back.
 (function () {
 const { W, H, E, P, clamp, lerp, hash, noise1, rgba, glow, text, camera, drift, flash } = L;
-const { K, at, dark, souls, chip, beat } = window.PK;
+const { K, at, souls, chip, beat } = window.PK;
+// PK.dark's sheen texture can index past its hue table for negative noise (crash after the lib hash fix);
+// this file keeps a fixed copy (shared cache with "lost": same generator) and composes the sheen at quarter resolution.
+function sheenTexH() {
+  if (window.PK._sheenRB) return window.PK._sheenRB;
+  const { fbm } = L;
+  const c = document.createElement('canvas'); c.width = 270; c.height = 480; const x = c.getContext('2d');
+  const id = x.createImageData(270, 480);
+  for (let j = 0; j < 480; j++) for (let i = 0; i < 270; i++) {
+    const u = i / 270, v = j / 480; const n = fbm(u * 3.1 + fbm(v * 2.3, 4) * 1.4, 7) + fbm(v * 4.2 + u, 9) * .7;
+    const band = Math.sin(n * 9.0); const k = Math.pow(Math.max(0, band), 3);
+    const hue = ((n * 360 * 1.3 + 200) % 360 + 360) % 360; const h6 = hue / 60, f = h6 - Math.floor(h6);
+    const rgb = [[1, f, 0], [1 - f, 1, 0], [0, 1, f], [0, 1 - f, 1], [f, 0, 1], [1, 0, 1 - f]][Math.floor(h6) % 6];
+    const o = (j * 270 + i) * 4; id.data[o] = 40 + 160 * rgb[0] * k; id.data[o + 1] = 40 + 150 * rgb[1] * k; id.data[o + 2] = 50 + 170 * rgb[2] * k; id.data[o + 3] = 255 * (.15 + .85 * k);
+  }
+  x.putImageData(id, 0, 0); window.PK._sheenRB = c; return c;
+}
+function dark(ctx, t, { k = 1, seed = 1, base = '#010203' } = {}) {
+  const [b, x] = L.buf('hookDark', 270, 480);
+  x.fillStyle = base; x.fillRect(0, 0, 270, 480); x.scale(.25, .25);
+  const tex = sheenTexH(); x.globalCompositeOperation = 'screen';
+  for (let l = 0; l < 2; l++) {
+    const sc = 4.6 + l * 1.8, dx = Math.sin(t * .07 + seed + l * 2) * 120 - 200, dy = Math.cos(t * .05 + seed * 3 + l) * 160 - 300 + t * (6 + l * 5);
+    x.globalAlpha = (.075 - l * .025) * k; x.drawImage(tex, dx, dy, 270 * sc, 480 * sc);
+  }
+  ctx.save(); ctx.drawImage(b, 0, 0, W, H);
+  for (let i = 0; i < 9; i++) {
+    const life = 3 + hash(i * 5 + seed) * 2, ph = ((t / life + hash(i + seed)) % 1);
+    const px = hash(i * 7 + seed * 3) * W, py = 520 + hash(i * 11 + seed) * 760, r = 30 + ph * 180;
+    ctx.strokeStyle = rgba('#8fd3e8', .08 * k * (1 - ph)); ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(px, py, r, r * .28, 0, 0, 7); ctx.stroke();
+  }
+  ctx.restore();
+}
 function mouth(ctx, t, cx, cy, R, swirl) {
   // flange + bolts
   ctx.save();

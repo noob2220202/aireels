@@ -76,7 +76,7 @@ window.PK.scenes.blocked = function (ctx, t, d, info) {
   const back = P(t, tPa - .25, tPa + .9, E.inOutQ), inn = P(t, tGw - .2, tHe + .1, E.inOutQ), down = P(t, tHe + .45, d + .6, E.inOutQ);
   let cx = lerp(520, 540, back), cy = lerp(816, 862, back), z = lerp(1.22, 1.0, back) * (1 + .025 * P(t, -.3, tPa));
   cx = lerp(cx, RXB + 60, inn); cy = lerp(cy, HB + 10, inn); z = lerp(z, 1.18, inn);
-  cx = lerp(cx, 640, down); cy = lerp(cy, 960, down); z *= 1 + .08 * down;
+  cx = lerp(cx, 640, down); cy = lerp(cy, 945, down); z *= 1 + .08 * down;
   const dr = { x: fb(t * .35, 61) * 14, y: fb(t * .3, 70) * 14, r: fb(t * .25, 65) * .005 };
   const shk = .3 * Math.exp(-Math.max(0, t - tSt) * 7) * (t > tSt - .01 ? 1 : 0);
   ctx.fillStyle = '#010203'; ctx.fillRect(0, 0, W, H);
@@ -164,8 +164,13 @@ window.PK.scenes.blocked = function (ctx, t, d, info) {
   {
     const g = ctx.createLinearGradient(RXB - HW / 2, 0, RXB + HW / 2, 0); g.addColorStop(0, '#2a2412'); g.addColorStop(.3, '#4a3d1c'); g.addColorStop(1, '#1a160b');
     roundRect(ctx, RXB - HW / 2, HB - HH / 2, HW, HH, 14); ctx.fillStyle = g; ctx.fill(); ctx.strokeStyle = 'rgba(0,0,0,.7)'; ctx.lineWidth = 3; ctx.stroke();
-    roundRect(ctx, RXB - HW / 2 + 12, HB - HH / 2 + 12, HW - 24, HH - 26, 8); ctx.fillStyle = '#041014'; ctx.fill();
-    ctx.fillStyle = 'rgba(143,211,232,.12)'; ctx.fillRect(RXB - HW / 2 + 12, HB - HH / 2 + 12, HW - 24, 2);
+    // flooded, unlit: panel seams and ribs only
+    ctx.fillStyle = 'rgba(0,0,0,.35)'; ctx.fillRect(RXB - HW / 2 + 4, HB + 6, HW - 8, 5);
+    for (let k = 1; k < 4; k++) ctx.fillRect(RXB - HW / 2 + k * HW / 4 - 2, HB - HH / 2 + 6, 4, HH - 12);
+    ctx.fillStyle = 'rgba(255,225,150,.07)'; ctx.fillRect(RXB - HW / 2 + 6, HB - HH / 2 + 5, HW - 12, 2);
+    ctx.fillStyle = 'rgba(0,0,0,.45)'; for (let k = 0; k < 7; k++) { ctx.beginPath(); ctx.arc(RXB - HW / 2 + 14 + k * (HW - 28) / 6, HB + HH / 2 - 9, 2, 0, 7); ctx.fill(); }
+    const sh = ctx.createLinearGradient(0, HB - HH / 2, 0, HB + HH / 2); sh.addColorStop(0, 'rgba(0,0,0,0)'); sh.addColorStop(1, 'rgba(0,0,0,.45)');
+    roundRect(ctx, RXB - HW / 2, HB - HH / 2, HW, HH, 14); ctx.fillStyle = sh; ctx.fill();
     ctx.fillStyle = '#1e1a10'; ctx.fillRect(RXB - 20, HB - HH / 2 - 10, 40, 12);
   }
   // far line into the dark, four dim lights (unchanged)
@@ -231,10 +236,11 @@ window.PK.scenes.blocked = function (ctx, t, d, info) {
   }
   // the cards (sober, small): what Paria said / what the commission found
   const dim = 1 - .25 * P(t, tSt - .1, tSt + .3);
-  const aA = P(t, tPa - .05, tPa + .25, E.outQ) * dim * (1 - P(t, d - .1, d + .3));
-  const aB = P(t, tAn - .05, tAn + .25, E.outQ) * dim * (1 - P(t, d - .1, d + .3));
-  card(ctx, t, info.sc.data.a, 528, aA, tPa - .05, 'rgba(200,210,218,.8)');
-  card(ctx, t, info.sc.data.b, 610, aB, tAn - .05, '#8fd3e8');
+  const out = 1 - P(t, tHe + .85, tHe + 1.3, E.inOutQ);
+  const aA = P(t, tPa - .05, tPa + .25, E.outQ) * dim * out;
+  const aB = P(t, tAn - .05, tAn + .25, E.outQ) * dim * out;
+  card(ctx, t, info.sc.data.a, 518, aA, tPa - .05, 'rgba(200,210,218,.8)');
+  card(ctx, t, info.sc.data.b, 594, aB, tAn - .05, '#8fd3e8');
   flash(ctx, .1 * Math.exp(-Math.max(0, t - tSt) * 9) * (t > tSt - .01 ? 1 : 0), '#e3262f');
 };
 })();

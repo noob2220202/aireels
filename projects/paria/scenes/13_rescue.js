@@ -16,19 +16,19 @@ const fb = (x, s = 0, o = 3) => { let v = 0, a = .5, f = 1; for (let k = 0; k < 
 
 // ---- cheaper PK.dark (same oily sheen), composed at quarter resolution ----
 function sheenTexR() {
-  if (window.PK._sheenLite) return window.PK._sheenLite;
+  if (window.PK._sheenRB) return window.PK._sheenRB;
   const c = document.createElement('canvas'); c.width = 270; c.height = 480; const x = c.getContext('2d');
   const id = x.createImageData(270, 480);
   for (let j = 0; j < 480; j++) for (let i = 0; i < 270; i++) {
     const u = i / 270, v = j / 480; const n = fbm(u * 3.1 + fbm(v * 2.3, 4) * 1.4, 7) + fbm(v * 4.2 + u, 9) * .7;
     const band = Math.sin(n * 9.0); const k = Math.pow(Math.max(0, band), 3);
-    const hue = (n * 360 * 1.3 + 200) % 360; const h6 = hue / 60, f = h6 - Math.floor(h6);
+    const hue = ((n * 360 * 1.3 + 200) % 360 + 360) % 360; const h6 = hue / 60, f = h6 - Math.floor(h6);
     const rgb = [[1, f, 0], [1 - f, 1, 0], [0, 1, f], [0, 1 - f, 1], [f, 0, 1], [1, 0, 1 - f]][Math.floor(h6) % 6];
     const o = (j * 270 + i) * 4; id.data[o] = 40 + 160 * rgb[0] * k; id.data[o + 1] = 40 + 150 * rgb[1] * k; id.data[o + 2] = 50 + 170 * rgb[2] * k; id.data[o + 3] = 255 * (.15 + .85 * k);
   }
-  x.putImageData(id, 0, 0); window.PK._sheenLite = c; return c;
+  x.putImageData(id, 0, 0); window.PK._sheenRB = c; return c;
 }
-function darkFastR(ctx, t, k, seed, base = '#010203') {
+function darkFastR(ctx, t, k, seed, yTop = 0, base = '#010203') {
   const [b, x] = L.buf('rbDarkR', 270, 480);
   x.fillStyle = base; x.fillRect(0, 0, 270, 480); x.scale(.25, .25);
   const tex = sheenTexR(); x.globalCompositeOperation = 'screen';
@@ -36,7 +36,10 @@ function darkFastR(ctx, t, k, seed, base = '#010203') {
     const sc = 4.6 + l * 1.8, dx = Math.sin(t * .07 + seed + l * 2) * 120 - 200, dy = Math.cos(t * .05 + seed * 3 + l) * 160 - 300 + t * (6 + l * 5);
     x.globalAlpha = (.075 - l * .025) * k; x.drawImage(tex, dx, dy, 270 * sc, 480 * sc);
   }
-  ctx.save(); ctx.globalAlpha = 1; ctx.drawImage(b, 0, 0, W, H); ctx.restore();
+  ctx.save(); ctx.globalAlpha = 1;
+  const y0 = clamp(Math.floor(yTop / 4) * 4, 0, H - 4);
+  if (y0 > 0) { ctx.fillStyle = base; ctx.fillRect(0, 0, W, y0); }
+  ctx.drawImage(b, 0, y0 / 4, 270, 480 - y0 / 4, 0, y0, W, H - y0); ctx.restore();
 }
 function iris(ctx, k, pulse, cx, cy) {
   if (k <= 0) return;
@@ -132,7 +135,7 @@ function volunteer(ctx, t, side, o) {
   ctx.save(); ctx.globalAlpha *= o.a * o.lamp; ctx.fillStyle = '#f4fbff'; ctx.beginPath(); ctx.arc(lx, ly, 3, 0, 7); ctx.fill(); ctx.restore();
 }
 
-function timeStrip(ctx, t, a, p, lab, endA) {
+function timeStrip(ctx, t, a, p, lab, endA, tIn, tOut) {
   if (a <= 0) return;
   const x0 = 150, x1 = 930, y = 1146, xf = lerp(x0, x1, p);
   ctx.save(); ctx.globalAlpha *= a;
@@ -148,8 +151,8 @@ function timeStrip(ctx, t, a, p, lab, endA) {
   if (endA > 0) { ctx.globalAlpha = a * endA; ctx.fillStyle = '#cfe8ff'; ctx.beginPath(); ctx.arc(x1, y, 9 * E.outBack(endA), 0, 7); ctx.fill();
     const q = (t * .9) % 1; ctx.strokeStyle = rgba('#cfe8ff', (1 - q) * .6); ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x1, y, 10 + q * 26, 0, 7); ctx.stroke(); }
   ctx.restore();
-  text(ctx, '오후 2:45경 사고', x0 - 16, y + 44, { size: 28, weight: 800, color: '#ffc9c2', align: 'left', alpha: a });
-  text(ctx, '오후 5:45경 구조 (조사위원회)', x1 + 16, y + 44, { size: 28, weight: 800, color: '#dff1ff', align: 'right', alpha: a * endA });
+  text(ctx, tIn, x0 - 16, y + 44, { size: 28, weight: 800, color: '#ffc9c2', align: 'left', alpha: a });
+  text(ctx, tOut, x1 + 16, y + 44, { size: 28, weight: 800, color: '#dff1ff', align: 'right', alpha: a * endA });
   // centre: clock + 약 3시간
   if (lab > 0) {
     const sc = lerp(.7, 1, E.outBack(lab, 2)), tw = measure(ctx, '약 3시간', 54, FONT.sub, 900), cx = 540 + 32, cy = y - 58;
@@ -181,7 +184,7 @@ window.PK.scenes.rescue = function (ctx, t, d, info) {
   const shk = .32 * Math.exp(-Math.max(0, t - tBr) * 6) * (t > tBr - .02 ? 1 : 0) + .07 * Math.exp(-Math.pow((t - tGe - .25) / .12, 2)) + .04 * P(t, 1.2, 1.6) * (1 - P(t, 2.0, 2.5));
   const sx = shk * nz(t * 22, 3) * 18 + dr.x, sy = shk * nz(t * 22, 4) * 18 + dr.y;
 
-  darkFastR(ctx, t, .55 - .25 * pan, 19);
+  darkFastR(ctx, t, .4 - .2 * pan, 19, 850 + (0 - cy) * z - 40);
   ctx.save();
   cam(ctx, cx, cy, z, dr.r + shk * nz(t * 15, 5) * .01, sx, sy);
   const M = ctx.getTransform();
@@ -192,12 +195,12 @@ window.PK.scenes.rescue = function (ctx, t, d, info) {
   // ---- habitat interior above the floor (air) ----
   {
     const g = ctx.createLinearGradient(0, -900, 0, 0); g.addColorStop(0, '#020304'); g.addColorStop(1, rel > 0 ? window.PK.lerp2('#0a0f12', '#1a1a17', rel) : '#0a0f12');
-    ctx.fillStyle = g; ctx.fillRect(RX - 760, -1100, 1520, 1100);
+    if (cy < 1100) { ctx.fillStyle = g; ctx.fillRect(RX - 760, -1100, 1520, 1100); }
     ctx.fillStyle = rgba('#8aa0aa', .035 + .03 * rel); for (let x = RX - 700; x < RX + 760; x += 150) ctx.fillRect(x, -1100, 9, 1100);
     ctx.fillStyle = rgba('#8aa0aa', .05); ctx.fillRect(RX - 760, -420, 1520, 6);
   }
   // cold light pouring down from the opening above (volumetric)
-  godrays(ctx, RX, -720, Math.PI / 2, .55, 1250, '#dff3ff', .085 * lit, t, 9);
+  if (cy < 1150) godrays(ctx, RX, -720, Math.PI / 2, .55, 1000, '#dff3ff', .12 * lit, t, 5);
   glow(ctx, RX, -10, 320, '#cfe8ff', .1 * lit);
 
   // ---- seabed under the line ----
@@ -232,7 +235,7 @@ window.PK.scenes.rescue = function (ctx, t, d, info) {
   }
 
   // ---- light inside the riser water: from above, and his own ----
-  ctx.save(); ctx.clip(inner()); ctx.beginPath(); ctx.rect(RX - RR - 400, SURF, 4000, 4000); ctx.clip();
+  ctx.save(); if (cy > 850) ctx.clip(inner()); ctx.beginPath(); ctx.rect(RX - RR - (cy > 850 ? 400 : 0), SURF, cy > 850 ? 4000 : RR * 2, 4000); ctx.clip();
   ctx.globalCompositeOperation = 'lighter';
   {
     const g = ctx.createLinearGradient(0, SURF, 0, SURF + 620); g.addColorStop(0, rgba('#8fd3e8', .17 * Math.min(1, lit))); g.addColorStop(.3, rgba('#8fd3e8', .04 * Math.min(1, lit))); g.addColorStop(1, 'rgba(143,211,232,0)');
@@ -252,10 +255,10 @@ window.PK.scenes.rescue = function (ctx, t, d, info) {
   const bubOn = 1 - P(t, tBr - .1, tBr + .1);
   for (let i = 0; i < 26; i++) {
     const per = .5 + hi(i * 3 + 5) * .6, off = hi(i * 7 + 9) * per, ts = Math.floor((t + off) / per) * per - off, age = t - ts;
-    const y0 = lightY(ts, tp) - 22, by = y0 - age * (230 + 140 * hi(i * 11 + Math.floor((t + off) / per)));
+    const y0 = lightY(ts, tp) - 36, by = y0 - age * (230 + 140 * hi(i * 11 + Math.floor((t + off) / per)));
     if (by < SURF + 4 || ts < -.5 || ts > tBr - .2) continue;
     const bx = RX + (hi(i * 13 + Math.floor((t + off) / per) * 3) - .5) * 60 + Math.sin(age * 5 + i) * 7, r = 2.2 + 4 * hi(i * 17);
-    ctx.strokeStyle = rgba('#d8f6ff', .45 * Math.min(1, age * 4) * bubOn); ctx.beginPath(); ctx.arc(bx, by, r, 0, 7); ctx.stroke();
+    ctx.strokeStyle = rgba('#d8f6ff', .45 * Math.min(1, age * 2.5) * bubOn); ctx.beginPath(); ctx.arc(bx, by, r, 0, 7); ctx.stroke();
   }
   ctx.restore();
   // the water surface inside the riser (ripples where the hands go in, a burst when he comes out)
@@ -299,7 +302,7 @@ window.PK.scenes.rescue = function (ctx, t, d, info) {
   const under = ly > SURF;
   if (under) glow(ctx, lx, ly, 150, '#8fd3e8', .06);
   const bpm = lerp(96, 124, P(t, 2.4, tp, E.inQ)) - 22 * rel;
-  glow(ctx, lx, ly, 260 + 260 * rel, '#ff9a3c', .07 + .12 * rel);
+  glow(ctx, lx, ly, 240 + 60 * rel, '#ff9a3c', .08 + .1 * rel);
   souls(ctx, t, [{ x: lx, y: ly, a: .95, s: 1 + .25 * rel }], { bpm });
   // splash + bloom as he breaks the surface
   const u = t - tBr;
@@ -313,7 +316,7 @@ window.PK.scenes.rescue = function (ctx, t, d, info) {
       ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x - vx * .025, y + (vy - 2200 * uu) * .025); ctx.stroke();
     }
     ctx.restore();
-    glow(ctx, RX, SURF - 10, 420, '#fff1d8', .55 * Math.exp(-Math.max(0, u) * 3.2) * clamp(u * 12 + .3));
+    glow(ctx, RX, SURF - 10, 340, '#fff1d8', .55 * Math.exp(-Math.max(0, u) * 3.2) * clamp(u * 12 + .3));
   }
   // silt drifting through the beam (faster while the hours pass)
   {
@@ -331,14 +334,16 @@ window.PK.scenes.rescue = function (ctx, t, d, info) {
   ctx.restore();
 
   // ---- screen space ----
+  // keep the subtitle band dark and quiet
+  { const g = ctx.createLinearGradient(0, 1170, 0, 1290); g.addColorStop(0, 'rgba(1,2,3,0)'); g.addColorStop(1, 'rgba(1,2,3,.86)'); ctx.fillStyle = g; ctx.fillRect(0, 1170, W, 120); ctx.fillStyle = 'rgba(1,2,3,.86)'; ctx.fillRect(0, 1290, W, H - 1290); }
   // tunnel vision: tight while he is under, opens as he comes out
   const ik2 = lerp(.6, .74, P(t, .5, tp, E.inOutQ)) * (1 - .82 * rel);
   iris(ctx, ik2, .5 * beat(t, bpm) + .5 * (.5 + .5 * Math.sin(t * Math.PI * 2 * .45)), lerp(540, ls.x, .7), lerp(820, ls.y, .6));
   // warm air and light after the breach
   if (rel > 0) {
-    ctx.save(); ctx.globalCompositeOperation = 'screen';
-    const g = ctx.createRadialGradient(ls.x, ls.y, 0, ls.x, ls.y, 760); g.addColorStop(0, rgba('#ffcf8a', .2 * rel)); g.addColorStop(.5, rgba('#ffcf8a', .05 * rel)); g.addColorStop(1, 'rgba(255,207,138,0)');
-    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H); ctx.restore();
+    ctx.save(); ctx.globalCompositeOperation = 'lighter';
+    const g = ctx.createRadialGradient(ls.x, ls.y, 0, ls.x, ls.y, 640); g.addColorStop(0, rgba('#ffcf8a', .14 * rel)); g.addColorStop(.5, rgba('#ffcf8a', .035 * rel)); g.addColorStop(1, 'rgba(255,207,138,0)');
+    ctx.fillStyle = g; ctx.fillRect(ls.x - 640, ls.y - 640, 1280, 1280); ctx.restore();
   }
   // '수직관' tag on the riser
   const ta = P(t, tSu - .05, tSu + .3, E.outQ) * (1 - P(t, tJa - .2, tJa + .15));
@@ -350,7 +355,7 @@ window.PK.scenes.rescue = function (ctx, t, d, info) {
   }
   // time strip: 오후 2:45경 사고 -> 오후 5:45경 구조, 약 3시간
   const sa = P(t, t3 - .12, t3 + .22, E.outQ) * (1 - P(t, tJa + .2, tJa + .55, E.inQ));
-  timeStrip(ctx, t, sa, P(t, t3 + .05, tDw + .45, E.inOutQ), P(t, t3 - .05, t3 + .3), P(t, tDw + .25, tDw + .55, E.outQ));
+  timeStrip(ctx, t, sa, P(t, t3 + .05, tDw + .45, E.inOutQ), P(t, t3 - .05, t3 + .3), P(t, tDw + .25, tDw + .55, E.outQ), (info.sc.data || {}).t_in || '오후 2:45경 사고', (info.sc.data || {}).t_out || '오후 5:45경 구조 (조사위원회)');
   // breaking through into the air: a warm flash
   flash(ctx, .24 * Math.exp(-Math.max(0, t - tBr) * 5) * P(t, tBr - .06, tBr), '#fff1d8');
 };

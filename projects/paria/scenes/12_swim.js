@@ -86,7 +86,7 @@ window.PK.scenes.swim = function (ctx, t, d, info) {
   ctx.translate(surge * 7 * nz(t * 24, 3), surge * 7 * nz(t * 24, 5));
 
   // ---- the pressure pulse that runs ahead down the line on every "swim" ----
-  const pingAt = zr => { let a = 0; pl.S.forEach(s => { const u = t - s; if (u < 0 || u > 1.3) return; const wz = .4 + u * 9; a += .9 * Math.exp(-Math.pow((zr - wz) / 1.1, 2)) * Math.pow(1 - u / 1.3, 1.5); }); return a; };
+  const pingAt = zr => { let a = 0; pl.S.forEach(s => { const u = t - s; if (u < 0 || u > 1.3) return; const wz = .4 + u * 9; a += .9 * Math.exp(-Math.pow((zr - wz) / 1.1, 2)) * Math.pow(1 - u / 1.3, 1.5) * Math.exp(-wz / 5); }); return a; };
 
   // ---- girth welds and the steel between them ----
   const NEAR = .22, FAR = 26;
@@ -118,7 +118,7 @@ window.PK.scenes.swim = function (ctx, t, d, info) {
     wx.fillStyle = m; wx.fillRect(-W, -H, W * 2, H * 2);
     ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(wb, 0, 0, W, H); ctx.restore();
     // the dull pulse: a soft band of cold light running away down the pipe
-    pl.S.forEach(s0 => { const u = t - s0; if (u < 0 || u > 1.3) return; const wz = .4 + u * 9, R = F / wz, a = .13 * Math.pow(1 - u / 1.3, 1.5);
+    pl.S.forEach(s0 => { const u = t - s0; if (u < 0 || u > 1.3) return; const wz = .4 + u * 9, R = F / wz, a = .13 * Math.pow(1 - u / 1.3, 1.5) * Math.exp(-wz / 4.5);
       const rg = ctx.createRadialGradient(vx, vy, R * .55, vx, vy, R * 1.3); rg.addColorStop(0, 'rgba(143,211,232,0)'); rg.addColorStop(.55, rgba('#8fd3e8', a)); rg.addColorStop(1, 'rgba(143,211,232,0)');
       ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = rg; ctx.fillRect(vx - R * 1.35, vy - R * 1.35, R * 2.7, R * 2.7); ctx.restore(); });
   }
