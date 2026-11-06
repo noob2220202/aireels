@@ -388,6 +388,18 @@ def rewind(dur=.7):
     return y * np.minimum(1, t / .02) * np.minimum(1, (dur - t) / .05)
 
 
+def alarm(dur=2.0, f1=880.0, f2=660.0, rate=2.5):
+    """Two-tone ship console alarm (soft square wave, band-limited)."""
+    t = secs(dur)
+    f = np.where((t * rate) % 1 < .5, f1, f2)
+    ph = 2 * np.pi * np.cumsum(f) / SR
+    y = np.tanh(3 * np.sin(ph)) * .22
+    gate = ((t * rate * 2) % 1 < .82).astype(float)
+    gate = filt(gate, 'lowpass', 60)
+    y = filt(y * gate, 'bandpass', [400, 4000])
+    return reverb(y * np.minimum(1, t / .01) * np.minimum(1, (dur - t) / .08), rt=.9, mix=.25)
+
+
 def snap():
     n = int(.4 * SR)
     t = np.arange(n) / SR
@@ -593,6 +605,7 @@ SFX = {
     'shimmer': lambda o: shimmer(o.get('dur', 1.6)),
     'rewind': lambda o: rewind(o.get('dur', .7)),
     'snap': lambda o: snap(),
+    'alarm': lambda o: alarm(o.get('dur', 2.0), o.get('f1', 880.0), o.get('f2', 660.0), o.get('rate', 2.5)),
     'flap': lambda o: flap(o.get('count', 8), o.get('dur', .6)),
     'snip': lambda o: snip(),
     'rustle': lambda o: rustle(o.get('dur', .8)),
@@ -827,6 +840,10 @@ def mix(project):
         if v.get('kind') == 'clip':
             # real archival audio: band-limit, de-noise lightly, level-match later via process_voice's normaliser
             x = filt(filt(x, 'highpass', 90), 'lowpass', 9000)
+            for f0, q in v.get('notch', []):  # remove steady music/drone tones under an archival voice
+                bn, an = signal.iirnotch(f0, q, fs=SR)
+                for _ in range(2):
+                    x = signal.filtfilt(bn, an, x, axis=-1)
             place(voice, process_voice(x) * db(v.get('db', -1.5)), v['t'], 1.0)
             continue
         if TL.get('voice_match'):

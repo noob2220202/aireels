@@ -1,0 +1,1100 @@
+{
+ "name": "lemons_bibby_topaz",
+ "voice": {
+  "name": "ko-KR-HyunsuMultilingualNeural",
+  "rate": "+18%",
+  "pitch": "+0Hz",
+  "clone_ref": "assets/voices/my_voice_ref15.wav",
+  "clone_steps": 30,
+  "clone_f0": true
+ },
+ "voice_match": "assets/voices/my_voice_full.mp3",
+ "narration": "blocks",
+ "max_pause": 0.45,
+ "block_gap": 0.3,
+ "start_pad": 0.15,
+ "end_pad": 1.8,
+ "maxu": 10.5,
+ "sfx_rel_db": 7,
+ "title": {
+  "l1": "북해 바닥, 끊긴 생명줄",
+  "l2": "남은 숨은 단 몇 분"
+ },
+ "meta": {
+  "warning": "※ 실제 인터뷰 음성 포함 (BBC)"
+ },
+ "music": {
+  "style": "dark",
+  "root": 55.0,
+  "rel_db": -12,
+  "duck": 0.42,
+  "ticks": false,
+  "intensity": [
+   [
+    0,
+    0.6
+   ],
+   [
+    "@night",
+    0.3
+   ],
+   [
+    "@dp",
+    0.55
+   ],
+   [
+    "@snag",
+    0.75
+   ],
+   [
+    "@snap",
+    0.9
+   ],
+   [
+    "@dark",
+    0.5
+   ],
+   [
+    "@climb",
+    0.7
+   ],
+   [
+    "@curl",
+    0.8
+   ],
+   [
+    "@blackout",
+    0.2
+   ],
+   [
+    "@bridge",
+    0.55
+   ],
+   [
+    "@yuasa",
+    0.7
+   ],
+   [
+    "@breaths",
+    0.5
+   ],
+   [
+    "@alive",
+    0.35
+   ],
+   [
+    "@unknown",
+    0.2
+   ]
+  ],
+  "pulse_start": 0.3,
+  "pulse_end": "@unknown",
+  "pulse_db": -2,
+  "gain": [
+   [
+    0,
+    0
+   ],
+   [
+    "@blackout",
+    -6
+   ],
+   [
+    "@bridge",
+    0
+   ],
+   [
+    "@unknown",
+    -4
+   ]
+  ],
+  "coda": "@back",
+  "coda_fade": 2.5,
+  "coda_db": -1,
+  "coda_music": {
+   "bpm": 70,
+   "intensity": [
+    [
+     0,
+     0.4
+    ]
+   ]
+  }
+ },
+ "muffle": [
+  [
+   0,
+   1400
+  ],
+  [
+   "@night",
+   18000
+  ],
+  [
+   "@night:구조물에서",
+   900
+  ],
+  [
+   "@dp",
+   18000
+  ],
+  [
+   "@snap:총소리처럼",
+   18000
+  ],
+  [
+   "@snap:끊어졌습니다.",
+   380
+  ],
+  [
+   "@bridge",
+   18000
+  ],
+  [
+   "@yuasa",
+   700
+  ],
+  [
+   "@breaths:던컨",
+   18000
+  ]
+ ],
+ "scenes": [
+  {
+   "id": "hook",
+   "say": "북해 수심 약 90미터, 잠수사의 생명줄이 끊겼습니다.",
+   "tts": "북해 수심 약 구십미터, 잠수사의 생명줄이 끊겼습니다.",
+   "hl": [
+    "90미터,",
+    "끊겼습니다."
+   ],
+   "sfx": [
+    {
+     "type": "underwater",
+     "at": 0,
+     "dur": 4.5,
+     "db": -6
+    },
+    {
+     "type": "breath",
+     "at": 0,
+     "dur": 3.2,
+     "rate": 0.32,
+     "db": -8,
+     "dry": true
+    },
+    {
+     "type": "creak",
+     "word": "생명줄이",
+     "off": -0.3,
+     "dur": 0.8,
+     "db": -6
+    },
+    {
+     "type": "snap",
+     "word": "끊겼습니다.",
+     "off": 0,
+     "db": -2
+    },
+    {
+     "type": "impact",
+     "word": "끊겼습니다.",
+     "off": 0.02,
+     "size": 0.7,
+     "db": -5
+    },
+    {
+     "type": "braam",
+     "word": "끊겼습니다.",
+     "off": 0,
+     "db": -8,
+     "dur": 2.4
+    }
+   ],
+   "data": {
+    "warning": "※ 실제 인터뷰 음성 포함 (BBC)",
+    "tag": "실화 · 2012 북해"
+   }
+  },
+  {
+   "id": "math",
+   "say": "",
+   "trans": {
+    "type": "cut",
+    "dur": 0.02
+   },
+   "clip": {
+    "file": "../../assets/lemons_media/bbc_outlook_2019_how_did_this_diver_cheat_death_p08lg6lt.mp3",
+    "segs": [
+     [
+      1157.25,
+      1160.62
+     ]
+    ],
+    "fade": [
+     0.02,
+     0.04
+    ],
+    "lead": 0.3,
+    "tail": 0.35,
+    "subs": [
+     {
+      "src0": 1157.25,
+      "src1": 1157.86,
+      "text": "(비상 기체) 5분,",
+      "en": "Five minutes,"
+     },
+     {
+      "src0": 1157.86,
+      "src1": 1159.45,
+      "text": "아마 2~3분은 썼을 테니",
+      "en": "I've probably used it for two or three,"
+     },
+     {
+      "src0": 1159.45,
+      "src1": 1160.62,
+      "text": "이제 2분 남았구나",
+      "en": "I've only got two left here"
+     }
+    ]
+   },
+   "sfx": [
+    {
+     "type": "breath",
+     "at": 0,
+     "dur": 4,
+     "rate": 0.42,
+     "fast": 0.3,
+     "db": -14,
+     "dry": true
+    }
+   ],
+   "data": {
+    "who": "크리스 레몬스 · 그날의 계산을 회상",
+    "where": "BBC World Service 「Outlook」 (2019)",
+    "tag": "본인 회상"
+   }
+  },
+  {
+   "id": "night",
+   "say": "2012년 9월 밤, 크리스 레몬스는 해저 구조물에서 일하고 있었습니다.",
+   "tts": "이천십이년 구월 밤, 크리스 레몬스는 해저 구조물에서 일하고 있었습니다.",
+   "hl": [
+    "크리스",
+    "레몬스는"
+   ],
+   "trans": {
+    "type": "dip",
+    "dur": 0.5
+   },
+   "sfx": [
+    {
+     "type": "rewind",
+     "at": 0,
+     "dur": 0.6,
+     "db": -8
+    },
+    {
+     "type": "wind",
+     "at": 0.3,
+     "dur": 3.5,
+     "db": -12
+    },
+    {
+     "type": "underwater",
+     "word": "해저",
+     "off": -0.4,
+     "dur": 4,
+     "db": -10
+    },
+    {
+     "type": "breath",
+     "word": "일하고",
+     "off": -0.2,
+     "dur": 3,
+     "rate": 0.3,
+     "db": -12,
+     "dry": true
+    }
+   ],
+   "data": {
+    "date": "2012.9.18 (화) 밤",
+    "place": "북해 헌팅턴 유전 · 애버딘 동쪽 약 200km",
+    "depth": "수심 약 90m (보도에 따라 80~100m)",
+    "who": "포화잠수사 크리스 레몬스 (당시 32세)",
+    "bell": "다이빙 벨",
+    "note": "포화잠수: 몇 주씩 고압 챔버에서 생활 · 곧장 수면으로 올라올 수 없음"
+   }
+  },
+  {
+   "id": "umbilical",
+   "say": "숨 쉴 기체도, 온수도, 빛과 통신도, 모두 다이빙 벨과 이어진 줄 하나에 달렸습니다.",
+   "hl": [
+    "줄",
+    "하나에"
+   ],
+   "trans": {
+    "type": "push",
+    "dur": 0.4
+   },
+   "sfx": [
+    {
+     "type": "breath",
+     "at": 0,
+     "dur": 5.5,
+     "rate": 0.3,
+     "db": -12,
+     "dry": true
+    },
+    {
+     "type": "tick",
+     "word": "기체도,",
+     "off": 0,
+     "db": -12
+    },
+    {
+     "type": "tick",
+     "word": "온수도,",
+     "off": 0,
+     "db": -12
+    },
+    {
+     "type": "tick",
+     "word": "빛과",
+     "off": 0,
+     "db": -12
+    },
+    {
+     "type": "tick",
+     "word": "통신도,",
+     "off": 0,
+     "db": -12
+    }
+   ],
+   "data": {
+    "gas": "호흡 기체 (헬륨+산소)",
+    "water": "온수 (잠수복 난방)",
+    "power": "전기·조명·영상",
+    "comms": "통신",
+    "name": "엄빌리컬 = 생명줄"
+   }
+  },
+  {
+   "id": "dp",
+   "say": "밤 10시쯤, 배를 제자리에 붙잡아 두던 장치가 멈췄습니다.",
+   "tts": "밤 열시쯤, 배를 제자리에 붙잡아 두던 장치가 멈췄습니다.",
+   "hl": [
+    "멈췄습니다."
+   ],
+   "trans": {
+    "type": "cut",
+    "dur": 0.02
+   },
+   "sfx": [
+    {
+     "type": "wind",
+     "at": 0,
+     "dur": 4.5,
+     "db": -8
+    },
+    {
+     "type": "engine",
+     "at": 0,
+     "dur": 2.6,
+     "db": -12
+    },
+    {
+     "type": "alarm",
+     "word": "장치가",
+     "off": -0.3,
+     "dur": 2.6,
+     "db": -8,
+     "dry": true
+    },
+    {
+     "type": "thunk",
+     "word": "멈췄습니다.",
+     "off": 0,
+     "db": -8
+    }
+   ],
+   "data": {
+    "time": "22:10경 · 동적위치제어(DP) 경보 → 위치 상실",
+    "wind": "바람 약 30~35노트",
+    "cause": "원인: DP 제어 통신망 장애 · 근본 원인 미확정 (IMCA 안전 공지 02/13)"
+   }
+  },
+  {
+   "id": "snag",
+   "say": "배가 바람에 밀려나면서, 그의 생명줄이 구조물에 걸렸습니다.",
+   "hl": [
+    "걸렸습니다."
+   ],
+   "trans": {
+    "type": "push",
+    "dur": 0.4
+   },
+   "sfx": [
+    {
+     "type": "underwater",
+     "at": 0,
+     "dur": 5,
+     "db": -10
+    },
+    {
+     "type": "groan",
+     "word": "밀려나면서,",
+     "off": -0.2,
+     "dur": 2.4,
+     "db": -5
+    },
+    {
+     "type": "creak",
+     "word": "걸렸습니다.",
+     "off": 0,
+     "dur": 1.0,
+     "db": -4
+    }
+   ],
+   "data": {
+    "tag": "튀어나온 금속 구조물에 걸림",
+    "drift": "배가 밀려남"
+   }
+  },
+  {
+   "id": "weight",
+   "say": "",
+   "trans": {
+    "type": "cut",
+    "dur": 0.02
+   },
+   "clip": {
+    "file": "../../assets/lemons_media/bbc_outlook_2019_how_did_this_diver_cheat_death_p08lg6lt.mp3",
+    "segs": [
+     [
+      817.2,
+      821.93
+     ]
+    ],
+    "fade": [
+     0.03,
+     0.04
+    ],
+    "lead": 0.3,
+    "tail": 0.35,
+    "subs": [
+     {
+      "src0": 817.2,
+      "src1": 819.92,
+      "text": "8천 톤짜리 배의 무게가",
+      "en": "The sort of weight of 8,000 tons of boat"
+     },
+     {
+      "src0": 819.92,
+      "src1": 821.93,
+      "text": "줄을 순식간에 팽팽하게 당겼어요",
+      "en": "was pulling it so tight so quickly"
+     }
+    ]
+   },
+   "sfx": [
+    {
+     "type": "groan",
+     "at": 0.3,
+     "dur": 4.5,
+     "db": -14
+    }
+   ],
+   "data": {
+    "who": "크리스 레몬스",
+    "where": "BBC World Service 「Outlook」 (2019)"
+   }
+  },
+  {
+   "id": "snap",
+   "say": "호스가 막혀 비상 기체로 바꿨고, 곧 생명줄이 총소리처럼 끊어졌습니다.",
+   "hl": [
+    "총소리처럼"
+   ],
+   "trans": {
+    "type": "cut",
+    "dur": 0.02
+   },
+   "sfx": [
+    {
+     "type": "breath",
+     "at": 0,
+     "dur": 2.4,
+     "rate": 0.5,
+     "fast": 0.6,
+     "db": -8,
+     "dry": true
+    },
+    {
+     "type": "creak",
+     "word": "곧",
+     "off": -0.4,
+     "dur": 0.9,
+     "db": -5
+    },
+    {
+     "type": "snap",
+     "word": "총소리처럼",
+     "off": 0,
+     "db": 0
+    },
+    {
+     "type": "impact",
+     "word": "총소리처럼",
+     "off": 0,
+     "size": 1.0,
+     "db": -3
+    },
+    {
+     "type": "braam",
+     "word": "끊어졌습니다.",
+     "off": 0,
+     "db": -8,
+     "dur": 2.6
+    }
+   ],
+   "data": {
+    "bailout": "비상 기체(베일아웃) 개방",
+    "time": "22:12~13경 · 생명줄 절단",
+    "note": "\"산탄총 같은 소리\" — 레몬스",
+    "order": "순서는 레몬스 본인 증언 기준"
+   }
+  },
+  {
+   "id": "dark",
+   "say": "",
+   "trans": {
+    "type": "cut",
+    "dur": 0.02
+   },
+   "clip": {
+    "file": "../../assets/lemons_media/bbc_outlook_2019_how_did_this_diver_cheat_death_p08lg6lt.mp3",
+    "segs": [
+     [
+      1065.66,
+      1070.8
+     ]
+    ],
+    "fade": [
+     0.03,
+     0.06
+    ],
+    "lead": 0.3,
+    "tail": 0.35,
+    "subs": [
+     {
+      "src0": 1065.66,
+      "src1": 1069.04,
+      "text": "갑자기, 패닉과 빛의 세계에서",
+      "en": "Suddenly, a plunge from this world of panic and light"
+     },
+     {
+      "src0": 1069.04,
+      "src1": 1070.8,
+      "text": "완전한 침묵과 어둠 속으로",
+      "en": "to complete silence and darkness."
+     }
+    ],
+    "notch": [
+     [
+      1000,
+      25
+     ],
+     [
+      248,
+      25
+     ]
+    ]
+   },
+   "data": {
+    "who": "크리스 레몬스",
+    "where": "BBC World Service 「Outlook」 (2019)"
+   }
+  },
+  {
+   "id": "climb",
+   "say": "더듬어 구조물 위로 올랐지만, 벨의 불빛은 어디에도 없었습니다.",
+   "hl": [
+    "어디에도"
+   ],
+   "trans": {
+    "type": "cut",
+    "dur": 0.02
+   },
+   "sfx": [
+    {
+     "type": "breath",
+     "at": 0,
+     "dur": 5,
+     "rate": 0.36,
+     "fast": 0.3,
+     "db": -8,
+     "dry": true
+    },
+    {
+     "type": "knock",
+     "word": "구조물",
+     "off": -0.2,
+     "n": 2,
+     "gap": 0.5,
+     "db": -14
+    },
+    {
+     "type": "heartbeat",
+     "word": "불빛은",
+     "off": 0,
+     "db": -10,
+     "dry": true
+    }
+   ],
+   "data": {
+    "tag": "벨은 배와 함께 밀려나 있었음",
+    "gauge": "게이지는 너무 어두워 보이지 않았다 (본인 회상)",
+    "bailout": "비상 기체 약 5~10분 (출처마다 다름)"
+   }
+  },
+  {
+   "id": "curl",
+   "say": "마음을 가라앉혀 기체를 아끼며 웅크렸고, 호흡은 점점 뻑뻑해졌다고 합니다.",
+   "hl": [
+    "뻑뻑해졌다고"
+   ],
+   "trans": {
+    "type": "fade",
+    "dur": 0.4
+   },
+   "sfx": [
+    {
+     "type": "breath",
+     "at": 0,
+     "dur": 6.5,
+     "rate": 0.26,
+     "fast": 0.0,
+     "db": -7,
+     "dry": true
+    },
+    {
+     "type": "heartbeat",
+     "word": "웅크렸고,",
+     "off": 0,
+     "db": -11,
+     "dry": true
+    },
+    {
+     "type": "heartbeat",
+     "word": "호흡은",
+     "off": 0.3,
+     "db": -11,
+     "dry": true
+    }
+   ],
+   "data": {
+    "tag": "본인 회상 (BBC, 2019)"
+   }
+  },
+  {
+   "id": "thisisit",
+   "say": "",
+   "trans": {
+    "type": "cut",
+    "dur": 0.02
+   },
+   "clip": {
+    "file": "../../assets/lemons_media/bbc_outlook_2019_how_did_this_diver_cheat_death_p08lg6lt.mp3",
+    "segs": [
+     [
+      1331.45,
+      1336.15
+     ]
+    ],
+    "fade": [
+     0.03,
+     0.05
+    ],
+    "lead": 0.3,
+    "tail": 0.5,
+    "subs": [
+     {
+      "src0": 1331.45,
+      "src1": 1332.52,
+      "text": "막상 그 순간이 오자",
+      "en": "But when it did come"
+     },
+     {
+      "src0": 1332.52,
+      "src1": 1334.62,
+      "text": "분명히 알았어요, 이게 끝이구나",
+      "en": "there was a definite realisation that this was it,"
+     },
+     {
+      "src0": 1334.62,
+      "src1": 1336.15,
+      "text": "제발 아프지 않기를",
+      "en": "and I really hope it doesn't hurt."
+     }
+    ]
+   },
+   "data": {
+    "who": "크리스 레몬스",
+    "where": "BBC World Service 「Outlook」 (2019)"
+   }
+  },
+  {
+   "id": "blackout",
+   "say": "그리고, 의식을 잃었습니다.",
+   "new_block": true,
+   "max_pause": 0.7,
+   "voice": {
+    "rate": "+8%"
+   },
+   "trans": {
+    "type": "fade",
+    "dur": 0.5
+   },
+   "sfx": [
+    {
+     "type": "underwater",
+     "at": 0,
+     "dur": 3.5,
+     "db": -14
+    }
+   ],
+   "data": {
+    "tag": "의식을 잃은 시각: 아무도 모름"
+   }
+  },
+  {
+   "id": "bridge",
+   "say": "그사이 선장과 일등항해사는 배를 직접 몰아 되돌아오고 있었습니다.",
+   "new_block": true,
+   "hl": [
+    "직접"
+   ],
+   "trans": {
+    "type": "cut",
+    "dur": 0.02
+   },
+   "sfx": [
+    {
+     "type": "wind",
+     "at": 0,
+     "dur": 5,
+     "db": -8
+    },
+    {
+     "type": "engine",
+     "word": "몰아",
+     "off": -0.2,
+     "dur": 3.4,
+     "db": -6
+    },
+    {
+     "type": "rain",
+     "at": 0,
+     "dur": 5,
+     "db": -22
+    }
+   ],
+   "data": {
+    "manual": "22:17 수동 조종 (회사 기록) · 이후 DP 재가동",
+    "drift": "약 240m 밀려남 (출처마다 190~250m)",
+    "rov": "무인잠수정(ROV)이 구조물 위의 그를 찾아냄"
+   }
+  },
+  {
+   "id": "yuasa",
+   "say": "배가 돌아오자, 동료 데이브 유아사가 그를 벨까지 끌고 왔습니다.",
+   "hl": [
+    "데이브",
+    "유아사가"
+   ],
+   "trans": {
+    "type": "push",
+    "dur": 0.4
+   },
+   "sfx": [
+    {
+     "type": "underwater",
+     "at": 0,
+     "dur": 5,
+     "db": -10
+    },
+    {
+     "type": "breath",
+     "word": "동료",
+     "off": -0.2,
+     "dur": 3.4,
+     "rate": 0.5,
+     "fast": 0.5,
+     "db": -10,
+     "dry": true
+    }
+   ],
+   "data": {
+    "who": "동료 잠수사 데이브 유아사",
+    "time": "22:40경 · 벨을 다시 내림"
+   }
+  },
+  {
+   "id": "superhuman",
+   "say": "",
+   "trans": {
+    "type": "cut",
+    "dur": 0.02
+   },
+   "clip": {
+    "file": "../../assets/lemons_media/bbc_eye_of_the_storm_2019_diver_who_cheated_death_p07c6w6z.mp3",
+    "segs": [
+     [
+      762.0,
+      766.06
+     ]
+    ],
+    "fade": [
+     0.03,
+     0.06
+    ],
+    "lead": 0.3,
+    "tail": 0.35,
+    "subs": [
+     {
+      "src0": 762.0,
+      "src1": 764.24,
+      "text": "정말 초인적인 힘으로",
+      "en": "It was a real superhuman effort"
+     },
+     {
+      "src0": 764.24,
+      "src1": 766.06,
+      "text": "저를 끌고 와 준 거예요",
+      "en": "to come and drag me back."
+     }
+    ]
+   },
+   "data": {
+    "who": "크리스 레몬스 · 데이브 유아사에 대해",
+    "where": "BBC Radio 5 Live 「Eye of the Storm」 (2019)"
+   }
+  },
+  {
+   "id": "breaths",
+   "say": "생명줄이 끊긴 지 약 35분, 벨 안의 던컨 올콕이 숨을 두 번 불어넣자, 그가 숨을 들이켰다고 합니다.",
+   "tts": "생명줄이 끊긴 지 약 삼십오분, 벨 안의 던컨 올콕이 숨을 두 번 불어넣자, 그가 숨을 들이켰다고 합니다.",
+   "new_block": true,
+   "hl": [
+    "35분,",
+    "들이켰다고"
+   ],
+   "trans": {
+    "type": "cut",
+    "dur": 0.02
+   },
+   "sfx": [
+    {
+     "type": "underwater",
+     "at": 0,
+     "dur": 3,
+     "db": -14
+    },
+    {
+     "type": "heartbeat",
+     "word": "들이켰다고",
+     "off": 0.1,
+     "db": -8,
+     "dry": true
+    },
+    {
+     "type": "shimmer",
+     "word": "들이켰다고",
+     "off": 0,
+     "dur": 1.8,
+     "db": -12
+    }
+   ],
+   "data": {
+    "bell": "벨 안 · 벨맨 던컨 올콕",
+    "time": "22:46경 · 헬멧을 벗김",
+    "note": "구조 직후 상태는 기록마다 조금 다름"
+   }
+  },
+  {
+   "id": "alive",
+   "say": "",
+   "trans": {
+    "type": "cut",
+    "dur": 0.02
+   },
+   "clip": {
+    "file": "../../assets/lemons_media/bbc_outlook_2019_how_did_this_diver_cheat_death_p08lg6lt.mp3",
+    "segs": [
+     [
+      1673.6,
+      1677.1
+     ]
+    ],
+    "fade": [
+     0.03,
+     0.06
+    ],
+    "lead": 0.3,
+    "tail": 0.35,
+    "subs": [
+     {
+      "src0": 1673.6,
+      "src1": 1674.32,
+      "text": "(던컨이) 그러더라고요",
+      "en": "He just said, look,"
+     },
+     {
+      "src0": 1674.32,
+      "src1": 1675.7,
+      "text": "살아 있다, 숨 쉰다,",
+      "en": "he's alive, he's breathing,"
+     },
+     {
+      "src0": 1675.7,
+      "src1": 1677.1,
+      "text": "말까지 한다고요",
+      "en": "he's actually talking."
+     }
+    ]
+   },
+   "data": {
+    "who": "크레이그 프레드릭 · 당시 잠수 감독관 (벨 안의 보고를 회상)",
+    "where": "BBC World Service 「Outlook」 (2019)"
+   }
+  },
+  {
+   "id": "unknown",
+   "say": "기체 없이 버틴 시간은, 아무도 모릅니다.",
+   "new_block": true,
+   "hl": [
+    "아무도"
+   ],
+   "trans": {
+    "type": "dip",
+    "dur": 0.5
+   },
+   "sfx": [
+    {
+     "type": "piano",
+     "at": 0.1,
+     "f": 110.0,
+     "dur": 3.5,
+     "db": -10
+    }
+   ],
+   "data": {
+    "note": "생명줄 절단 → 구조까지 약 33~41분 · 의식을 잃은 시각은 모름",
+    "why": "생존 이유는 아직 가설 (차가운 수온 등)"
+   }
+  },
+  {
+   "id": "back",
+   "say": "약 3주 뒤, 그는 다시 바다로 돌아갔습니다.",
+   "tts": "약 삼주 뒤, 그는 다시 바다로 돌아갔습니다.",
+   "hl": [
+    "다시"
+   ],
+   "trans": {
+    "type": "fade",
+    "dur": 0.5
+   },
+   "sfx": [
+    {
+     "type": "underwater",
+     "at": 0,
+     "dur": 3,
+     "db": -16
+    }
+   ],
+   "data": {
+    "tag": "감압 약 3~4일 · 검사 이상 없음"
+   }
+  },
+  {
+   "id": "same",
+   "say": "",
+   "trans": {
+    "type": "cut",
+    "dur": 0.02
+   },
+   "clip": {
+    "file": "../../assets/lemons_media/bbc_outlook_2019_how_did_this_diver_cheat_death_p08lg6lt.mp3",
+    "segs": [
+     [
+      2019.36,
+      2024.5
+     ]
+    ],
+    "fade": [
+     0.03,
+     0.08
+    ],
+    "lead": 0.3,
+    "tail": 0.35,
+    "subs": [
+     {
+      "src0": 2019.36,
+      "src1": 2020.58,
+      "text": "물에 들어가자마자",
+      "en": "As soon as we got into the water,"
+     },
+     {
+      "src0": 2020.58,
+      "src1": 2022.68,
+      "text": "같은 세 사람, 던컨, 데이브, 저",
+      "en": "the same three, you know, Duncan, Dave and myself,"
+     },
+     {
+      "src0": 2022.68,
+      "src1": 2024.5,
+      "text": "다 함께 같은 곳으로 돌아갔어요",
+      "en": "we all went back together to the same place."
+     }
+    ]
+   },
+   "data": {
+    "who": "크리스 레몬스",
+    "where": "BBC World Service 「Outlook」 (2019)"
+   }
+  },
+  {
+   "id": "close",
+   "say": "레몬스가 꼽는, 살아남은 큰 이유 하나. 곁에 있던 사람들입니다.",
+   "new_block": true,
+   "voice": {
+    "rate": "+8%"
+   },
+   "max_pause": 0.8,
+   "hl": [
+    "곁에",
+    "있던",
+    "사람들입니다."
+   ],
+   "trans": {
+    "type": "dip",
+    "dur": 0.6
+   },
+   "sfx": [
+    {
+     "type": "bell",
+     "word": "사람들입니다.",
+     "off": 0,
+     "f": 659.25,
+     "db": -14
+    }
+   ],
+   "data": {
+    "line": "이 사고에서는 모두 살아남았습니다",
+    "names": "크리스 레몬스 · 데이브 유아사 · 던컨 올콕",
+    "quote": "\"One of the greatest reasons I survived was the quality of the people around me.\" — 크리스 레몬스 (BBC Future, 2019)"
+   }
+  }
+ ]
+}
