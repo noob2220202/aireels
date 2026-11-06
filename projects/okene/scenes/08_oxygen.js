@@ -312,22 +312,24 @@ window.PK.scenes.oxygen = function (ctx, t, d, info) {
   const { beat, souls, sourceCard } = PK, D = info.sc.data || {}, sc = info.sc;
   const v0 = sc.voice_t - sc.t0, v1 = sc.voice_end - sc.t0;
   const subs = ((info.TL && info.TL.subs) || []).filter(c => c.t0 >= sc.t0 - .01 && c.t0 < sc.t1);
-  const s2 = v0 + (v1 - v0) * .417;                                    // "it was almost gone" (second clip segment)
-  const s3 = subs[1] ? subs[1].t0 - sc.t0 : v0 + (v1 - v0) * .742;    // "because I was already struggling to breathe"
+  // "it was almost gone" (second clip segment; its own subtitle chunk if the first quote is split in two)
+  const s2 = subs.length >= 3 ? subs[1].t0 - sc.t0 : v0 + (v1 - v0) * .417;
+  const s3 = subs.length >= 2 ? subs[subs.length - 1].t0 - sc.t0 : v0 + (v1 - v0) * .742;    // "because I was already struggling to breathe"
   const br = ((info.TL && info.TL.sfx) || []).find(s => s.type === 'breath' && Math.abs(s.t - sc.t0) < .1);
   const per = br ? 1 / ((br.rate || .6) + (br.fast || 0)) : .625;
   const ph = ((t / per) % 1 + 1) % 1, inh = ph < .42 ? Math.pow(Math.sin(Math.PI * ph / .42), 1.5) : 0;
-  const gone = P(t, s2 - .15, s2 + 1.3, E.inOutQ), strug = P(t, s3 - .25, s3 + .5, E.inOutQ), endK = P(t, d - .6, d, E.inQ);
+  const gone = P(t, s2 - .15, s2 + 1.3, E.inOutQ), strug = P(t, s3 - .25, s3 + .5, E.inOutQ), endK = P(t, d - .75, d - .04, E.inQ);
   const dip = (hi(Math.floor(t * 7) + 11) > .84 ? .2 : 0) * (.35 + gone);
   const I = (1 - .3 * gone - .1 * strug) * (1 - .12 * (.5 + .5 * nz(t * 9, 4)) - dip) * (1 - .3 * endK);
   const bpm = lerp(84, 112, strug), bt = beat(t, bpm);
 
   // ---- section perspective: the near cut faces (steel slab above, hull-side wall at the right, water below) frame the gap,
   //      which recedes to a thin dark slit at the cabin's far wall. Front-plane coords; depth scale s: 1 (cut) .. SB (far wall)
-  const rise = .5 * P(t, 0, d, E.inOutQ) + .5 * gone;
-  const yC = 600, yW = lerp(852, 806, rise), VX = 610, VY = 712, SB = .56, XL = -260, XR = 1010;
+  // the water keeps climbing: slowly all through, a step on 'almost gone', and again while he struggles to breathe
+  const rise = .3 * P(t, 0, d, E.inOutQ) + .4 * gone + .3 * P(t, s3 - .5, d - .35, E.inOutQ);
+  const yC = 600, yW = lerp(852, 772, rise), VX = 610, VY = 712, SB = .56, XL = -260, XR = 1010;
   const p3 = (x, y, s) => [VX + (x - VX) * s, VY + (y - VY) * s];
-  const sL = .88, xLf = 650, yLf = yW - 30 + 2 * Math.sin(t * 1.1);   // his light rides the mattresses up with the water
+  const sL = .88, xLf = 650, yLf = yW - 42 + 2 * Math.sin(t * 1.1);   // his light rides the mattresses up with the water
   const Lp = p3(xLf, yLf, sL), Lc = p3(xLf, yC, sL);
   const wy = (x, tt) => yW + Math.sin(x * .021 + tt * 1.3) * 4 + Math.sin(x * .057 - tt * .9) * 2;
 
@@ -335,45 +337,49 @@ window.PK.scenes.oxygen = function (ctx, t, d, info) {
   ctx.save();
   const dr = { x: fb(t * .35, 81) * 10, y: fb(t * .3, 82) * 10, r: fb(t * .25, 83) * .006 };
   const [shx, shy, shr] = KN.shake(t, .16 * strug, 8);
-  const z = lerp(1.12, 1.28, P(t, -.3, d + .2, E.inOutQ));
-  ctx.translate(Lp[0] + dr.x + shx, Lp[1] + dr.y + shy); ctx.rotate(dr.r + shr); ctx.scale(z, z); ctx.translate(-Lp[0], -Lp[1] + 6);
+  // close and low in the gap: his light held low in the frame (cold's last framing of the cabin: the old floor just under the
+  // title, the light low right), pushing in as the water lifts him toward the ceiling; ends where divers opens on him
+  const cam = P(t, -.3, d + .2, E.inOutQ), z = lerp(1.45, 1.9, cam) * (1 + .012 * bt);
+  const AX = lerp(660, 570, P(t, 0, d, E.inOutQ)), AY = lerp(965, 925, P(t, 0, d, E.inOutQ));
+  ctx.translate(AX + dr.x + shx, AY + dr.y + shy); ctx.rotate(dr.r + shr); ctx.scale(z, z); ctx.translate(-Lp[0], -Lp[1] + 6);
 
   // ---- far wall (thin slit) with the doorway, side walls ----
   const fq = [p3(XL, yC, SB), p3(XR, yC, SB), p3(XR, yW, SB), p3(XL, yW, SB)];
-  fillPoly(ctx, fq, '#05080a');
-  { const g = ctx.createRadialGradient(Lp[0], fq[0][1] + 40, 0, Lp[0], fq[0][1] + 40, 420); g.addColorStop(0, rgba('#ff9f5a', .13 * I)); g.addColorStop(1, 'rgba(255,160,90,0)'); ctx.fillStyle = g; ctx.fill(); }
+  fillPoly(ctx, fq, '#060c0f');
+  { const g = ctx.createRadialGradient(Lp[0], fq[0][1] + 40, 0, Lp[0], fq[0][1] + 40, 380); g.addColorStop(0, rgba('#ff9f5a', .1 * I)); g.addColorStop(1, 'rgba(255,160,90,0)'); ctx.fillStyle = g; ctx.fill(); }
+  // the cabin's wall panel seams (KN.cabin spacing), cool steel
+  ctx.fillStyle = 'rgba(160,190,205,.12)'; for (let k = 1; k < 10; k++) { const a = p3(XL + k * 133, yC, SB), b = p3(XL + k * 133, yW, SB); ctx.fillRect(a[0] - 1, a[1], 2, b[1] - a[1]); }
   { const a = p3(190, yC + 30, SB), b = p3(430, yW, SB); ctx.fillStyle = '#000'; ctx.fillRect(a[0], a[1], b[0] - a[0], b[1] - a[1]); ctx.strokeStyle = 'rgba(150,175,188,.13)'; ctx.lineWidth = 2; ctx.strokeRect(a[0], a[1], b[0] - a[0], b[1] - a[1]);
     ctx.fillStyle = '#161d21'; ctx.fillRect(a[0] - 6, a[1] - 7, b[0] - a[0] + 12, 7); }
   fillPoly(ctx, [p3(XL, yC, 1), p3(XL, yC, SB), p3(XL, yW, SB), p3(XL, yW, 1)], '#040708');
   const rwq = [p3(XR, yC, 1), p3(XR, yC, SB), p3(XR, yW, SB), p3(XR, yW, 1)];
   fillPoly(ctx, rwq, '#070b0d');
-  { const g = ctx.createRadialGradient(Lp[0], Lp[1], 0, Lp[0], Lp[1], 520); g.addColorStop(0, rgba('#ffa860', .22 * I)); g.addColorStop(1, 'rgba(255,160,90,0)'); ctx.fillStyle = g; ctx.fill(); }
-  // exposed frames where he pulled the wall panels off
-  for (const s of [.95, .85, .76, .67, .6]) {
-    const a = p3(XR, yC, s), b = p3(XR, yW, s), lit = I * Math.exp(-Math.abs(s - sL) * 6);
-    ctx.fillStyle = rgba('#a89276', .08 + .5 * lit); ctx.fillRect(a[0] - 7 * s, a[1], 12 * s, b[1] - a[1]);
-  }
+  { const g = ctx.createRadialGradient(Lp[0], Lp[1], 0, Lp[0], Lp[1], 460); g.addColorStop(0, rgba('#ffa860', .16 * I)); g.addColorStop(1, 'rgba(255,160,90,0)'); ctx.fillStyle = g; ctx.fill(); }
+  // the bare steel where he pulled the wall panels off: one deep frame, rivet rows (as KN.bareWall)
+  { const a = p3(XR, yC, .8), b = p3(XR, yW, .8), lit = I * Math.exp(-Math.abs(.8 - sL) * 6);
+    ctx.fillStyle = '#121b20'; ctx.fillRect(a[0] - 10, a[1], 16, b[1] - a[1]); ctx.fillStyle = rgba('#ffcf9a', .05 + .35 * lit); ctx.fillRect(a[0] - 10, a[1], 2, b[1] - a[1]);
+    ctx.fillStyle = rgba('#9fb3bd', .1 + .2 * I); for (const s of [.94, .88, .74, .68, .63]) { const r = p3(XR, yC + 70, s); ctx.fillRect(r[0] - 1.5, r[1], 3 * s, 3 * s); } }
   // ---- ceiling: the old floor tiles, lit from below by his light; caustic ripples crawl over them ----
   const cq = [p3(XL, yC, 1), p3(XR, yC, 1), p3(XR, yC, SB), p3(XL, yC, SB)];
-  fillPoly(ctx, cq, '#0a0f12');
+  fillPoly(ctx, cq, '#0e1418');                                       // KN.cabin's tile steel
   ctx.save(); ctx.clip();
   { const g = ctx.createLinearGradient(0, yC, 0, cq[2][1]); g.addColorStop(0, 'rgba(1,2,3,0)'); g.addColorStop(1, 'rgba(1,2,3,.6)'); ctx.fillStyle = g; ctx.fillRect(-300, yC - 2, 1700, cq[2][1] - yC + 4); }
-  const zs = j => 1 / (1 + (1 / SB - 1) * j);
-  for (let i = 0; i < 11; i++) for (let j = 0; j < 6; j++) {         // stained / missing tiles
-    const h0 = hi(i * 37 + j * 11 + 3); if (h0 < .78) continue; const x0 = XL + i * 115;
-    fillPoly(ctx, [p3(x0, yC, zs(j / 6)), p3(x0 + 115, yC, zs(j / 6)), p3(x0 + 115, yC, zs((j + 1) / 6)), p3(x0, yC, zs((j + 1) / 6))], h0 > .9 ? 'rgba(70,46,24,.4)' : 'rgba(0,0,0,.4)');
+  const zs = j => 1 / (1 + (1 / SB - 1) * j), TW = 800 / 9, NT = Math.ceil((XR - XL) / TW);   // KN.cabin's tile size
+  for (let i = 0; i < NT; i++) for (let j = 0; j < 6; j++) {         // stained / missing tiles
+    const h0 = hi(i * 37 + j * 11 + 3); if (h0 < .8) continue; const x0 = XL + i * TW;
+    fillPoly(ctx, [p3(x0, yC, zs(j / 6)), p3(x0 + TW, yC, zs(j / 6)), p3(x0 + TW, yC, zs((j + 1) / 6)), p3(x0, yC, zs((j + 1) / 6))], h0 > .92 ? 'rgba(40,52,58,.5)' : 'rgba(0,0,0,.4)');
   }
   ctx.save(); ctx.translate(Lc[0], Lc[1]); ctx.scale(1.5, .3);
-  { const g = ctx.createRadialGradient(0, 0, 0, 0, 0, 520); g.addColorStop(0, rgba('#ffb877', .42 * I * (.85 + .15 * bt))); g.addColorStop(.45, rgba('#ff9a50', .1 * I)); g.addColorStop(1, 'rgba(255,150,80,0)'); ctx.fillStyle = g; ctx.fillRect(-560, -560, 1120, 1120); }
+  { const g = ctx.createRadialGradient(0, 0, 0, 0, 0, 420); g.addColorStop(0, rgba('#ffb877', .26 * I * (.85 + .15 * bt))); g.addColorStop(.45, rgba('#ff9a50', .06 * I)); g.addColorStop(1, 'rgba(255,150,80,0)'); ctx.fillStyle = g; ctx.fillRect(-460, -460, 920, 920); }
   ctx.restore();
-  { const tg = ctx.createRadialGradient(Lc[0], Lc[1], 0, Lc[0], Lc[1], 600);
-    tg.addColorStop(0, rgba('#ffd2a0', .6 * I)); tg.addColorStop(.45, rgba('#b99a7c', .15 * I + .04)); tg.addColorStop(1, 'rgba(110,135,150,.06)');
-    ctx.strokeStyle = tg; ctx.lineWidth = 2.2; ctx.beginPath();
-    for (let k = 0; k <= 11; k++) { const a = p3(XL + k * 115, yC, 1), b = p3(XL + k * 115, yC, SB); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); }
+  { const tg = ctx.createRadialGradient(Lc[0], Lc[1], 0, Lc[0], Lc[1], 520);
+    tg.addColorStop(0, rgba('#ffd2a0', .45 * I)); tg.addColorStop(.35, rgba('#9fb3bd', .1 * I + .2)); tg.addColorStop(1, 'rgba(159,179,189,.16)');
+    ctx.strokeStyle = tg; ctx.lineWidth = 2.6; ctx.beginPath();
+    for (let k = 0; k <= NT; k++) { const a = p3(XL + k * TW, yC, 1), b = p3(XL + k * TW, yC, SB); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); }
     for (let j = 1; j <= 6; j++) { const a = p3(XL, yC, zs(j / 6)), b = p3(XR, yC, zs(j / 6)); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); }
     ctx.stroke(); }
   { ctx.globalCompositeOperation = 'lighter';
-    const cg = ctx.createRadialGradient(Lc[0], Lc[1], 0, Lc[0], Lc[1], 330); cg.addColorStop(0, rgba('#ffc890', .5 * I)); cg.addColorStop(.6, rgba('#ffb070', .14 * I)); cg.addColorStop(1, 'rgba(255,170,100,0)');
+    const cg = ctx.createRadialGradient(Lc[0], Lc[1], 0, Lc[0], Lc[1], 330); cg.addColorStop(0, rgba('#ffc890', .38 * I)); cg.addColorStop(.6, rgba('#ffb070', .1 * I)); cg.addColorStop(1, 'rgba(255,170,100,0)');
     ctx.strokeStyle = cg; ctx.lineWidth = 2.4; ctx.beginPath();
     for (let i = 0; i < 9; i++) { const si = sL + (i - 4) * .035; for (let j = 0; j <= 24; j++) { const x = xLf - 330 + j * 660 / 24, ds = .012 * Math.sin(x * .028 + t * 2.3 + i * 1.7) + .007 * Math.sin(x * .061 - t * 3.4 + i), p = p3(x, yC, clamp(si + ds, SB, 1)); j ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]); } }
     ctx.stroke(); }
@@ -421,16 +427,18 @@ window.PK.scenes.oxygen = function (ctx, t, d, info) {
     }); }
   ctx.restore();
   // ---- the stacked mattresses, his light on them ----
-  { const x0 = 540, x1 = 1000, s0 = .99, s1 = .68, yT = yW - 22 + 1.5 * Math.sin(t * 1.1);
-    const top = [p3(x0, yT, s0), p3(x1, yT, s0), p3(x1, yT, s1), p3(x0, yT, s1)];
+  { const s0 = .99, s1 = .7, yT = yW - 34 + 1.5 * Math.sin(t * 1.1), LH = (yW + 2 - yT) / 3;
+    // the top surface (his light lies on it), then the three mattresses' front faces, stacked and offset as in KN.cabin
+    const top = [p3(548, yT, s0), p3(866, yT, s0), p3(866, yT, s1), p3(548, yT, s1)];
     fillPoly(ctx, top, '#15110d');
     { const g = ctx.createRadialGradient(Lp[0], Lp[1], 0, Lp[0], Lp[1], 260); g.addColorStop(0, rgba('#ffb36b', .45 * I)); g.addColorStop(1, 'rgba(255,170,100,0)'); ctx.fillStyle = g; ctx.fill(); }
-    const fa = p3(x0, yT, s0), fb2 = p3(x1, yW + 2, s0);
-    ctx.fillStyle = '#0b0907'; ctx.fillRect(fa[0], fa[1], fb2[0] - fa[0], fb2[1] - fa[1]);
-    ctx.fillStyle = 'rgba(0,0,0,.6)'; for (let k = 1; k < 3; k++) ctx.fillRect(fa[0], fa[1] + (fb2[1] - fa[1]) * k / 3 - 1, fb2[0] - fa[0], 2);
-    const g = ctx.createRadialGradient(Lp[0], Lp[1], 0, Lp[0], Lp[1], 360); g.addColorStop(0, rgba('#ffd2a0', .8 * I)); g.addColorStop(1, 'rgba(255,200,150,.04)');
-    ctx.strokeStyle = g; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(fa[0], fa[1]); ctx.lineTo(fb2[0], fa[1]); ctx.stroke(); }
-  souls(ctx, t, [{ x: Lp[0], y: Lp[1], a: clamp(.45 + .55 * I), s: 2.05 }], { bpm });
+    const eg = ctx.createRadialGradient(Lp[0], Lp[1], 0, Lp[0], Lp[1], 360); eg.addColorStop(0, rgba('#ffd2a0', .8 * I)); eg.addColorStop(1, 'rgba(255,200,150,.04)');
+    for (let k = 0; k < 3; k++) {
+      const ya = yW + 2 - (k + 1) * LH, fa = p3(520 + k * 14, ya, s0), fb2 = p3(906 - k * 20, ya + LH + 1, s0);
+      ctx.fillStyle = k === 2 ? '#15120e' : '#0d0b09'; ctx.beginPath(); ctx.roundRect(fa[0], fa[1], fb2[0] - fa[0], fb2[1] - fa[1], 6); ctx.fill();
+      ctx.strokeStyle = eg; ctx.lineWidth = k === 2 ? 2.5 : 1.6; ctx.beginPath(); ctx.moveTo(fa[0] + 6, fa[1] + .5); ctx.lineTo(fb2[0] - 6, fa[1] + .5); ctx.stroke();
+    } }
+  souls(ctx, t, [{ x: Lp[0], y: Lp[1], a: clamp(.45 + .55 * I), s: 2.6 }], { bpm });
 
   // ---- the near cut faces: water body, hull-side wall, the steel slab overhead ----
   { ctx.beginPath(); ctx.moveTo(-300, 1500); for (let x = -300; x <= XR + 8; x += 8) ctx.lineTo(x, wy(x, t)); ctx.lineTo(XR, 1500); ctx.closePath();
@@ -459,7 +467,7 @@ window.PK.scenes.oxygen = function (ctx, t, d, info) {
     ctx.fillStyle = g; ctx.fillRect(-300, yC - 600, XR + 300, 600); hatch(ctx, -300, yC - 600, XR, yC - 18, .03);
     ctx.fillStyle = 'rgba(0,0,0,.45)'; for (let x = -280; x < XR; x += 52) ctx.fillRect(x, yC - 62, 6, 6);
     ctx.fillStyle = '#141b1f'; ctx.fillRect(-300, yC - 18, XR + 300, 18);            // the old floor tiles in section
-    ctx.fillStyle = 'rgba(0,0,0,.6)'; for (let x = XL; x < XR; x += 115) ctx.fillRect(x - 1, yC - 18, 2, 18);
+    ctx.fillStyle = 'rgba(0,0,0,.6)'; for (let x = XL; x < XR; x += TW) ctx.fillRect(x - 1, yC - 18, 2, 18);
     const tg = ctx.createLinearGradient(Lp[0] - 380, 0, Lp[0] + 380, 0); tg.addColorStop(0, 'rgba(255,190,130,0)'); tg.addColorStop(.5, rgba('#ffc890', .55 * I)); tg.addColorStop(1, 'rgba(255,190,130,0)');
     ctx.fillStyle = tg; ctx.fillRect(Lp[0] - 380, yC - 3, 760, 3);
     ctx.fillStyle = 'rgba(160,190,205,.18)'; ctx.fillRect(-300, yC - 19, XR + 300, 1); }
@@ -493,9 +501,14 @@ window.PK.scenes.oxygen = function (ctx, t, d, info) {
   ctx.restore();
 
   // ---- tunnel vision: closes on every inhale, tighter as the air runs out ----
-  const irisK = .38 + .08 * P(t, 0, s2) + .1 * gone + .12 * strug + .42 * endK;
-  KN.iris(ctx, irisK, inh * (.55 + .7 * strug), LS.x, LS.y - 70);
+  const irisK = clamp(.45 + .1 * P(t, 0, s2) + .15 * gone + .2 * strug + .6 * endK);
+  KN.iris(ctx, irisK, inh * (.8 + .8 * strug), LS.x, LS.y - 70);
+  // the last beat goes dark but for a faint ember of his light (hard cut to the knocks)
+  if (endK > 0) { ctx.fillStyle = `rgba(1,2,3,${(.9 * endK).toFixed(3)})`; ctx.fillRect(0, 0, W, 1290); glow(ctx, LS.x, LS.y, 60, '#ffb347', .35 * endK); }
   KN.subBand(ctx);
+  // where we are now: the officer's cabin next door (approved label), gone before the real voice gets going
+  const cA = P(t, .15, .4, E.outQ) * (1 - P(t, 1.6, 1.9, E.inQ));
+  if (cA > 0) { const s = lerp(.86, 1, E.outBack(clamp(P(t, .15, .4)))); ctx.save(); ctx.translate(540, 540); ctx.scale(s, s); PK.chip(ctx, '사관 선실', 0, 0, cA, { size: 34, color: '#cfe8ff' }); ctx.restore(); }
   sourceCard(ctx, D.who || '', D.where || '', P(t, .03, .28, E.outQ) * (1 - P(t, d - .22, d, E.inQ)));
 };
 })();
