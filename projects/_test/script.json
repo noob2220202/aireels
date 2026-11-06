@@ -1,0 +1,9 @@
+{
+ "name": "_test",
+ "voice": {"name": "ko-KR-InJoonNeural", "rate": "+12%", "pitch": "-2Hz"},
+ "music": {"root": 73.42, "intensity": [[0, 0.3], ["@b", 0.9]]},
+ "scenes": [
+  {"id": "a", "say": "1971년 11월 24일. 한 남자가 비행기를 납치했다.", "hl": ["납치했다"], "sfx": [{"type": "impact", "at": 0}]},
+  {"id": "b", "say": "그리고, 하늘에서 사라졌다.", "hl": ["사라졌다"], "trans": {"type": "whip", "dur": 0.45}, "sfx": [{"type": "whoosh", "at": -0.3}, {"type": "braam", "word": "사라졌다"}]}
+ ]
+}
