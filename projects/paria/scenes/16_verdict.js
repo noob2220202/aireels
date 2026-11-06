@@ -238,12 +238,15 @@ window.PK.scenes.verdict = function (ctx, t, d, info) {
 
   // ---- dawn: black -> cold grey-blue ----
   const kd = P(t, -.3, d - .2, E.inOutQ);
-  const g = ctx.createLinearGradient(0, 0, 0, H);
-  g.addColorStop(0, lerp2('#010203', '#26394a', kd)); g.addColorStop(.42, lerp2('#010203', '#152330', kd)); g.addColorStop(1, lerp2('#010203', '#05080b', kd));
-  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  // smooth light only: composed at quarter resolution and scaled up (cheap)
+  { const [b, x] = L.buf('vdBg', 270, 480); x.scale(.25, .25);
+    const g = x.createLinearGradient(0, 0, 0, H);
+    g.addColorStop(0, lerp2('#010203', '#26394a', kd)); g.addColorStop(.42, lerp2('#010203', '#152330', kd)); g.addColorStop(1, lerp2('#010203', '#05080b', kd));
+    x.fillStyle = g; x.fillRect(0, 0, W, H);
+    glow(x, 640, 700, 1150, '#9fb8c8', .11 * kd, 'screen');
+    godrays(x, -80, 360, .6, .5, 2000, '#bcd6e6', .05 * kd, t, 6);
+    ctx.drawImage(b, 0, 0, W, H); }
   sheen(ctx, t, .5 * (1 - P(t, -.3, 1.8, E.inOutQ)), 18);
-  glow(ctx, 640, 700, 1150, '#9fb8c8', .11 * kd, 'screen');
-  godrays(ctx, -80, 360, .6, .5, 2000, '#bcd6e6', .05 * kd, t, 6);
   motes(ctx, t, { n: 46, color: '#cfe2ee', a: .32 * kd, size: 1.7, speed: 5, seed: 61, area: [0, 440, W, 900] });
 
   // ---- camera: slow push, a small knock on '중과실로' and on '없습니다' ----

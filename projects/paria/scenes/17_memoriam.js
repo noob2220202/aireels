@@ -10,19 +10,19 @@ const { at, lerp2 } = window.PK;
 
 const HZ = 628;                                     // horizon (screen y)
 const LAN = [{ x: 206, y: 792, s: 1.36 }, { x: 428, y: 748, s: 1.14 }, { x: 652, y: 772, s: 1.25 }, { x: 872, y: 738, s: 1.08 }];
-const ROW0 = 906, ROWH = 64, RIPY = 1156, MEMY = 1216;
+const ROW0 = 894, ROWH = 60, RIPY = 1162, MEMY = 1224;
 
 function sky(ctx, t, k) {
   const g = ctx.createLinearGradient(0, 0, 0, HZ);
-  g.addColorStop(0, '#010203'); g.addColorStop(.45, lerp2('#03070b', '#0a1520', k)); g.addColorStop(.74, lerp2('#07111a', '#1b2a37', k)); g.addColorStop(.93, lerp2('#0f1b24', '#3b4d5c', k)); g.addColorStop(1, lerp2('#16232c', '#566a79', k));
+  g.addColorStop(0, '#010203'); g.addColorStop(.45, lerp2('#03070b', '#0a1726', k)); g.addColorStop(.74, lerp2('#07111a', '#1a2c3e', k)); g.addColorStop(.93, lerp2('#0f1b24', '#3a4e60', k)); g.addColorStop(1, lerp2('#16232c', '#5a6c7a', k));
   ctx.fillStyle = g; ctx.fillRect(-60, -60, W + 120, HZ + 60);
   // where the sun will come up: a faint, pale warmth on the horizon (very low)
-  ctx.save(); ctx.translate(700, HZ + 4); ctx.scale(3.4, .5); glow(ctx, 0, 0, 300, '#e3b892', .2 * k * k, 'screen'); glow(ctx, 0, 0, 110, '#f6dfc4', .16 * k * k, 'screen'); ctx.restore();
+  ctx.save(); ctx.translate(700, HZ + 4); ctx.scale(3.4, .5); glow(ctx, 0, 0, 320, '#e3b48c', .3 * k * k, 'screen'); glow(ctx, 0, 0, 120, '#f6dcbf', .22 * k * k, 'screen'); ctx.restore();
   // thin, slow cloud bands
   ctx.save(); ctx.globalCompositeOperation = 'screen';
   for (let i = 0; i < 5; i++) {
     const y = HZ - 40 - i * 34 - hash(i * 7) * 20, x = ((hash(i * 3) * 1400 + t * (3 + i)) % 1500) - 200, w = 380 + hash(i * 5) * 420;
-    const cg = ctx.createLinearGradient(x, 0, x + w, 0); cg.addColorStop(0, 'rgba(150,175,195,0)'); cg.addColorStop(.5, rgba('#96afc3', (.05 + .03 * hash(i)) * k)); cg.addColorStop(1, 'rgba(150,175,195,0)');
+    const cg = ctx.createLinearGradient(x, 0, x + w, 0); cg.addColorStop(0, 'rgba(150,175,195,0)'); cg.addColorStop(.5, rgba('#a4b9c9', (.07 + .05 * hash(i)) * k)); cg.addColorStop(1, 'rgba(150,175,195,0)');
     ctx.fillStyle = cg; ctx.fillRect(x, y, w, 3 + hash(i * 9) * 5);
   }
   ctx.restore();
@@ -81,7 +81,7 @@ function lantern(ctx, t, i, x, y, s, lit, boost, ring) {
     }
     ctx.restore();
     ctx.save(); ctx.translate(x, y + 26 * s); ctx.scale(1, .3); glow(ctx, 0, 0, 170 * s, '#ff9a3c', .16 * Lt + .1 * boost); ctx.restore();
-    glow(ctx, x, y - 22 * s, 290 * s, '#ff9a3c', .09 * Lt + .1 * boost);
+    glow(ctx, x, y - 22 * s, 300 * s, '#ff9a3c', .13 * Lt + .12 * boost); glow(ctx, x, y - 26 * s, 80 * s, '#ffb347', .22 * Lt + .2 * boost);
   }
   ctx.save(); ctx.translate(x, y); ctx.rotate(rot); ctx.scale(s, s);
   // float
@@ -91,7 +91,7 @@ function lantern(ctx, t, i, x, y, s, lit, boost, ring) {
   ctx.fillStyle = '#121a20'; ctx.fill();
   if (Lt > 0) {
     const gb = ctx.createLinearGradient(-19, 0, 19, 0);
-    gb.addColorStop(0, rgba('#b85f1c', Lt)); gb.addColorStop(.3, rgba('#ffc477', Lt)); gb.addColorStop(.5, rgba('#ffe7bd', Lt)); gb.addColorStop(.7, rgba('#ffc477', Lt)); gb.addColorStop(1, rgba('#b85f1c', Lt));
+    gb.addColorStop(0, rgba('#a8521a', Lt)); gb.addColorStop(.3, rgba('#ffa94a', Lt)); gb.addColorStop(.5, rgba('#ffd28f', Lt)); gb.addColorStop(.7, rgba('#ffa94a', Lt)); gb.addColorStop(1, rgba('#a8521a', Lt));
     ctx.fillStyle = gb; ctx.fill();
     const gv = ctx.createLinearGradient(0, -50, 0, -5); gv.addColorStop(0, 'rgba(60,25,5,.35)'); gv.addColorStop(.6, 'rgba(255,240,210,0)'); gv.addColorStop(1, 'rgba(90,40,10,.25)');
     ctx.fillStyle = gv; ctx.fill();
@@ -101,7 +101,7 @@ function lantern(ctx, t, i, x, y, s, lit, boost, ring) {
   ctx.strokeStyle = rgba('#a9c1d0', .42 * (1 - .75 * lit)); ctx.lineWidth = 1.6; ctx.beginPath(); ctx.moveTo(-19, -5); ctx.lineTo(-15, -50); ctx.lineTo(15, -50); ctx.stroke();
   ctx.fillStyle = '#07090b'; ctx.fillRect(-17, -55, 34, 6);
   ctx.restore();
-  if (Lt > 0) { glow(ctx, x, y - 26 * s, 34 * s, '#fff1d6', .55 * Lt + .4 * boost); }
+  if (Lt > 0) { glow(ctx, x, y - 26 * s, 30 * s, '#ffe2b0', .5 * Lt + .4 * boost); }
   // waterline: the float sits in the water
   ctx.fillStyle = 'rgba(2,5,8,.75)'; ctx.beginPath(); ctx.ellipse(x, y + 5 * s, 30 * s, 4 * s, 0, 0, 7); ctx.fill();
 }
