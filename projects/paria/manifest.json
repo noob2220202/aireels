@@ -1,1 +1,1 @@
-{"scripts":["common.js","scenes/00_test.js"]}
+{"scripts": ["common.js", "scenes/01_hook.js", "scenes/02_setup.js", "scenes/03_suction.js", "scenes/04_hell.js", "scenes/05_alive.js", "scenes/06_who.js", "scenes/07_crawl.js", "scenes/08_transcript.js", "scenes/09_decision.js", "scenes/10_leave.js", "scenes/11_promise.js", "scenes/12_swim.js", "scenes/13_rescue.js", "scenes/14_blocked.js", "scenes/15_lost.js", "scenes/16_verdict.js", "scenes/17_memoriam.js"]}

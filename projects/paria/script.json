@@ -1,0 +1,979 @@
+{
+ "name": "paria_pipeline",
+ "voice": {
+  "name": "ko-KR-HyunsuMultilingualNeural",
+  "rate": "+18%",
+  "pitch": "+0Hz",
+  "clone_ref": "assets/voices/my_voice_ref15.wav",
+  "clone_steps": 30,
+  "clone_f0": true
+ },
+ "voice_match": "assets/voices/my_voice_full.mp3",
+ "narration": "blocks",
+ "max_pause": 0.45,
+ "block_gap": 0.3,
+ "start_pad": 0.15,
+ "end_pad": 1.8,
+ "maxu": 10.5,
+ "sfx_rel_db": 7,
+ "title": {
+  "l1": "송유관에 빨려 들어간 5명",
+  "l2": "살아 나온 건 단 1명"
+ },
+ "meta": {
+  "warning": "※ 실제 생존자 음성 포함 · 시청 주의"
+ },
+ "scenes": [
+  {
+   "id": "hook",
+   "say": "송유관에 다섯 명이 빨려 들어갔고, 단 한 명만 살아 나왔습니다.",
+   "hl": [
+    "다섯",
+    "한"
+   ],
+   "data": {
+    "note": "black -> 30-inch pipe mouth swallowing water, five lights pulled in; big 5 -> 1; content warning chip first 2.2s"
+   },
+   "sfx": [
+    {
+     "type": "suction",
+     "at": 0.0,
+     "dur": 2.4,
+     "db": -3
+    },
+    {
+     "type": "impact",
+     "at": 0.05,
+     "size": 0.9,
+     "db": -4
+    },
+    {
+     "type": "underwater",
+     "at": 0.0,
+     "dur": 5.5,
+     "db": -9
+    },
+    {
+     "type": "groan",
+     "word": "빨려",
+     "off": -0.1,
+     "db": -9
+    },
+    {
+     "type": "braam",
+     "word": "한",
+     "off": -0.05,
+     "db": -8,
+     "dur": 2.4
+    }
+   ]
+  },
+  {
+   "id": "setup",
+   "say": "2022년, 트리니다드 토바고. 국영기업 파리아의 해저 송유관을 고치던 하청 잠수부 다섯 명이,",
+   "tts": "이천이십이년, 트리니다드 토바고. 국영기업 파리아의 해저 송유관을 고치던 하청 잠수부 다섯 명이,",
+   "hl": [
+    "파리아의"
+   ],
+   "trans": {
+    "type": "dip",
+    "dur": 0.5
+   },
+   "data": {
+    "date": "2022.2.25",
+    "place": "Pointe-à-Pierre, Trinidad",
+    "berth": "6번 부두 · 36번 해저관",
+    "pipe": "지름 30인치 ≈ 76cm",
+    "client": "Paria Fuel Trading (국영)",
+    "crew": "하청 LMCS 잠수부 5명"
+   },
+   "sfx": [
+    {
+     "type": "underwater",
+     "at": 0.0,
+     "dur": 8.0,
+     "db": -7
+    },
+    {
+     "type": "breath",
+     "at": 0.3,
+     "dur": 7.5,
+     "rate": 0.24,
+     "db": -13
+    },
+    {
+     "type": "groan",
+     "word": "송유관을",
+     "off": 0.0,
+     "db": -15
+    }
+   ]
+  },
+  {
+   "id": "suction",
+   "say": "풍선 마개의 바람을 빼던 순간, 관 속 압력 차가 그들을 그대로 빨아들였습니다.",
+   "hl": [
+    "압력",
+    "빨아들였습니다"
+   ],
+   "trans": {
+    "type": "push",
+    "dur": 0.4
+   },
+   "data": {
+    "label": "ΔP (델타 P) · 압력 차"
+   },
+   "sfx": [
+    {
+     "type": "gurgle",
+     "word": "바람을",
+     "off": -0.1,
+     "dur": 1.6,
+     "db": -9
+    },
+    {
+     "type": "groan",
+     "word": "순간,",
+     "off": 0.0,
+     "db": -7
+    },
+    {
+     "type": "whoosh",
+     "word": "그대로",
+     "off": -0.1,
+     "dur": 0.6,
+     "db": -9
+    },
+    {
+     "type": "suction",
+     "word": "빨아들였습니다",
+     "off": -0.7,
+     "dur": 2.8,
+     "db": 0
+    },
+    {
+     "type": "impact",
+     "word": "빨아들였습니다",
+     "off": 0.35,
+     "size": 0.75,
+     "db": -5
+    }
+   ]
+  },
+  {
+   "id": "hell",
+   "clip": {
+    "file": "../../assets/paria_media/dailymail_pipeline_ep2_into_the_pipe.mp3",
+    "segs": [
+     [
+      814.55,
+      819.55
+     ]
+    ],
+    "fade": [
+     0.04,
+     0.12
+    ],
+    "lead": 0.5,
+    "tail": 0.45,
+    "subs": [
+     {
+      "src0": 814.6,
+      "src1": 817.6,
+      "text": "저는 제가 살아 있는 건지조차",
+      "en": "But to me, I wasn't even sure if I was alive"
+     },
+     {
+      "src0": 817.6,
+      "src1": 819.5,
+      "text": "여기가 지옥인 건지도 몰랐어요",
+      "en": "…and [if] this [was] hell"
+     }
+    ]
+   },
+   "say": "",
+   "trans": {
+    "type": "cut"
+   },
+   "data": {
+    "who": "크리스토퍼 부드램 · 유일한 생존자",
+    "where": "Daily Mail 팟캐스트 「Pipeline」 Ep.2 (2025)"
+   },
+   "sfx": [
+    {
+     "type": "underwater",
+     "at": 0.0,
+     "dur": 6.0,
+     "db": -17
+    },
+    {
+     "type": "gurgle",
+     "at": -0.2,
+     "dur": 1.2,
+     "db": -18,
+     "from": "voice_end"
+    }
+   ]
+  },
+  {
+   "id": "alive",
+   "say": "그런데, 다섯 명 모두 아직 살아 있었습니다.",
+   "hl": [
+    "살아"
+   ],
+   "trans": {
+    "type": "fade",
+    "dur": 0.5
+   },
+   "sfx": [
+    {
+     "type": "shimmer",
+     "word": "살아",
+     "off": 0.0,
+     "dur": 1.4,
+     "db": -15
+    },
+    {
+     "type": "underwater",
+     "at": 0.0,
+     "dur": 4.0,
+     "db": -16
+    }
+   ]
+  },
+  {
+   "id": "who",
+   "clip": {
+    "file": "../../assets/paria_media/dailymail_pipeline_ep2_into_the_pipe.mp3",
+    "segs": [
+     [
+      1062.45,
+      1064.38
+     ],
+     [
+      1068.42,
+      1069.95
+     ],
+     [
+      1072.38,
+      1074.55
+     ]
+    ],
+    "gap": 0.3,
+    "fade": [
+     0.04,
+     0.06
+    ],
+    "lead": 0.35,
+    "tail": 0.4,
+    "subs": [
+     {
+      "src0": 1062.5,
+      "src1": 1064.38,
+      "text": "어이, 누구야?",
+      "en": "Oi, oi, who is that, boy?"
+     },
+     {
+      "src0": 1068.42,
+      "src1": 1069.95,
+      "text": "나야, 나.",
+      "en": "It's me, it's me."
+     },
+     {
+      "src0": 1072.38,
+      "src1": 1074.55,
+      "text": "카즈야, 카즈.",
+      "en": "He say, Kaz, boy. Kaz."
+     }
+    ]
+   },
+   "say": "",
+   "trans": {
+    "type": "fade",
+    "dur": 0.35
+   },
+   "data": {
+    "who": "부드램 · 관 속 첫 대화를 회상하며",
+    "where": "Daily Mail 팟캐스트 「Pipeline」 Ep.2 (2025)"
+   },
+   "sfx": [
+    {
+     "type": "underwater",
+     "at": 0.0,
+     "dur": 7.0,
+     "db": -19
+    },
+    {
+     "type": "groan",
+     "at": 2.6,
+     "dur": 2.0,
+     "db": -19
+    }
+   ]
+  },
+  {
+   "id": "crawl",
+   "say": "다친 몸으로 서로를 사슬처럼 붙잡고 나아갔습니다. 그 목소리는 카짐 알리 주니어의 고프로에 남았습니다.",
+   "hl": [
+    "사슬처럼",
+    "고프로에"
+   ],
+   "trans": {
+    "type": "fade",
+    "dur": 0.4
+   },
+   "data": {
+    "fluid": "기름·물 약 20cm",
+    "pipe": "지름 76cm"
+   },
+   "sfx": [
+    {
+     "type": "gurgle",
+     "at": 0.2,
+     "dur": 2.2,
+     "db": -13
+    },
+    {
+     "type": "breath",
+     "at": 0.0,
+     "dur": 6.5,
+     "rate": 0.45,
+     "fast": 0.4,
+     "db": -16
+    },
+    {
+     "type": "static",
+     "word": "고프로에",
+     "off": -0.15,
+     "dur": 0.5,
+     "db": -15
+    },
+    {
+     "type": "groan",
+     "word": "붙잡고",
+     "off": 0.0,
+     "db": -12
+    }
+   ]
+  },
+  {
+   "id": "transcript",
+   "hold": {
+    "dur": 5.6,
+    "lead": 0.25,
+    "tail": 0.25,
+    "subs": [
+     {
+      "t0": 0.0,
+      "t1": 1.5,
+      "text": "다들, 가야 돼.",
+      "en": "Come allyuh, we have to go.",
+      "who": "크리스"
+     },
+     {
+      "t0": 1.5,
+      "t1": 3.0,
+      "text": "이제 움직여야 돼.",
+      "en": "… We have to start moving.",
+      "who": "크리스"
+     },
+     {
+      "t0": 3.25,
+      "t1": 4.65,
+      "text": "카즈, 괜찮아?",
+      "en": "Kaz, everything alright with you?",
+      "who": "크리스"
+     },
+     {
+      "t0": 4.65,
+      "t1": 5.6,
+      "text": "아니.",
+      "en": "No.",
+      "who": "카즈"
+     }
+    ]
+   },
+   "say": "",
+   "trans": {
+    "type": "cut"
+   },
+   "data": {
+    "badge": "실제 관 속 녹음 · 녹취",
+    "src": "고프로 음성(2022.11.21 조사위원회 공개) · 녹취: T&T Guardian"
+   },
+   "sfx": [
+    {
+     "type": "static",
+     "at": 0.1,
+     "dur": 0.45,
+     "db": -16
+    },
+    {
+     "type": "underwater",
+     "at": 0.0,
+     "dur": 6.0,
+     "db": -19
+    },
+    {
+     "type": "static",
+     "at": -0.1,
+     "dur": 0.4,
+     "db": -17,
+     "from": "voice_end"
+    }
+   ]
+  },
+  {
+   "id": "decision",
+   "say": "물이 차올라 숨 쉴 틈이 15센티미터만 남자, 부드램은 혼자 나가 도움을 데려오기로 합니다.",
+   "tts": "물이 차올라 숨 쉴 틈이 십오센티미터만 남자, 부드램은 혼자 나가 도움을 데려오기로 합니다.",
+   "hl": [
+    "15센티미터만",
+    "도움을"
+   ],
+   "trans": {
+    "type": "fade",
+    "dur": 0.35
+   },
+   "data": {
+    "gap": "숨 쉴 틈 ≈ 15cm (6인치)",
+    "tanks": "공기통 2개"
+   },
+   "sfx": [
+    {
+     "type": "gurgle",
+     "at": 0.0,
+     "dur": 3.0,
+     "db": -10
+    },
+    {
+     "type": "gurgle",
+     "word": "차올라",
+     "off": 0.0,
+     "dur": 2.2,
+     "db": -8
+    },
+    {
+     "type": "breath",
+     "at": 0.2,
+     "dur": 7.0,
+     "rate": 0.6,
+     "fast": 0.8,
+     "db": -14
+    },
+    {
+     "type": "knock",
+     "word": "부드램은",
+     "off": -1.4,
+     "n": 3,
+     "gap": 0.55,
+     "db": -15
+    }
+   ]
+  },
+  {
+   "id": "leave",
+   "clip": {
+    "file": "../../assets/paria_media/dailymail_pipeline_ep2_into_the_pipe.mp3",
+    "segs": [
+     [
+      1702.74,
+      1706.5
+     ]
+    ],
+    "fade": [
+     0.03,
+     0.12
+    ],
+    "lead": 0.3,
+    "tail": 0.3,
+    "subs": [
+     {
+      "src0": 1702.8,
+      "src1": 1703.85,
+      "text": "카즈가 그러더라고요.",
+      "en": "Kaz was like,"
+     },
+     {
+      "src0": 1703.85,
+      "src1": 1705.38,
+      "text": "크리스, 나 두고 가지 마.",
+      "en": "Chris, don't go and leave me."
+     },
+     {
+      "src0": 1705.38,
+      "src1": 1706.5,
+      "text": "두고 가지 마…",
+      "en": "Don't go and leave me."
+     }
+    ]
+   },
+   "say": "",
+   "trans": {
+    "type": "cut"
+   },
+   "data": {
+    "who": "부드램의 회상",
+    "where": "Daily Mail 팟캐스트 「Pipeline」 Ep.2 (2025)"
+   },
+   "sfx": [
+    {
+     "type": "groan",
+     "at": 0.2,
+     "dur": 2.4,
+     "db": -21
+    }
+   ]
+  },
+  {
+   "id": "promise",
+   "clip": {
+    "file": "../../assets/paria_media/express_2022-03-13_the_day_i_cheated_death_x890pgy.mp4",
+    "segs": [
+     [
+      116.84,
+      123.18
+     ]
+    ],
+    "fade": [
+     0.03,
+     0.08
+    ],
+    "lead": 0.3,
+    "tail": 0.35,
+    "subs": [
+     {
+      "src0": 117.0,
+      "src1": 118.95,
+      "text": "한 명 한 명에게 약속했어요.",
+      "en": "I promise each and every one of them"
+     },
+     {
+      "src0": 118.95,
+      "src1": 120.45,
+      "text": "꼭 데리러 돌아오겠다고.",
+      "en": "that I'll be back for them."
+     },
+     {
+      "src0": 120.45,
+      "src1": 123.15,
+      "text": "못 돌아오면, 도움을 보내겠다고.",
+      "en": "If I can't come back, I'll send help."
+     }
+    ]
+   },
+   "say": "",
+   "trans": {
+    "type": "cut"
+   },
+   "data": {
+    "who": "크리스토퍼 부드램 인터뷰",
+    "where": "Trinidad Express (2022.3)"
+   },
+   "sfx": [
+    {
+     "type": "underwater",
+     "at": 0.0,
+     "dur": 7.5,
+     "db": -21
+    }
+   ]
+  },
+  {
+   "id": "swim",
+   "clip": {
+    "file": "../../assets/paria_media/dailymail_pipeline_ep2_into_the_pipe.mp3",
+    "segs": [
+     [
+      1865.28,
+      1869.78
+     ]
+    ],
+    "fade": [
+     0.03,
+     0.15
+    ],
+    "lead": 0.35,
+    "tail": 0.3,
+    "subs": [
+     {
+      "src0": 1865.3,
+      "src1": 1866.9,
+      "text": "그냥 움직였어요.",
+      "en": "To just move,"
+     },
+     {
+      "src0": 1866.9,
+      "src1": 1869.75,
+      "text": "헤엄쳐, 헤엄쳐, 헤엄쳐.",
+      "en": "swim, swim, swim."
+     }
+    ]
+   },
+   "say": "",
+   "trans": {
+    "type": "push",
+    "dur": 0.35
+   },
+   "data": {
+    "who": "부드램",
+    "where": "Daily Mail 팟캐스트 「Pipeline」 Ep.2 (2025)"
+   },
+   "sfx": [
+    {
+     "type": "breath",
+     "at": 0.0,
+     "dur": 5.2,
+     "rate": 0.85,
+     "fast": 1.0,
+     "db": -11
+    },
+    {
+     "type": "gurgle",
+     "at": 0.3,
+     "dur": 4.0,
+     "db": -12
+    },
+    {
+     "type": "whoosh",
+     "at": 0.1,
+     "dur": 0.8,
+     "db": -12
+    }
+   ]
+  },
+  {
+   "id": "rescue",
+   "say": "약 3시간 뒤, 수직관 끝에서 자원 잠수부들이 그를 끌어올렸습니다.",
+   "tts": "약 세시간 뒤, 수직관 끝에서 자원 잠수부들이 그를 끌어올렸습니다.",
+   "hl": [
+    "3시간",
+    "끌어올렸습니다"
+   ],
+   "trans": {
+    "type": "fade",
+    "dur": 0.3
+   },
+   "data": {
+    "t_in": "오후 2:45경 사고",
+    "t_out": "오후 5:45경 구조 (조사위원회)"
+   },
+   "sfx": [
+    {
+     "type": "gurgle",
+     "at": 0.0,
+     "dur": 1.2,
+     "db": -10
+    },
+    {
+     "type": "whoosh",
+     "word": "끌어올렸습니다",
+     "off": -0.35,
+     "dur": 0.7,
+     "db": -8
+    },
+    {
+     "type": "impact",
+     "word": "끌어올렸습니다",
+     "off": 0.15,
+     "size": 0.45,
+     "db": -9
+    }
+   ]
+  },
+  {
+   "id": "blocked",
+   "say": "그는 동료들이 살아 있다고 외쳤지만, 파리아는 구조자 안전을 이유로 관 진입을 허가하지 않았습니다.",
+   "hl": [
+    "살아",
+    "허가하지"
+   ],
+   "trans": {
+    "type": "push",
+    "dur": 0.4
+   },
+   "data": {
+    "a": "파리아: 구조자 안전·추가 압력 사고 우려로 진입 불허",
+    "b": "조사위원회: 파리아가 LMCS의 구조를 사실상 막았다"
+   },
+   "sfx": [
+    {
+     "type": "static",
+     "word": "파리아는",
+     "off": -0.1,
+     "dur": 0.8,
+     "db": -13
+    },
+    {
+     "type": "thunk",
+     "word": "허가하지",
+     "off": 0.0,
+     "db": -6
+    }
+   ]
+  },
+  {
+   "id": "lost",
+   "say": "네 사람은 끝내 돌아오지 못했습니다.",
+   "hl": [
+    "네"
+   ],
+   "trans": {
+    "type": "dip",
+    "dur": 0.7
+   },
+   "sfx": [
+    {
+     "type": "piano",
+     "at": 0.15,
+     "f": 110.0,
+     "dur": 4.0,
+     "db": -9,
+     "from": "voice_end"
+    }
+   ]
+  },
+  {
+   "id": "verdict",
+   "say": "조사위원회는 파리아의 과실을 형사적 중과실로 볼 수 있다고 판단했지만, 과실치사로 기소된 사람이나 회사는 아직 없습니다.",
+   "hl": [
+    "중과실로",
+    "없습니다."
+   ],
+   "trans": {
+    "type": "fade",
+    "dur": 0.5
+   },
+   "data": {
+    "quote_en": "Paria's negligence could be characterised as gross negligence and consequently criminal",
+    "quote_ko": "파리아의 과실은 중과실, 따라서 형사적 과실로 규정될 수 있다",
+    "foot": "조사위원회 판단이며 법원 판결 아님 · 위험은 두 회사 모두 만듦 · 파리아는 책임 부인 · 2026.11 기준 유죄 판결 없음",
+    "quote2_en": "The opportunity to rescue the men from the pipe was completely wasted",
+    "quote2_ko": "관 속 사람들을 구할 기회는 완전히 허비되었다"
+   },
+   "sfx": [
+    {
+     "type": "stamp",
+     "word": "중과실로",
+     "off": 0.0,
+     "db": -7
+    },
+    {
+     "type": "thunk",
+     "word": "없습니다.",
+     "off": 0.0,
+     "db": -9
+    }
+   ]
+  },
+  {
+   "id": "memoriam",
+   "say": "파이잘 쿠르반. 카짐 알리 주니어. 리시 나가사르. 유수프 헨리.",
+   "trans": {
+    "type": "dip",
+    "dur": 0.8
+   },
+   "data": {
+    "names": [
+     [
+      "Fyzal Kurban",
+      "파이잘 쿠르반"
+     ],
+     [
+      "Kazim Ali Jr.",
+      "카짐 알리 주니어"
+     ],
+     [
+      "Rishi Nagassar",
+      "리시 나가사르"
+     ],
+     [
+      "Yusuf Henry",
+      "유수프 헨리"
+     ]
+    ],
+    "line": "In memoriam · 2022 파리아 잠수부 참사",
+    "rip": "고인들의 명복을 빕니다"
+   },
+   "sfx": [
+    {
+     "type": "bell",
+     "word": "쿠르반.",
+     "off": -0.05,
+     "f": 587.33,
+     "db": -12
+    },
+    {
+     "type": "bell",
+     "word": "주니어.",
+     "off": -0.05,
+     "f": 523.25,
+     "db": -12
+    },
+    {
+     "type": "bell",
+     "word": "나가사르.",
+     "off": -0.05,
+     "f": 440.0,
+     "db": -12
+    },
+    {
+     "type": "bell",
+     "word": "헨리.",
+     "off": -0.05,
+     "f": 392.0,
+     "db": -12
+    }
+   ]
+  }
+ ],
+ "music": {
+  "style": "dark",
+  "root": 61.74,
+  "rel_db": -12,
+  "duck": 0.42,
+  "ticks": false,
+  "drone_db": 0,
+  "intensity": [
+   [
+    0,
+    0.6
+   ],
+   [
+    "@setup",
+    0.3
+   ],
+   [
+    "@suction",
+    0.5
+   ],
+   [
+    "@suction:빨아들였습니다",
+    0.95
+   ],
+   [
+    "@hell",
+    0.35
+   ],
+   [
+    "@alive",
+    0.4
+   ],
+   [
+    "@crawl",
+    0.6
+   ],
+   [
+    "@transcript",
+    0.5
+   ],
+   [
+    "@decision",
+    0.75
+   ],
+   [
+    "@decision:end",
+    0.9
+   ],
+   [
+    "@leave",
+    0.65
+   ],
+   [
+    "@promise",
+    0.6
+   ],
+   [
+    "@swim",
+    1.0
+   ],
+   [
+    "@rescue",
+    0.75
+   ],
+   [
+    "@rescue:끌어올렸습니다",
+    0.35
+   ],
+   [
+    "@blocked",
+    0.5
+   ],
+   [
+    "@lost",
+    0.15
+   ]
+  ],
+  "pulse_start": 0.4,
+  "pulse_end": "@lost",
+  "pulse_db": -2,
+  "gain": [
+   [
+    0,
+    0
+   ],
+   [
+    "@suction:빨아들였습니다+0.5",
+    0
+   ],
+   [
+    "@hell",
+    -7
+   ],
+   [
+    "@hell:end",
+    -3
+   ],
+   [
+    "@alive",
+    -2
+   ],
+   [
+    "@lost",
+    -4
+   ],
+   [
+    "@lost:end",
+    -8
+   ]
+  ],
+  "coda": "@verdict-0.4",
+  "coda_fade": 3.0,
+  "coda_db": -1,
+  "coda_music": {
+   "bpm": 66,
+   "intensity": [
+    [
+     0,
+     0.35
+    ]
+   ]
+  }
+ },
+ "muffle": [
+  [
+   0,
+   1600
+  ],
+  [
+   "@setup",
+   2600
+  ],
+  [
+   "@suction:빨아들였습니다+0.1",
+   2600
+  ],
+  [
+   "@suction:빨아들였습니다+0.7",
+   380
+  ],
+  [
+   "@rescue:끌어올렸습니다-0.3",
+   380
+  ],
+  [
+   "@rescue:끌어올렸습니다+0.6",
+   18000
+  ]
+ ]
+}

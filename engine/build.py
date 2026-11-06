@@ -319,16 +319,57 @@ def tts_block(texts, V, cache, max_pause=None):
     return wav, st, en, ffprobe_dur(wav)
 
 
+def clip_segs(c):
+    return [tuple(x) for x in c['segs']] if c.get('segs') else [(c.get('start', 0), c['end'])]
+
+
+def clip_time(c, src_t):
+    """Map a time in the source file to a time inside the cut clip (segments are joined with c['gap'] seconds)."""
+    off = 0.0
+    segs = clip_segs(c)
+    for k, (a, b) in enumerate(segs):
+        if src_t <= b or k == len(segs) - 1:
+            return off + min(max(src_t, a), b) - a
+        off += b - a + c.get('gap', .3)
+    return off
+
+
+def cut_clip(P, c, cache, sid):
+    """Cut one or more [start, end] ranges from a source file (audio only), short fades, joined with small gaps."""
+    import numpy as np
+    import soundfile as sf
+    src = (P / c['file']).resolve()
+    segs = clip_segs(c)
+    key = json.dumps([str(src), segs, c.get('gap', .3), c.get('fade', [.03, .06])])
+    out = cache / f"clip_{sid}_{hashlib.sha1(key.encode()).hexdigest()[:8]}.wav"
+    if not out.exists():
+        sr = 48000
+        fi, fo = c.get('fade', [.03, .06])
+        parts = []
+        for k, (a, b) in enumerate(segs):
+            raw = subprocess.run(['ffmpeg', '-v', 'error', '-ss', str(a), '-to', str(b), '-i', str(src), '-vn', '-ac', '1',
+                                  '-ar', str(sr), '-f', 'f32le', '-'], capture_output=True, check=True).stdout
+            x = np.frombuffer(raw, np.float32).copy()
+            n1, n2 = int(fi * sr), int(fo * sr)
+            x[:n1] *= np.linspace(0, 1, n1)
+            x[len(x) - n2:] *= np.linspace(1, 0, n2)
+            parts.append(x)
+            if k < len(segs) - 1:
+                parts.append(np.zeros(int(c.get('gap', .3) * sr), np.float32))
+        sf.write(str(out), np.concatenate(parts), sr)
+    return out, ffprobe_dur(out)
+
+
 def block_tracks(S, V, B, cache, P):
     """Narration blocks (one TTS pass each) interleaved with real audio clips (scene['clip'])."""
     sl = S['scenes']
     groups, cur = [], []
     for sc in sl:
-        if sc.get('clip'):
+        if sc.get('clip') or sc.get('hold'):
             if cur:
                 groups.append(('narr', cur))
                 cur = []
-            groups.append(('clip', [sc]))
+            groups.append(('clip' if sc.get('clip') else 'hold', [sc]))
         else:
             cur.append(sc)
     if cur:
@@ -350,18 +391,17 @@ def block_tracks(S, V, B, cache, P):
                 rows.append((sc, dw, ws, we, ws[0], we[-1], 'narr', ws[0] - sc.get('lead', .12)))
                 idx += n
             cursor += dur + S.get('block_gap', .25)
+        elif kind == 'hold':
+            # silent beat (e.g. a transcript card): no voice, subtitles from hold['subs'] relative to its start
+            sc = scs[0]
+            h = sc['hold']
+            vt = cursor + h.get('lead', .2)
+            rows.append((sc, [], [], [], vt, vt + h['dur'], 'hold', cursor))
+            cursor = vt + h['dur'] + h.get('tail', .2)
         else:
             sc = scs[0]
             c = sc['clip']
-            src = (P / c['file']).resolve()
-            out = cache / f"clip_{sc['id']}_{hashlib.sha1((str(src) + str(c.get('start')) + str(c.get('end'))).encode()).hexdigest()[:8]}.wav"
-            args = ['ffmpeg', '-y', '-loglevel', 'error']
-            if c.get('start') is not None:
-                args += ['-ss', str(c['start'])]
-            if c.get('end') is not None:
-                args += ['-to', str(c['end'])]
-            subprocess.run(args + ['-i', str(src), '-ac', '1', '-ar', '48000', str(out)], check=True)
-            dur = ffprobe_dur(out)
+            out, dur = cut_clip(P, c, cache, sc['id'])
             lead = c.get('lead', .35)
             vt = cursor + lead
             voice.append({'file': str(out.relative_to(B)), 't': round(vt, 3), 'dur': round(dur, 3), 'kind': 'clip'})
@@ -380,15 +420,22 @@ def block_tracks(S, V, B, cache, P):
                 b = ws[chs[j + 1][0][0]] if j + 1 < len(chs) else min(vend + .12, t1 + .1)
                 subs.append({'t0': round(a, 3), 't1': round(b, 3), 'lines': [clean_sub(' '.join(w for _, w in ch))], 'hl': sc.get('hl', [])})
         else:
-            # clip subtitles: explicit [{t0,t1,text}] relative to clip start, else the scene's 'say' split evenly
-            items = sc['clip'].get('subs')
+            # clip subtitles: explicit [{t0,t1,text}] relative to clip start (or {src0,src1,text} in source seconds),
+            # else the scene's 'say' split evenly
+            c = sc.get('clip') or sc['hold']
+            items = [dict(it, t0=clip_time(c, it['src0']), t1=clip_time(c, it['src1'])) if 'src0' in it else it
+                     for it in c.get('subs', [])]
             if not items:
                 chs = chunk_words(sc['say'].split(), sc.get('maxu', 12))
                 n = len(chs)
                 items = [{'t0': (vend - vt) * j / n, 't1': (vend - vt) * (j + 1) / n, 'text': ' '.join(w for _, w in ch)} for j, ch in enumerate(chs)]
             for it in items:
-                subs.append({'t0': round(vt + it['t0'], 3), 't1': round(vt + it['t1'], 3), 'lines': [clean_sub(it['text'])],
-                             'hl': sc.get('hl', []), 'quote': True})
+                sub = {'t0': round(vt + it['t0'], 3), 't1': round(vt + it['t1'], 3), 'lines': [clean_sub(it['text'])],
+                       'hl': sc.get('hl', []), 'quote': it.get('quote', True)}
+                for k2 in ('en', 'who'):
+                    if it.get(k2):
+                        sub[k2] = it[k2]
+                subs.append(sub)
         for c in sc.get('sfx', []):
             c = dict(c)
             if 'word' in c:
@@ -522,7 +569,7 @@ def step_tts(P):
         M['intensity'] = sorted([[resolve(a), b] for a, b in M['intensity']])
     if 'bells' in M:
         M['bells'] = [resolve(x) for x in M['bells']]
-    for k in ('pulse_start', 'pulse_end'):
+    for k in ('pulse_start', 'pulse_end', 'coda'):
         if k in M:
             M[k] = resolve(M[k])
     if 'gain' in M:

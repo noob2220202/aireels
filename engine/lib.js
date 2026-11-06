@@ -284,6 +284,15 @@ function subtitles(ctx, t, chunks, { y = 1270, size = 74, maxW = 900, color = '#
     words.forEach((w, j) => { const isH = (c.hl || []).some(h => h && w.includes(h)); segs.push({ s: w + (j < words.length - 1 ? ' ' : ''), color: isH ? hlColor : base }); });
     richLine(ctx, segs, 0, (i - (lines.length - 1) / 2) * size * 1.22, { size, strokeW: size * .2 });
   });
+  // optional: speaker label above, original-language line below (real quotes)
+  const half = (lines.length / 2) * size * 1.22;
+  if (c.who) { setFont(ctx, size * .4, FONT.sub, 700); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = 'rgba(207,232,255,.75)'; ctx.fillText(c.who, 0, -half - size * .32); }
+  if (c.en) {
+    setFont(ctx, size * .44, FONT.sub, 600); ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.lineWidth = size * .08; ctx.strokeStyle = 'rgba(0,0,0,.85)'; ctx.lineJoin = 'round';
+    const en = c.en.length > 58 ? c.en.slice(0, c.en.lastIndexOf(' ', 58)) + '\n' + c.en.slice(c.en.lastIndexOf(' ', 58) + 1) : c.en;
+    en.split('\n').forEach((s, i) => { const yy = half + size * (.42 + i * .56); ctx.strokeText(s, 0, yy); ctx.fillStyle = 'rgba(207,232,255,.62)'; ctx.fillText(s, 0, yy); });
+  }
   ctx.restore();
 }
 

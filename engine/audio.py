@@ -772,6 +772,15 @@ def music_bed(TL):
     bus = np.stack([filt(c, 'highpass', 38, 4) for c in bus])
     low = np.stack([filt(c, 'lowpass', 110) for c in bus])
     bus = bus - .45 * low
+    # optional coda: crossfade from the tense bed into the calm piano bed at M['coda'] (seconds)
+    if M.get('coda') is not None:
+        cm = dict(M, style='calm', **M.get('coda_music', {}))
+        calm = calm_bed(dict(TL, music=cm)) * db(M.get('coda_db', 0))
+        m = min(bus.shape[1], calm.shape[1])
+        tt = np.arange(m) / SR
+        fd = M.get('coda_fade', 3.0)
+        k = np.clip((tt - M['coda']) / fd, 0, 1)
+        bus = bus[:, :m] * np.cos(k * np.pi / 2) + calm[:, :m] * np.sin(k * np.pi / 2)
     return bus
 
 
