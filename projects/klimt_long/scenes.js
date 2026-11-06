@@ -703,7 +703,7 @@ const scenes = {
     const tE = at(info, '증거는', .55), tN = at(info, '없었다', .85);
     desk(ctx); lamp(ctx, 540, 700, 1000, .28);
     const k = P(t, 0, .4, E.outC);
-    ctx.save(); ctx.translate(540, lerp(1100, 860, k)); ctx.rotate(lerp(.08, -.02, k));
+    ctx.save(); ctx.translate(540, lerp(1140, 900, k)); ctx.rotate(lerp(.08, -.02, k)); ctx.scale(.86, .86);
     ctx.shadowColor = 'rgba(0,0,0,.7)'; ctx.shadowBlur = 50; ctx.shadowOffsetY = 25; ctx.fillStyle = '#c9a86a'; roundRect(ctx, -400, -440, 800, 880, 10); ctx.fill(); ctx.shadowColor = 'transparent';
     const pg = ctx.createPattern(L.TEX.paper, 'repeat'); ctx.globalAlpha = .25; ctx.fillStyle = pg; ctx.fillRect(-400, -440, 800, 880); ctx.globalAlpha = 1;
     text(ctx, '1997 · 미술관 관리인 조사', 0, -360, { size: 50, weight: 900, color: '#3a2a12' }); L.hline(ctx, -330, -310, 660, 'rgba(60,40,10,.6)', 3);
@@ -920,7 +920,7 @@ const scenes = {
     desk(ctx);
     const k = P(t, 0, .3, E.outC);
     const shakeY = (t > .25 && t < .5) ? Math.sin(t * 80) * 10 * (1 - (t - .25) / .25) : 0;
-    ctx.save(); ctx.translate(lerp(1400, 540, k), 860 + shakeY); ctx.rotate(lerp(.25, -.03, k));
+    ctx.save(); ctx.translate(lerp(1400, 540, k), 900 + shakeY); ctx.rotate(lerp(.25, -.03, k)); ctx.scale(.86, .86);
     ctx.shadowColor = 'rgba(0,0,0,.7)'; ctx.shadowBlur = 50; ctx.shadowOffsetY = 25; ctx.fillStyle = '#c9a86a'; roundRect(ctx, -380, -470, 760, 940, 10); ctx.fill(); ctx.shadowColor = 'transparent';
     ctx.fillStyle = '#d4b679'; roundRect(ctx, 120, -520, 240, 70, 10); ctx.fill();
     const pg = ctx.createPattern(L.TEX.paper, 'repeat'); ctx.globalAlpha = .25; ctx.fillStyle = pg; ctx.fillRect(-380, -470, 760, 940); ctx.globalAlpha = 1;
