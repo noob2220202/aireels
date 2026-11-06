@@ -174,7 +174,7 @@ window.PK.scenes.hand = function (ctx, t, d, info) {
     chip(ctx, D.date || '', 540, 492, chipA, { size: 34 });
     // white-out into the close-up (centred on the cut)
     const wo = P(t, tDe + .1, tCut, E.inQ);
-    if (wo > 0) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; const g = ctx.createRadialGradient(540, 900, 0, 540, 900, 900); g.addColorStop(0, rgba('#eaf8ff', wo)); g.addColorStop(1, rgba('#9fd8ff', wo * .6)); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H); ctx.restore(); }
+    if (wo > 0) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; const g = ctx.createRadialGradient(540, 900, 0, 540, 900, 900); g.addColorStop(0, rgba('#eaf8ff', wo)); g.addColorStop(1, rgba('#9fd8ff', wo * .6)); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H); ctx.restore(); subShade(ctx, wo); }
     return;
   }
 
@@ -222,6 +222,11 @@ window.PK.scenes.hand = function (ctx, t, d, info) {
   flash(ctx, .34 * Math.exp(-Math.max(0, t - tI) * 12) * after, '#e2f5ff');
   // the tail of the white-out
   const wo = 1 - P(t, tCut, tCut + .3, E.outQ);
-  if (wo > 0) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = rgba('#dff3ff', wo * .9); ctx.fillRect(0, 0, W, H); ctx.restore(); }
+  if (wo > 0) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = rgba('#dff3ff', wo * .9); ctx.fillRect(0, 0, W, H); ctx.restore(); subShade(ctx, wo); }
 };
+// keep the subtitle band dark while the white-out floods the frame
+function subShade(ctx, a) {
+  const g = ctx.createLinearGradient(0, 1150, 0, 1300); g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, rgba('#000', .82 * a));
+  ctx.fillStyle = g; ctx.fillRect(0, 1150, W, 150); ctx.fillStyle = rgba('#000', .82 * a); ctx.fillRect(0, 1300, W, H - 1300);
+}
 })();

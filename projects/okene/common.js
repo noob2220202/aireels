@@ -350,7 +350,10 @@ window.PROJECT = {
     const mem = TL.scenes.find(s => s.id === 'memoriam' || s.id === 'memorial');
     if (!window.COVER_MODE) {
       const ta = mem ? 1 - P(T0, mem.t0 - .35, mem.t0 + .35, E.inOutQ) : 1;
-      topTitle(ctx, TL, ta, 1);
+      // the loud yellow headline steps back during the death toll and the survivor's question (eleven, whyme)
+      const el = TL.scenes.find(s => s.id === 'eleven'), wy = TL.scenes.find(s => s.id === 'whyme');
+      const hush = el && wy ? .55 * P(T0, el.t0 - .3, el.t0 + .6, E.inOutQ) * (1 - P(T0, wy.t1 - .4, wy.t1 + .3, E.inOutQ)) : 0;
+      topTitle(ctx, TL, ta * (1 - hush), 1);
       if (!mem || T0 < mem.t0 - .1) subtitles(ctx, T0, TL.subs, { y: 1345, size: 74 });  // memoriam shows the names itself
     }
     else if (window.COVER) window.COVER(ctx, TL);

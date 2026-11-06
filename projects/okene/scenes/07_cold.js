@@ -146,7 +146,7 @@ window.PK.scenes.cold = function (ctx, t, d, info) {
   const inWall = clamp(1 - Math.abs(lx - 1094) / 110);                    // passing under the wall between the two rooms
   const flick = 1 - .12 * thirst * (.5 + .5 * OK.nz(T * 9, 41));
   const warm = (1 - .35 * thirst) * lerp(1, .55, under);
-  const lightA = flick * lerp(1, .55, under) * (1 - .6 * inWall);
+  const lightA = flick * lerp(1, .75, under) * (1 - .3 * inWall);       // dimmed under water/the wall, but never reads as going out
   const contact = (.72 + .28 * PK.beat(T, 72)) * (1 - P(t, tGo - .04, tGo + .08));
 
   // ---------------- camera: pocket's last framing -> pans with him into the cabin (the old floor kept just under the counter) ----------------

@@ -363,6 +363,14 @@ const mix = (a, b, k) => PK.lerp2(a, b, clamp(k));
 const cv = (w, h) => { const c = document.createElement('canvas'); c.width = Math.max(1, Math.ceil(w)); c.height = Math.max(1, Math.ceil(h)); return c; };
 const devScale = ctx => { const m = ctx.getTransform(); return Math.sqrt(Math.abs(m.a * m.d - m.b * m.c)) || 1; };
 const al = v => (v == null ? 1 : v);
+// grow-only offscreen buffers, clipped to the requested (w, h) region (no per-size canvas churn)
+const GB = {};
+function gbuf(name, w, h) {
+  w = Math.max(1, Math.ceil(w)); h = Math.max(1, Math.ceil(h)); let b = GB[name];
+  if (!b || b.width < w || b.height < h) { b = cv(Math.max(w, b ? b.width : 0, 64), Math.max(h, b ? b.height : 0, 64)); GB[name] = b; }
+  const x = b.getContext('2d'); x.restore(); x.save(); x.setTransform(1, 0, 0, 1, 0, 0); x.globalAlpha = 1; x.globalCompositeOperation = 'source-over'; x.beginPath(); x.rect(0, 0, w, h); x.clip();
+  return [b, x];
+}
 Object.assign(LM, { hi, nz, fb, mix });
 
 // ---------- cached sprites ----------
@@ -385,11 +393,27 @@ function murkTex() {   // soft drifting murk (teal), alpha-only noise, 160x280, 
   const w = 160, h = 280, c = cv(w, h), x = c.getContext('2d'), id = x.createImageData(w, h);
   for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) {
     let v = 0, a = .5, f = 1 / 24; for (let o = 0; o < 4; o++) { v += a * n2(i * f, j * f, o + 3); a *= .5; f *= 2; }
-    const k = clamp((v - .3) / .5), q = (j * w + i) * 4; id.data[q] = 70; id.data[q + 1] = 150; id.data[q + 2] = 156; id.data[q + 3] = 255 * k * k;
+    const k = clamp((v - .26) / .56), q = (j * w + i) * 4; id.data[q] = 70; id.data[q + 1] = 150; id.data[q + 2] = 156; id.data[q + 3] = 255 * k * (.35 + .65 * k);
   }
   x.putImageData(id, 0, 0); return (_murk = c);
 }
-// LM.glow(ctx, x, y, r, color, a = 1, op = 'lighter'): fast cached radial glow (same look as L.glow, ~5x cheaper)
+// full-size murk layer baked once from the noise (drawn unscaled each frame: ~6x cheaper than a scaled draw)
+let _murkBig = null;
+function murkBig() {
+  if (_murkBig) return _murkBig;
+  const w = W + 480, h = H + 640, c = cv(w, h), x = c.getContext('2d'), mt = murkTex();
+  x.imageSmoothingQuality = 'high'; x.drawImage(mt, 0, 0, w, h);
+  x.globalAlpha = .55; x.translate(w, 0); x.scale(-1, 1); x.drawImage(mt, -w * .3, -h * .25, w * 1.5, h * 1.5);
+  return (_murkBig = c);
+}
+const _strip = { c: null };
+function gradStrip(stops, y0, y1, h) {   // 1-px-wide vertical gradient, stretched with nearest-neighbour (5x cheaper than a gradient fill)
+  if (!_strip.c || _strip.c.height !== h) _strip.c = cv(1, h);
+  const x = _strip.c.getContext('2d'), g = x.createLinearGradient(0, y0, 0, y1); stops.forEach(([o, c]) => g.addColorStop(o, c));
+  x.clearRect(0, 0, 1, h); x.fillStyle = g; x.fillRect(0, 0, 1, h); return _strip.c;
+}
+// LM.glow(ctx, x, y, r, color, a = 1, op = 'lighter'): cached-sprite radial glow (same look as L.glow). Big glows cost
+// ~3 ms per 800 px diameter in this renderer: keep large ones few.
 LM.glow = function (ctx, x, y, r, color, a = 1, op = 'lighter') {
   if (!(a > .003) || !(r > .5)) return;
   ctx.save(); ctx.globalCompositeOperation = op; ctx.globalAlpha *= Math.min(1, a); ctx.drawImage(glowSpr(color), x - r, y - r, r * 2, r * 2); ctx.restore();
@@ -463,19 +487,13 @@ LM.sea = function (ctx, t, o = {}) {
   const cx = clamp(cam[0], -400, 400), cy = clamp(cam[1], -400, 400);
   ctx.save();
   const top = mix(o.top || COL.teal, '#010404', dark * .94), mid = mix(o.mid || COL.deep, '#010303', dark * .95), bot = mix(o.bottom || COL.abyss, '#000101', dark);
-  const gy = -cy * .06, g = ctx.createLinearGradient(0, gy, 0, H + gy); g.addColorStop(0, top); g.addColorStop(.5, mid); g.addColorStop(1, bot);
-  ctx.fillStyle = g; ctx.fillRect(-60, -60, W + 120, H + 120);
-  // murk (two parallax layers of a cached noise texture)
-  const ma = al(o.murk) * (.05 + .3 * k);
+  const gy = -cy * .06, HS = H + 120, strip = gradStrip([[0, top], [.5, mid], [1, bot]], 60 + gy, 60 + H + gy, HS);
+  ctx.imageSmoothingEnabled = false; ctx.drawImage(strip, 0, 0, 1, HS, -60, -60, W + 120, HS); ctx.imageSmoothingEnabled = true;
+  // murk: one pre-baked full-size layer, drifting slowly (integer offsets, unscaled)
+  const ma = al(o.murk) * (.05 + .2 * k);
   if (ma > .004) {
-    const mt = murkTex(); ctx.globalCompositeOperation = 'screen';
-    for (let l = 0; l < 2; l++) {
-      const z = l ? .32 : .16, ww = W + (l ? 800 : 520), hh = H + (l ? 1100 : 760);
-      const ox = -(ww - W) / 2 + Math.sin(t * .023 + seed * 1.7 + l * 2.1) * 120 - cx * z, oy = -(hh - H) / 2 + Math.cos(t * .019 + seed + l * 1.3) * 150 - cy * z + t * (o.current ? o.current[1] * z : 0);
-      ctx.globalAlpha = ma * (l ? .6 : 1);
-      if (l) { ctx.save(); ctx.translate(ox + ww, oy); ctx.scale(-1, 1); ctx.drawImage(mt, 0, 0, ww, hh); ctx.restore(); } else ctx.drawImage(mt, ox, oy, ww, hh);
-    }
-    ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+    const mb = murkBig(), ox = Math.round(-240 + Math.sin(t * .023 + seed * 1.7) * 110 - cx * .2), oy = Math.round(-320 + Math.cos(t * .019 + seed) * 140 - cy * .2);
+    ctx.globalAlpha = ma; ctx.drawImage(mb, ox, oy); ctx.globalAlpha = 1;
   }
   // faint surface light (caustic shafts) near the top
   const sf = (o.surface || 0) * (1 - dark * .7);
@@ -494,7 +512,7 @@ LM.sea = function (ctx, t, o = {}) {
   }
   // scattering haze around lights (murky water glows around every source)
   const hz = al(o.haze);
-  if (hz > 0) for (const Lt of lights) LM.glow(ctx, Lt.x, Lt.y, Lt.r * 1.15, Lt.color, .2 * al(Lt.a) * hz);
+  if (hz > 0) for (const Lt of lights) LM.glow(ctx, Lt.x, Lt.y, Lt.r * .9, Lt.color, .24 * al(Lt.a) * hz);
   // marine snow: far / mid / near layers; ambient brightness fades with o.dark, lights reveal it
   const sn = o.snow == null ? 1 : o.snow;
   if (sn > 0) {
@@ -532,8 +550,9 @@ LM.seabed = function (ctx, y, t, o = {}) {
   if (!ctx) return yAt;
   ctx.save();
   ctx.beginPath(); ctx.moveTo(-80, H + 80); for (let xx = -80; xx <= W + 104; xx += 24) ctx.lineTo(xx, yAt(xx)); ctx.lineTo(W + 104, H + 80); ctx.closePath();
-  const g = ctx.createLinearGradient(0, y - 20, 0, y + 420); g.addColorStop(0, mix('#16241f', '#030605', dark * .92)); g.addColorStop(.2, mix('#0a1411', '#020403', dark)); g.addColorStop(1, '#010202');
-  ctx.fillStyle = g; ctx.fill(); ctx.clip();
+  ctx.clip();
+  const y0 = Math.floor(y - 40), hs = Math.max(2, Math.ceil(H + 80 - y0)), strip = gradStrip([[0, mix('#16241f', '#030605', dark * .92)], [.2 * 460 / hs, mix('#0a1411', '#020403', dark)], [Math.min(1, 460 / hs), '#010202'], [1, '#010202']], 20, 20 + hs, hs);
+  ctx.imageSmoothingEnabled = false; ctx.drawImage(strip, 0, 0, 1, hs, -80, y0, W + 184, hs); ctx.imageSmoothingEnabled = true;
   ctx.globalCompositeOperation = 'lighter';
   for (const Lt of lights) {
     const fy = yAt(Lt.x), hgt = Math.max(0, fy - Lt.y), f = clamp(1 - hgt / (Lt.r * 1.1)); if (f <= 0) continue;
@@ -558,14 +577,15 @@ LM.seabed = function (ctx, y, t, o = {}) {
 // Side view: (x, y) = centre of the base on the seabed; width ~730*s, height ~360*s (top deck at y-346*s).
 // Top view (o.view = 'top'): (x, y) = centre of the plan; ~700*s x 400*s.
 // It is LIT ONLY BY AVAILABLE LIGHT: a dark silhouette (o.sil = 1 blocks what is behind it) plus a lit pass
-// = ambient (o.amb = .08, o.ambColor) + o.lights [{x,y,r,color,a}] multiplied with the steel albedo, so in
+// = ambient (o.amb = .12, o.ambColor) + o.lights [{x,y,r,color,a}] multiplied with the steel albedo, so in
 // darkness it is near-invisible and a lamp/life-light reveals only nearby members.
-//  o.flip (bucket on the left) · o.a alpha.
+//  o.flip (bucket on the left) · o.a alpha · o.sil 1 (opacity of the body; < 1 = ghosted). Only the on-canvas part
+//  is processed, so close-ups (s 2-3) stay cheap.
 // ret: {hook [x,y] = underside lip of the protruding transponder bucket (where the umbilical snags),
 //       bucket [x,y] (bucket centre), rim [x,y], top [x,y] (centre of the top deck surface), topY, topL, topR,
 //       hose [[x,y]...] (the old hose up the side, bottom -> top, for climbing), map(lx, ly) -> [x,y], bbox}
 // =====================================================================================================
-const grey = (v, tint = 0) => { const c = Math.round(clamp(v) * 196); return `rgb(${Math.round(c * (1 - .06 * tint))},${Math.round(c * (1 + .02 * tint))},${Math.round(c * (1 + .03 * tint))})`; };
+const grey = (v, tint = 0) => { const c = Math.round(clamp(v) * 236); return `rgb(${Math.round(c * (1 - .06 * tint))},${Math.round(c * (1 + .02 * tint))},${Math.round(c * (1 + .03 * tint))})`; };
 function tubeSeg(c, x0, y0, x1, y1, w, tone = 1) {
   const dx = x1 - x0, dy = y1 - y0, L0 = Math.hypot(dx, dy) || 1; let nx = -dy / L0, ny = dx / L0; if (ny > 0 || (ny === 0 && nx > 0)) { nx = -nx; ny = -ny; }
   const ln = (of, lw, col) => { c.strokeStyle = col; c.lineWidth = lw; c.beginPath(); c.moveTo(x0 + nx * of, y0 + ny * of); c.lineTo(x1 + nx * of, y1 + ny * of); c.stroke(); };
@@ -694,26 +714,39 @@ LM.structure = function (ctx, x, y, s, t, o = {}) {
     : { hook: map(384, -96), bucket: map(384, -96), rim: map(384, -96), top: map(0, 0), topY: y, topL: map(-320, 0), topR: map(320, 0), hose: [] };
   ret.map = map; ret.bbox = [Math.min(map(box.x0, 0)[0], map(box.x1, 0)[0]), y + box.y0 * s, Math.max(map(box.x0, 0)[0], map(box.x1, 0)[0]), y + box.y1 * s];
   const a = al(o.a); if (!ctx || a <= 0) return ret;
-  const need = s * devScale(ctx), bk = need <= .5 ? .5 : need <= .71 ? .71 : need <= 1 ? 1 : need <= 1.41 ? 1.41 : need <= 2 ? 2 : 2.83;
+  const need = s * devScale(ctx) * .87, bk = [.5, .71, 1, 1.41, 2, 2.83].find(b => b >= need) || 2.83;
   const sp = structSprite(view, bk), dx = box.x0 * bk, dy = box.y0 * bk;
+  // the part of the sprite that is on the canvas (sprite px)
+  const m = ctx.getTransform().translate(x, y).scale(f * s / bk, s / bk), inv = m.inverse(), cw = ctx.canvas.width, ch = ctx.canvas.height;
+  let u0 = 1e9, v0 = 1e9, u1 = -1e9, v1 = -1e9;
+  for (const [px, py] of [[0, 0], [cw, 0], [0, ch], [cw, ch]]) { const q = inv.transformPoint(new DOMPoint(px, py)); u0 = Math.min(u0, q.x - dx); v0 = Math.min(v0, q.y - dy); u1 = Math.max(u1, q.x - dx); v1 = Math.max(v1, q.y - dy); }
+  const rx = Math.max(0, Math.floor(u0) - 2), ry = Math.max(0, Math.floor(v0) - 2), rw = Math.min(sp.w, Math.ceil(u1) + 2) - rx, rh = Math.min(sp.h, Math.ceil(v1) + 2) - ry;
+  if (rw <= 0 || rh <= 0) return ret;
   ctx.save(); ctx.translate(x, y); ctx.scale(f * s / bk, s / bk); const ga = ctx.globalAlpha;
-  const sil = o.sil == null ? 1 : o.sil; if (sil > 0) { ctx.globalAlpha = ga * a * clamp(sil); ctx.drawImage(sp.sil, dx, dy); }
-  const amb = o.amb == null ? .08 : o.amb, lights = o.lights || [];
+  const amb = o.amb == null ? .12 : o.amb, lights = o.lights || [], sil = o.sil == null ? 1 : o.sil;
   if (amb > .004 || lights.length) {
-    const [lb, lx] = buf('lmSt' + sp.key, sp.w, sp.h);
-    lx.fillStyle = mix('#000000', o.ambColor || '#8fb3b8', clamp(amb)); lx.fillRect(0, 0, sp.w, sp.h);
-    lx.globalCompositeOperation = 'lighter';
+    // lit pass = (ambient + lights) x steel albedo, masked to the structure; it is opaque, so it also occludes like the
+    // silhouette. The light map is smooth, so it is built at 1/4 resolution and stretched.
+    // (exact-size per-sprite buffers + clipping: full-canvas draws avoid the slow strict-source-rect path)
+    const q = 4, lw = Math.ceil(sp.w / q) + 1, lh = Math.ceil(sp.h / q) + 1;
+    const [mb2, mx2] = buf('lmStL' + sp.key, lw, lh);
+    mx2.fillStyle = mix('#000000', o.ambColor || '#9fc3c8', clamp(amb)); mx2.fillRect(0, 0, lw, lh);
+    mx2.globalCompositeOperation = 'lighter';
     for (const Lt of lights) {
-      const px = ((Lt.x - x) / (f * s) - box.x0) * bk, py = ((Lt.y - y) / s - box.y0) * bk, pr = Lt.r / s * bk, la = al(Lt.a);
-      if (pr < 1 || px + pr < 0 || py + pr < 0 || px - pr > sp.w || py - pr > sp.h) continue;
-      const g = lx.createRadialGradient(px, py, 0, px, py, pr);
-      g.addColorStop(0, rgba(Lt.color, Math.min(1, la))); g.addColorStop(.28, rgba(Lt.color, Math.min(1, .6 * la))); g.addColorStop(.62, rgba(Lt.color, Math.min(1, .17 * la))); g.addColorStop(1, rgba(Lt.color, 0));
-      lx.fillStyle = g; lx.fillRect(px - pr, py - pr, pr * 2, pr * 2);
+      const px = ((Lt.x - x) / (f * s) - box.x0) * bk / q, py = ((Lt.y - y) / s - box.y0) * bk / q, pr = Lt.r / s * bk / q, la = al(Lt.a);
+      if (pr < .5 || la <= 0 || px + pr < rx / q || py + pr < ry / q || px - pr > (rx + rw) / q || py - pr > (ry + rh) / q) continue;
+      const g = mx2.createRadialGradient(px, py, 0, px, py, pr);
+      g.addColorStop(0, rgba(Lt.color, Math.min(1, la))); g.addColorStop(.3, rgba(Lt.color, Math.min(1, .7 * la))); g.addColorStop(.65, rgba(Lt.color, Math.min(1, .28 * la))); g.addColorStop(1, rgba(Lt.color, 0));
+      mx2.fillStyle = g; mx2.fillRect(px - pr, py - pr, pr * 2, pr * 2);
     }
-    lx.globalCompositeOperation = 'multiply'; lx.drawImage(sp.alb, 0, 0);
+    const [lb, lx] = buf('lmSt' + sp.key, sp.w, sp.h);
+    lx.save(); lx.beginPath(); lx.rect(rx, ry, rw, rh); lx.clip();
+    lx.globalCompositeOperation = 'copy'; lx.drawImage(sp.alb, 0, 0);
+    lx.globalCompositeOperation = 'multiply'; lx.drawImage(mb2, 0, 0, lw * q, lh * q);
     lx.globalCompositeOperation = 'destination-in'; lx.drawImage(sp.alb, 0, 0);
-    ctx.globalAlpha = ga * a; ctx.drawImage(lb, dx, dy);
-  }
+    lx.restore();
+    ctx.globalAlpha = ga * a * clamp(sil); ctx.beginPath(); ctx.rect(dx + rx, dy + ry, rw, rh); ctx.clip(); ctx.drawImage(lb, dx, dy);
+  } else if (sil > 0) { ctx.globalAlpha = ga * a * clamp(sil); ctx.drawImage(sp.sil, dx, dy); }
   ctx.restore();
   return ret;
 };
@@ -731,7 +764,8 @@ LM.structure = function (ctx, x, y, s, t, o = {}) {
 //  o.bailout true (back cylinder) · o.bailoutLit 0..1 (its valve glows amber when opened)
 //  o.helmet true (false = bare faceless hooded head) · o.kind 'diver' | 'bellman' (no helmet/bailout)
 //  o.fill '#05090b' body · o.rim '#8fc8e0' rim colour · o.rimA 1 · o.light [x,y] (rim faces it) or o.rimDir
-//  (rad, default up-left) · o.halo .2 soft glow around the rim · o.detail 1 (straps, faceplate glint)
+//  (rad, default up-left) · o.rim2A .18 faint opposite rim · o.halo .2 soft glow around the rim · o.detail 1
+//  (straps, faceplate glint) · o.warm 0..1 warm bounce over the whole body (inside the bell) · o.lifeS light size
 // ret: {chest, head, lamp, lampAng, umb (umbilical attach point on the helmet), hand, hand2, foot, foot2,
 //       pelvis, valve (bailout valve), beat, s, lights: [life light, lamp light]}
 // =====================================================================================================
@@ -743,9 +777,9 @@ const POSES = LM.POSES = {
   climb:  { T: .1, h: -.42, na: [2.78, .22], fa: [2.12, .55], nl: [1.06, -1.72], fl: [-.04, -.14] },
   curl:   { T: 1.36, h: .62, na: [-.42, -.95], fa: [-.25, -1.15], nl: [1.18, -2.56], fl: [.98, -2.42] },
   float:  { T: .3, h: .58, na: [.5, .36], fa: [.78, .3], nl: [.3, -.5], fl: [.08, -.34] },
-  drag:   { T: -.34, h: .14, na: [1.42, .1], fa: [1.24, .22], nl: [.52, -.22], fl: [-.32, -.36] },
-  swim:   { T: 1.4, h: -.6, na: [1.62, .08], fa: [1.25, .36], nl: [-1.44, -.16], fl: [-1.62, .12] },
-  sit:    { T: .06, h: .18, na: [.55, .95], fa: [.35, 1.05], nl: [1.5, -1.48], fl: [1.42, -1.5] },
+  drag:   { T: -.5, h: .3, na: [1.2, .75], fa: [1.0, .95], nl: [.8, -.62], fl: [-.5, -.28] },
+  swim:   { T: 1.4, h: -.95, na: [1.62, .08], fa: [1.25, .36], nl: [-1.44, -.16], fl: [-1.62, .12] },
+  sit:    { T: .06, h: .18, na: [.02, 1.2], fa: [-.1, 1.3], nl: [1.5, -1.48], fl: [1.42, -1.5] },
   lean:   { T: .98, h: .4, na: [.12, .28], fa: [.36, .14], nl: [.16, -1.52], fl: [.02, -1.5] },
   huddle: { T: .42, h: .62, na: [.45, 1.15], fa: [.3, 1.3], nl: [2.05, -2.25], fl: [1.9, -2.2] },
 };
@@ -774,7 +808,7 @@ function rig(p) {
 const handOf = A => [A[2][0] + Math.sin(A[4]) * 14, A[2][1] + Math.cos(A[4]) * 14];
 const toeOf = Lg => [Lg[2][0] + Math.cos(Lg[4]) * 34 + Math.sin(Lg[4]) * 10, Lg[2][1] - Math.sin(Lg[4]) * 34 + Math.cos(Lg[4]) * 10];
 function keyPts(J) {
-  const r = [[J.pel, 34], [J.chest, 52], [J.neck, 30], [J.hel(12, -52), 56], [J.shN, 26], [J.shF, 26], [J.tor(-62, -100), 30]];
+  const r = [[J.pel, 34], [J.chest, 52], [J.neck, 30], [J.hel(12, -52), 56], [J.hel(28, -112), 14], [J.hel(64, -10), 18], [J.shN, 26], [J.shF, 26], [J.tor(-62, -100), 30], [J.tor(-63, -178), 14], [J.tor(-70, -196), 12], [J.tor(-62, -40), 24]];
   for (const A of [J.armN, J.armF]) r.push([A[1], 21], [A[2], 19], [handOf(A), 18]);
   for (const Lg of [J.legN, J.legF]) r.push([Lg[1], 27], [Lg[2], 22], [toeOf(Lg), 18]);
   return r;
@@ -818,8 +852,7 @@ function diverDetails(c, J, o, rim, kind, helmet) {
   const k = o.detail == null ? 1 : o.detail; if (k <= 0) return;
   c.lineCap = 'round';
   c.save(); c.rotate(J.T);
-  c.strokeStyle = rgba(rim, .17 * k); c.lineWidth = 5; c.beginPath(); c.moveTo(-36, -152); c.lineTo(46, -66); c.moveTo(-40, -24); c.lineTo(42, -30); c.stroke();
-  c.strokeStyle = rgba(rim, .1 * k); c.lineWidth = 2; c.beginPath(); c.moveTo(22, -170); c.quadraticCurveTo(32, -100, 26, -20); c.stroke();
+  c.strokeStyle = rgba(rim, .09 * k); c.lineWidth = 6; c.beginPath(); c.moveTo(-36, -150); c.quadraticCurveTo(10, -120, 44, -70); c.moveTo(-40, -24); c.quadraticCurveTo(0, -20, 42, -30); c.stroke();
   if (kind === 'diver' && o.bailout !== false) { c.strokeStyle = rgba(rim, .26 * k); c.lineWidth = 3; c.beginPath(); c.moveTo(-82, -126); c.lineTo(-46, -126); c.moveTo(-82, -70); c.lineTo(-46, -70); c.moveTo(-76, -150); c.lineTo(-76, -48); c.stroke();
     if (o.bailoutLit > 0) { c.fillStyle = rgba(COL.amber, clamp(o.bailoutLit)); c.beginPath(); c.arc(-63, -178, 7, 0, TAU); c.fill(); } }
   c.restore();
@@ -831,8 +864,7 @@ function diverDetails(c, J, o, rim, kind, helmet) {
     c.strokeStyle = rgba(rim, .2 * k); c.lineWidth = 2; c.beginPath(); c.moveTo(40, -92); c.lineTo(64, -80); c.quadraticCurveTo(76, -50, 68, -18); c.lineTo(44, -10); c.stroke();
     c.beginPath(); c.ellipse(8, 2, 40, 10, 0, Math.PI, TAU); c.stroke();
   } else if (kind === 'bellman') {
-    c.strokeStyle = rgba(rim, .32 * k); c.lineWidth = 4; c.beginPath(); c.ellipse(12, -44, 35, 40, -.1, -2.7, -.5); c.stroke();          // headset band
-    c.fillStyle = rgba(rim, .22 * k); c.beginPath(); c.ellipse(0, -40, 9, 13, 0, 0, TAU); c.fill();                                      // ear cup
+    c.strokeStyle = rgba(rim, .3 * k); c.lineWidth = 4; c.beginPath(); c.ellipse(12, -42, 31, 36, -.1, -2.75, -1.0); c.stroke();          // headset band over the top (no features)
   } else { c.strokeStyle = rgba(rim, .2 * k); c.lineWidth = 2.5; c.beginPath(); c.ellipse(12, -42, 30, 35, -.1, -2.7, -.9); c.stroke(); }
   c.restore();
 }
@@ -851,36 +883,38 @@ LM.diver = function (ctx, x, y, s, t, o = {}) {
   const b = PK.beat(t + (o.phase || 0), o.bpm || 62);
   const R = { chest: scr(J.chest), head: scr(J.hel(12, -52)), lamp: lampS, lampAng, umb: scr(J.hel(-34, -26)), hand: scr(handOf(J.armN)), hand2: scr(handOf(J.armF)),
     foot: scr(J.legN[2]), foot2: scr(J.legF[2]), pelvis: scr(J.pel), valve: scr(J.tor(-63, -178)), beat: b, s, lights: [] };
-  if (life > 0) R.lights.push({ x: R.chest[0], y: R.chest[1], r: 240 * s * (o.lifeS || 1), color: COL.amber, a: .8 * life * (.85 + .15 * b) });
+  if (life > 0) R.lights.push({ x: R.chest[0], y: R.chest[1], r: 520 * s * (o.lifeS || 1), color: COL.amber, a: .9 * life * (.85 + .15 * b) });
   if (lamp > 0) R.lights.push({ x: lampS[0] + Math.cos(lampAng) * 300 * s, y: lampS[1] + Math.sin(lampAng) * 300 * s, r: 460 * s, color: COL.lamp, a: .85 * lamp });
   if (!ctx || a <= 0) return R;
   if (lamp > 0) LM.lampBeam(ctx, t, lampS[0], lampS[1], lampAng, lamp * a, { len: (o.beamLen || 820) * s, spread: .27, s: Math.max(.4, s), seed: 9 });
-  // buffers sized to the pose, rendered at the effective device scale
-  const zs = devScale(ctx), S = s * zs;
-  let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9; for (const [q, r] of keyPts(J)) { x0 = Math.min(x0, q[0] - r); y0 = Math.min(y0, q[1] - r); x1 = Math.max(x1, q[0] + r); y1 = Math.max(y1, q[1] + r); }
-  const C = [(x0 + x1) / 2, (y0 + y1) / 2], D = Math.min(2048, Math.ceil((Math.hypot(x1 - x0, y1 - y0) * S + 48) / 64) * 64);
-  const rim = o.rim || COL.rim, fill = o.fill || '#05090b';
-  const setT = c => { c.setTransform(1, 0, 0, 1, 0, 0); c.translate(D / 2, D / 2); c.rotate(rot); c.scale(dir * S, S); c.translate(-C[0], -C[1]); };
-  const [mb, mx] = buf('lmDvM' + D, D, D); mx.clearRect(0, 0, D, D); setT(mx); mx.fillStyle = mx.strokeStyle = '#fff'; diverShape(mx, J, o, kind, helmet);
-  const [fbf, fx] = buf('lmDvF' + D, D, D); fx.clearRect(0, 0, D, D); fx.drawImage(mb, 0, 0); fx.globalCompositeOperation = 'source-in'; fx.fillStyle = fill; fx.fillRect(0, 0, D, D);
+  // tight buffers around the (rotated) pose, rendered at the effective device scale; the mask is drawn in the rim colour
+  const zs = devScale(ctx), S = s * zs, rim = o.rim || COL.rim, fill = o.fill || '#05090b', pad = 14;
+  const twD = q => { const u = dir * q[0] * S, v = q[1] * S; return [u * cr - v * sr, u * sr + v * cr]; };
+  let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+  for (const [q, r] of keyPts(J)) { const w = twD(q), rr = r * S; x0 = Math.min(x0, w[0] - rr); y0 = Math.min(y0, w[1] - rr); x1 = Math.max(x1, w[0] + rr); y1 = Math.max(y1, w[1] + rr); }
+  const ox0 = Math.floor(x0) - pad, oy0 = Math.floor(y0) - pad, BW = Math.min(2400, Math.ceil(x1) + pad - ox0), BH = Math.min(2400, Math.ceil(y1) + pad - oy0);
+  const setT = c => { c.setTransform(1, 0, 0, 1, -ox0, -oy0); c.rotate(rot); c.scale(dir * S, S); };
+  const [mb, mx] = gbuf('lmDvM', BW, BH); mx.clearRect(0, 0, BW, BH); setT(mx); mx.fillStyle = mx.strokeStyle = rim; diverShape(mx, J, o, kind, helmet);
+  const [fbf, fx] = gbuf('lmDvF', BW, BH); fx.globalCompositeOperation = 'copy'; fx.drawImage(mb, 0, 0, BW, BH, 0, 0, BW, BH); fx.globalCompositeOperation = 'source-in'; fx.fillStyle = fill; fx.fillRect(0, 0, BW, BH);
   fx.globalCompositeOperation = 'source-atop'; setT(fx);
   if (life > 0) { const g = fx.createRadialGradient(J.chest[0], J.chest[1], 0, J.chest[0], J.chest[1], 200); g.addColorStop(0, rgba(COL.amber, .5 * life * (.8 + .2 * b))); g.addColorStop(.45, rgba(COL.amber, .12 * life)); g.addColorStop(1, rgba(COL.amber, 0)); fx.fillStyle = g; fx.fillRect(J.chest[0] - 200, J.chest[1] - 200, 400, 400); }
-  if (o.warm > 0) { fx.fillStyle = rgba(COL.amber, .18 * o.warm); fx.fillRect(x0, y0, x1 - x0, y1 - y0); }
+  if (o.warm > 0) { fx.setTransform(1, 0, 0, 1, 0, 0); fx.fillStyle = rgba(COL.amber, .18 * o.warm); fx.fillRect(0, 0, BW, BH); setT(fx); }
   diverDetails(fx, J, o, rim, kind, helmet);
-  const [rbf, rx] = buf('lmDvR' + D, D, D); rx.clearRect(0, 0, D, D); rx.drawImage(mb, 0, 0); rx.globalCompositeOperation = 'source-in'; rx.fillStyle = rim; rx.fillRect(0, 0, D, D);
-  const sc = scr(C), rd = o.light ? Math.atan2(o.light[1] - R.chest[1], o.light[0] - R.chest[0]) : (o.rimDir == null ? -2.3 : o.rimDir);
-  const rw = (o.rimW || 3) * zs * clamp(s, .55, 1.6), ox = Math.cos(rd) * rw, oy = Math.sin(rd) * rw, X0 = -D / 2, Y0 = -D / 2;
-  ctx.save(); ctx.translate(sc[0], sc[1]); ctx.scale(1 / zs, 1 / zs);
+  const pel = scr(J.pel), rd = o.light ? Math.atan2(o.light[1] - R.chest[1], o.light[0] - R.chest[0]) : (o.rimDir == null ? -2.3 : o.rimDir);
+  const rw = (o.rimW || 3) * zs * clamp(s, .55, 1.6), ox = Math.cos(rd) * rw, oy = Math.sin(rd) * rw;
+  ctx.save(); ctx.translate(pel[0], pel[1]); ctx.scale(1 / zs, 1 / zs);
   const halo = o.halo == null ? .2 : o.halo, ga = ctx.globalAlpha;
   if (halo > 0) {
-    const [h1, h1x] = buf('lmDvH1' + D, D / 4, D / 4), [h2, h2x] = buf('lmDvH2' + D, D / 8, D / 8);
-    h1x.clearRect(0, 0, D / 4, D / 4); h1x.drawImage(rbf, 0, 0, D / 4, D / 4); h2x.clearRect(0, 0, D / 8, D / 8); h2x.drawImage(h1, 0, 0, D / 8, D / 8);
-    ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = ga * clamp(halo * a); ctx.drawImage(h2, X0 - 6, Y0 - 6, D + 12, D + 12);
+    const w4 = Math.ceil(BW / 4), h4 = Math.ceil(BH / 4), w8 = Math.ceil(BW / 8), h8 = Math.ceil(BH / 8);
+    const [h1, h1x] = gbuf('lmDvH1', w4, h4), [h2, h2x] = gbuf('lmDvH2', w8, h8);
+    h1x.clearRect(0, 0, w4, h4); h1x.drawImage(mb, 0, 0, BW, BH, 0, 0, w4, h4); h2x.clearRect(0, 0, w8, h8); h2x.drawImage(h1, 0, 0, w4, h4, 0, 0, w8, h8);
+    ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = ga * clamp(halo * a); ctx.drawImage(h2, 0, 0, w8, h8, ox0 - 6, oy0 - 6, BW + 12, BH + 12);
   }
   ctx.globalCompositeOperation = 'source-over';
-  ctx.globalAlpha = ga * clamp(al(o.rim2A == null ? .3 : o.rim2A) * a); ctx.drawImage(rbf, X0 - ox * .7, Y0 - oy * .7);
-  ctx.globalAlpha = ga * clamp(al(o.rimA) * a); ctx.drawImage(rbf, X0 + ox, Y0 + oy);
-  ctx.globalAlpha = ga * a; ctx.drawImage(fbf, X0, Y0);
+  const r2 = o.rim2A == null ? .18 : o.rim2A;
+  if (r2 > 0) { ctx.globalAlpha = ga * clamp(r2 * a); ctx.drawImage(mb, 0, 0, BW, BH, ox0 - ox * .7, oy0 - oy * .7, BW, BH); }
+  ctx.globalAlpha = ga * clamp(al(o.rimA) * a); ctx.drawImage(mb, 0, 0, BW, BH, ox0 + ox, oy0 + oy, BW, BH);
+  ctx.globalAlpha = ga * a; ctx.drawImage(fbf, 0, 0, BW, BH, ox0, oy0, BW, BH);
   ctx.restore();
   if (lamp > 0) { LM.glow(ctx, lampS[0], lampS[1], 64 * Math.max(.4, s), COL.lamp, .7 * lamp * a); LM.glow(ctx, lampS[0], lampS[1], 14 * Math.max(.4, s), '#ffffff', .95 * lamp * a); }
   if (o.bailoutLit > 0) LM.glow(ctx, R.valve[0], R.valve[1], 46 * Math.max(.5, s), COL.amber, .7 * o.bailoutLit * a);
@@ -1014,7 +1048,7 @@ LM.umbilical = function (ctx, pts, t, o = {}) {
     LM.glow(ctx, cp[0], cp[1], w * (6 + 46 * E.outC(clamp(u / .25))), '#ffffff', 1.2 * fl); LM.glow(ctx, cp[0], cp[1], w * 18, '#dff4ff', .8 * fl);
     if (endA) LM.glow(ctx, endA[0], endA[1], w * 3, '#fff4dc', .7 * k * k); if (endB) LM.glow(ctx, endB[0], endB[1], w * 3, '#fff4dc', .7 * k * k);
     ctx.save(); ctx.lineCap = 'round';
-    ctx.strokeStyle = rgba('#e8f6ff', .45 * k * k); ctx.lineWidth = 3 * k + 1; ctx.beginPath(); ctx.arc(cp[0], cp[1], 30 + 900 * E.outC(u / .7), 0, TAU); ctx.stroke();
+    ctx.strokeStyle = rgba('#e8f6ff', .32 * k * k); ctx.lineWidth = 3 * k + 1; ctx.beginPath(); ctx.arc(cp[0], cp[1], 24 + w * 26 * E.outC(u / .7), 0, TAU); ctx.stroke();
     for (let j = 0; j < 20; j++) {
       const q = hi(j * 7 + 11) * TAU, sp = 300 + 700 * hi(j * 11 + 5), r = sp * u * (1 - u * .5), sx = cp[0] + Math.cos(q) * r, sy = cp[1] + Math.sin(q) * r + 120 * u * u, ln = 8 + sp * .025;
       ctx.strokeStyle = rgba('#fff4dc', k); ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(sx - Math.cos(q) * ln, sy - Math.sin(q) * ln); ctx.stroke();
@@ -1029,7 +1063,7 @@ LM.umbilical = function (ctx, pts, t, o = {}) {
 // Exterior (default): round vessel in a protective frame, ONE porthole (not a face), gas bottles, bottom
 // hatch trunk, lift wire + bell umbilical up to o.wireTop (default -40); warm amber interior glow through the
 // porthole and the open hatch (light cone down into the water).
-//  o.glow 0..1 interior warmth · o.hatch 0..1 hatch open (light spills down) · o.amb .3 ambient on the paint
+//  o.glow 0..1 interior warmth · o.hatch 0..1 hatch open (light spills down) · o.amb .16 ambient on the paint
 //  o.swing rad (pivots on the wire) · o.lamps 0..1 cold frame lamps · o.rim colour · o.wireTop · o.wireDx
 // ret: {hatch [x,y] (bottom opening), port, wire (top attach), exit (where diver umbilicals leave),
 //       lights: [porthole glow, hatch spill, frame lamps]}
@@ -1038,13 +1072,14 @@ LM.umbilical = function (ctx, pts, t, o = {}) {
 // bellman (o.bellman 0..1 alpha, o.bellmanPose 'sit' | 'lean' (or o.bellmanMix 0..1 sit -> lean)).
 //  o.glow 0..1 lamp warmth · o.water 0..1 ripple on the hatch water
 // ret: {hatch [x,y] (centre of the floor opening), hatchR [rx, ry], lamp, bench, bellman (diver ret), lights}
+//  LM.bellClip(ctx, x, y, s) clips to the interior (e.g. to keep a diver lifted through the hatch inside the bell).
 // =====================================================================================================
 LM.bell = function (ctx, x, y, s, t, o = {}) {
   if (o.inside) return bellInside(ctx, x, y, s, t, o);
   const sw = o.swing || 0, cs = Math.cos(sw), sn = Math.sin(sw), PY = -292;
   const map = (lx, ly) => { const v = ly - PY; return [x + (lx * cs - v * sn) * s, y + PY * s + (lx * sn + v * cs) * s]; };
-  const glowK = o.glow == null ? 1 : o.glow, hatch = o.hatch || 0, lamps = o.lamps || 0, amb = o.amb == null ? .3 : o.amb, a = al(o.a);
-  const R = { hatch: map(0, 174), port: map(56, -40), wire: map(0, PY), exit: map(-26, 176), lights: [] };
+  const glowK = o.glow == null ? 1 : o.glow, hatch = o.hatch || 0, lamps = o.lamps || 0, amb = o.amb == null ? .16 : o.amb, a = al(o.a);
+  const R = { hatch: map(0, 174), port: map(56, -30), wire: map(0, PY), exit: map(-26, 176), lights: [] };
   const fl = .94 + .06 * nz(t * 3, 5);
   if (glowK > 0) R.lights.push({ x: R.port[0], y: R.port[1], r: 300 * s, color: COL.amber, a: .55 * glowK * fl });
   if (glowK > 0 && hatch > 0) { const hp = map(0, 330); R.lights.push({ x: hp[0], y: hp[1], r: 420 * s, color: COL.amber, a: .75 * glowK * hatch * fl }); }
@@ -1054,7 +1089,7 @@ LM.bell = function (ctx, x, y, s, t, o = {}) {
   // lift wire + bell umbilical (screen space, from the pivot straight up)
   const wt = o.wireTop == null ? -40 : o.wireTop, wp = R.wire, wdx = (o.wireDx || 0);
   ctx.strokeStyle = rgba('#a8b6ba', .3 + .3 * amb); ctx.lineWidth = Math.max(1.5, 3.2 * s); ctx.beginPath(); ctx.moveTo(wp[0], wp[1]); ctx.lineTo(wp[0] + wdx, wt); ctx.stroke();
-  const ub = map(34, -214);
+  const ub = map(34, -180);
   ctx.strokeStyle = mix('#050606', COL.umb, .25 + .4 * amb); ctx.lineWidth = Math.max(3, 13 * s); ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(ub[0], ub[1]);
   ctx.bezierCurveTo(ub[0] + 60 * s, ub[1] - 80 * s, wp[0] + wdx + 70 * s, wt + 300 * s, wp[0] + wdx + 50 * s, wt); ctx.stroke();
   ctx.save(); ctx.translate(wp[0], wp[1]); ctx.rotate(sw); ctx.scale(s, s); ctx.translate(0, -PY);
@@ -1072,26 +1107,26 @@ LM.bell = function (ctx, x, y, s, t, o = {}) {
   for (const [bx, v] of [[-206, .55], [-176, .8]]) { ctx.fillStyle = mix('#030505', '#56665e', v * (.4 + .9 * amb)); roundRect(ctx, bx - 14, -150, 28, 300, 13); ctx.fill(); ctx.fillStyle = steel(.8 * v); ctx.fillRect(bx - 8, -146, 4, 290); }
   ctx.fillStyle = steel(.4); ctx.fillRect(-212, -96, 54, 8); ctx.fillRect(-212, 90, 54, 8);
   // pressure vessel
-  const body = () => { ctx.beginPath(); ctx.arc(0, -96, 112, Math.PI, TAU); ctx.lineTo(112, 84); ctx.ellipse(0, 84, 112, 44, 0, 0, Math.PI); ctx.closePath(); };
+  const body = () => { ctx.beginPath(); ctx.arc(0, -70, 112, Math.PI, TAU); ctx.lineTo(112, 36); ctx.ellipse(0, 36, 112, 76, 0, 0, Math.PI); ctx.closePath(); };
   const paint = mix('#040505', o.paint || COL.bell, .25 + .85 * amb);
   const gv = ctx.createLinearGradient(-112, 0, 112, 0); gv.addColorStop(0, mix(paint, '#000000', .8)); gv.addColorStop(.3, paint); gv.addColorStop(.48, mix(paint, '#fff0c8', .12 + .1 * amb)); gv.addColorStop(.8, mix(paint, '#000000', .55)); gv.addColorStop(1, mix(paint, '#000000', .85));
   body(); ctx.fillStyle = gv; ctx.fill();
   ctx.save(); body(); ctx.clip();
-  if (glowK > 0) { const gw = ctx.createRadialGradient(56, -40, 10, 56, -40, 200); gw.addColorStop(0, rgba(COL.amber, .35 * glowK * fl)); gw.addColorStop(1, rgba(COL.amber, 0)); ctx.fillStyle = gw; ctx.fillRect(-120, -220, 240, 360); }
-  const gt = ctx.createLinearGradient(0, -210, 0, -60); gt.addColorStop(0, rgba(o.rim || '#bfe6f0', .22 + .2 * amb)); gt.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = gt; ctx.fillRect(-120, -220, 240, 160);
-  ctx.strokeStyle = 'rgba(0,0,0,.45)'; ctx.lineWidth = 3; ctx.beginPath(); ctx.ellipse(0, -96, 112, 16, 0, 0, Math.PI); ctx.stroke(); ctx.beginPath(); ctx.ellipse(0, 40, 112, 16, 0, 0, Math.PI); ctx.stroke();
+  if (glowK > 0) { const gw = ctx.createRadialGradient(56, -30, 10, 56, -30, 200); gw.addColorStop(0, rgba(COL.amber, .35 * glowK * fl)); gw.addColorStop(1, rgba(COL.amber, 0)); ctx.fillStyle = gw; ctx.fillRect(-120, -200, 240, 330); }
+  const gt = ctx.createLinearGradient(0, -184, 0, -40); gt.addColorStop(0, rgba(o.rim || '#bfe6f0', .2 + .2 * amb)); gt.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = gt; ctx.fillRect(-120, -190, 240, 150);
+  ctx.strokeStyle = 'rgba(0,0,0,.45)'; ctx.lineWidth = 3; ctx.beginPath(); ctx.ellipse(0, -70, 112, 16, 0, 0, Math.PI); ctx.stroke(); ctx.beginPath(); ctx.ellipse(0, 36, 112, 16, 0, 0, Math.PI); ctx.stroke();
   ctx.restore();
-  ctx.strokeStyle = rgba(o.rim || '#bfe6f0', .18 + .25 * amb); ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(0, -96, 111, Math.PI * 1.05, Math.PI * 1.6); ctx.stroke();
+  ctx.strokeStyle = rgba(o.rim || '#bfe6f0', .18 + .25 * amb); ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(0, -70, 111, Math.PI * 1.05, Math.PI * 1.6); ctx.stroke();
   // padeye + crown
-  ctx.fillStyle = steel(.6); ctx.fillRect(-10, -224, 20, 18); ctx.beginPath(); ctx.arc(0, PY + 6, 7, 0, TAU); ctx.fill();
+  ctx.fillStyle = steel(.6); ctx.fillRect(-10, -196, 20, 16); ctx.beginPath(); ctx.arc(0, PY + 6, 7, 0, TAU); ctx.fill();
   // the one porthole (off-centre)
-  ctx.fillStyle = steel(.7); ctx.beginPath(); ctx.arc(56, -40, 27, 0, TAU); ctx.fill(); ctx.fillStyle = steel(.25); ctx.beginPath(); ctx.arc(56, -40, 22, 0, TAU); ctx.fill();
-  const gp = ctx.createRadialGradient(52, -44, 2, 56, -40, 20);
+  ctx.fillStyle = steel(.7); ctx.beginPath(); ctx.arc(56, -30, 27, 0, TAU); ctx.fill(); ctx.fillStyle = steel(.25); ctx.beginPath(); ctx.arc(56, -30, 22, 0, TAU); ctx.fill();
+  const gp = ctx.createRadialGradient(52, -34, 2, 56, -30, 20);
   gp.addColorStop(0, mix('#0a0d0e', '#fff0cf', glowK * fl)); gp.addColorStop(.5, mix('#06090a', COL.amber, glowK * fl)); gp.addColorStop(1, mix('#030505', '#7a3f0c', glowK));
-  ctx.fillStyle = gp; ctx.beginPath(); ctx.arc(56, -40, 19, 0, TAU); ctx.fill();
-  ctx.strokeStyle = 'rgba(255,255,255,.35)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(56, -40, 14, 3.5, 4.4); ctx.stroke();
+  ctx.fillStyle = gp; ctx.beginPath(); ctx.arc(56, -30, 19, 0, TAU); ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,.35)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(56, -30, 14, 3.5, 4.4); ctx.stroke();
   // bottom trunk + hatch opening
-  ctx.fillStyle = steel(.4); ctx.fillRect(-40, 112, 80, 58); ctx.fillStyle = steel(.8); ctx.fillRect(-40, 112, 6, 58);
+  ctx.fillStyle = steel(.4); ctx.fillRect(-40, 104, 80, 66); ctx.fillStyle = steel(.8); ctx.fillRect(-40, 104, 6, 66);
   ctx.fillStyle = steel(.55); ctx.beginPath(); ctx.ellipse(0, 172, 46, 10, 0, 0, TAU); ctx.fill();
   ctx.fillStyle = hatch > 0 ? mix('#060504', '#ffd9a0', clamp(hatch * glowK * fl)) : '#020303'; ctx.beginPath(); ctx.ellipse(0, 173, 34, 7, 0, 0, TAU); ctx.fill();
   // frame (front): posts, top bumper, bottom ring, skids, lamps
@@ -1106,6 +1141,8 @@ LM.bell = function (ctx, x, y, s, t, o = {}) {
   ctx.restore();
   return R;
 };
+// LM.bellClip(ctx, x, y, s): sets a clip to the bell interior (same x, y, s as LM.bell(..., {inside: true}))
+LM.bellClip = function (ctx, x, y, s) { const r = 300 * s; ctx.beginPath(); ctx.moveTo(x - r, y - 150 * s); ctx.arc(x, y - 150 * s, r, Math.PI, TAU); ctx.lineTo(x + r, y + 150 * s); ctx.arc(x, y + 150 * s, r, 0, Math.PI); ctx.closePath(); ctx.clip(); };
 function bellInside(ctx, x, y, s, t, o) {
   const map = (lx, ly) => [x + lx * s, y + ly * s], glowK = o.glow == null ? 1 : o.glow, fl = .95 + .05 * nz(t * 2.6, 9), a = al(o.a);
   const bm = o.bellmanMix != null ? clamp(o.bellmanMix) : (o.bellmanPose === 'lean' ? 1 : 0);
@@ -1115,7 +1152,31 @@ function bellInside(ctx, x, y, s, t, o) {
   const bo = { kind: 'bellman', pose: 'sit', pose2: 'lean', mix: bm, anchor: 'pelvis', fill: '#0c0805', rim: COL.warm, rimA: .9, rimDir: -1.4, halo: .3, idle: .6, a: al(o.bellman == null ? 1 : o.bellman) * a, warm: .6 };
   R.bellman = LM.diver(null, map(bx, by)[0], map(bx, by)[1], bs, t, bo);
   if (!ctx || a <= 0) return R;
+  // static interior (lit by the lamp at full warmth) is a cached sprite; o.glow darkens it, the water moves per frame
+  const need = s * devScale(ctx) * .87, bk = [.5, .71, 1, 1.41, 2].find(v => v >= need) || 2, spr = bellInSprite(bk);
+  const gk = clamp(glowK * fl);
   ctx.save(); ctx.globalAlpha *= a; ctx.translate(x, y); ctx.scale(s, s);
+  ctx.save(); ctx.scale(1 / bk, 1 / bk); ctx.drawImage(spr, -340 * bk, -490 * bk); ctx.restore();
+  const cap = (r, top, bot) => { ctx.beginPath(); ctx.moveTo(-r, top); ctx.arc(0, top, r, Math.PI, TAU); ctx.lineTo(r, bot); ctx.arc(0, bot, r, 0, Math.PI); ctx.closePath(); };
+  if (gk < .995) { cap(338, -150, 150); ctx.fillStyle = `rgba(3,2,1,${.92 * (1 - gk)})`; ctx.fill(); }
+  const wl = v => rgba(mix('#000000', '#e0a060', glowK), v);
+  ctx.save(); ctx.beginPath(); ctx.ellipse(0, 358, 140, 34, 0, 0, TAU); ctx.clip();
+  const wa = o.water == null ? 1 : o.water;
+  for (let k = 0; k < 4; k++) { const ph = (t * .35 + k / 4) % 1; ctx.strokeStyle = rgba(COL.amber, .16 * wa * glowK * (1 - ph)); ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(10 * Math.sin(k), 360, 20 + ph * 130, 4 + ph * 30, 0, 0, TAU); ctx.stroke(); }
+  const gr = ctx.createLinearGradient(-60, 0, 60, 0); gr.addColorStop(0, 'rgba(255,179,71,0)'); gr.addColorStop(.5, rgba(COL.amber, .2 * glowK)); gr.addColorStop(1, 'rgba(255,179,71,0)'); ctx.fillStyle = gr; ctx.fillRect(-60, 340 + Math.sin(t * 1.3) * 3, 120, 5);
+  ctx.restore();
+  ctx.restore();
+  // warm presence behind the bellman, then the bellman himself, then the lamp glow and a warm haze
+  const pm = map(bx + 20, by - 130);
+  LM.glow(ctx, pm[0], pm[1], 330 * s, COL.amber, .2 * glowK * al(o.bellman == null ? 1 : o.bellman) * a);
+  if (al(o.bellman == null ? 1 : o.bellman) > 0) R.bellman = LM.diver(ctx, map(bx, by)[0], map(bx, by)[1], bs, t, bo);
+  LM.glow(ctx, R.lamp[0], R.lamp[1], 420 * s, COL.amber, .4 * glowK * fl * a); LM.glow(ctx, R.lamp[0], R.lamp[1], 60 * s, COL.core, .9 * glowK * fl * a);
+  return R;
+}
+function bellInSprite(bk) {
+  const key = 'bellIn' + bk; if (SPR[key]) return SPR[key];
+  const c = cv(680 * bk, 980 * bk), ctx = c.getContext('2d'); ctx.scale(bk, bk); ctx.translate(340, 490);
+  const glowK = 1, fl = 1;
   const cap = (r, top, bot) => { ctx.beginPath(); ctx.moveTo(-r, top); ctx.arc(0, top, r, Math.PI, TAU); ctx.lineTo(r, bot); ctx.arc(0, bot, r, 0, Math.PI); ctx.closePath(); };
   // steel wall in section
   cap(338, -150, 150); const gs = ctx.createLinearGradient(-338, 0, 338, 0); gs.addColorStop(0, '#1a1c1c'); gs.addColorStop(.5, '#3a3a34'); gs.addColorStop(1, '#141616'); ctx.fillStyle = gs; ctx.fill();
@@ -1145,11 +1206,7 @@ function bellInside(ctx, x, y, s, t, o) {
   ctx.fillStyle = mix('#030202', '#2a1c10', glowK); ctx.fillRect(-310, 300, 620, 200); ctx.fillStyle = wl(.35); ctx.fillRect(-310, 300, 620, 3);
   ctx.fillStyle = mix('#040302', '#4a3420', glowK); ctx.beginPath(); ctx.ellipse(0, 356, 160, 44, 0, 0, TAU); ctx.fill();
   ctx.fillStyle = '#010303'; ctx.beginPath(); ctx.ellipse(0, 358, 140, 34, 0, 0, TAU); ctx.fill();
-  ctx.save(); ctx.beginPath(); ctx.ellipse(0, 358, 140, 34, 0, 0, TAU); ctx.clip();
-  const wa = o.water == null ? 1 : o.water;
-  for (let k = 0; k < 4; k++) { const ph = (t * .35 + k / 4) % 1; ctx.strokeStyle = rgba(COL.amber, .16 * wa * glowK * (1 - ph)); ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(10 * Math.sin(k), 360, 20 + ph * 130, 4 + ph * 30, 0, 0, TAU); ctx.stroke(); }
-  const gr = ctx.createLinearGradient(-60, 0, 60, 0); gr.addColorStop(0, 'rgba(255,179,71,0)'); gr.addColorStop(.5, rgba(COL.amber, .2 * glowK)); gr.addColorStop(1, 'rgba(255,179,71,0)'); ctx.fillStyle = gr; ctx.fillRect(-60, 340 + Math.sin(t * 1.3) * 3, 120, 5);
-  ctx.restore();
+  ctx.save();
   ctx.strokeStyle = wl(.5); ctx.lineWidth = 3; ctx.beginPath(); ctx.ellipse(0, 356, 160, 44, 0, Math.PI, TAU); ctx.stroke();
   // open hatch lid, standing on its hinge (right of the opening)
   ctx.fillStyle = mix('#040302', '#3a2c1c', glowK); ctx.beginPath(); ctx.ellipse(190, 250, 24, 112, .08, 0, TAU); ctx.fill(); ctx.strokeStyle = wl(.55); ctx.lineWidth = 3; ctx.beginPath(); ctx.ellipse(190, 250, 24, 112, .08, Math.PI * .6, Math.PI * 1.4); ctx.stroke();
@@ -1157,16 +1214,10 @@ function bellInside(ctx, x, y, s, t, o) {
   ctx.fillStyle = mix('#060504', '#fff0cf', glowK * fl); ctx.beginPath(); ctx.ellipse(0, -398, 22, 16, 0, 0, TAU); ctx.fill();
   ctx.strokeStyle = mix('#050403', '#5a4024', glowK); ctx.lineWidth = 3; ctx.beginPath(); for (let k = -2; k <= 2; k++) { ctx.moveTo(k * 11, -418); ctx.quadraticCurveTo(k * 15, -398, k * 11, -380); } ctx.moveTo(-28, -380); ctx.lineTo(28, -380); ctx.stroke();
   ctx.restore();
-  ctx.restore();
-  // warm presence behind the bellman, then the bellman himself, then the lamp glow and a warm haze
-  const pm = map(bx + 20, by - 130);
-  LM.glow(ctx, pm[0], pm[1], 330 * s, COL.amber, .2 * glowK * al(o.bellman == null ? 1 : o.bellman) * a);
-  if (al(o.bellman == null ? 1 : o.bellman) > 0) R.bellman = LM.diver(ctx, map(bx, by)[0], map(bx, by)[1], bs, t, bo);
-  LM.glow(ctx, R.lamp[0], R.lamp[1], 420 * s, COL.amber, .4 * glowK * fl * a); LM.glow(ctx, R.lamp[0], R.lamp[1], 60 * s, COL.core, .9 * glowK * fl * a);
-  ctx.save(); cap0(ctx, x, y, s); ctx.clip(); const vg = ctx.createRadialGradient(x, y - 60 * s, 200 * s, x, y, 560 * s); vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,.6)'); ctx.fillStyle = vg; ctx.fillRect(x - 340 * s, y - 500 * s, 680 * s, 1000 * s); ctx.restore();
-  return R;
+  // inner vignette
+  ctx.save(); cap(300, -150, 150); ctx.clip(); const vg = ctx.createRadialGradient(0, -60, 200, 0, 0, 560); vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,.6)'); ctx.fillStyle = vg; ctx.fillRect(-340, -500, 680, 1000); ctx.restore();
+  return (SPR[key] = c);
 }
-function cap0(ctx, x, y, s) { const r = 300 * s; ctx.beginPath(); ctx.moveTo(x - r, y - 150 * s); ctx.arc(x, y - 150 * s, r, Math.PI, TAU); ctx.lineTo(x + r, y + 150 * s); ctx.arc(x, y + 150 * s, r, 0, Math.PI); ctx.closePath(); }
 
 // =====================================================================================================
 // LM.ship(ctx, x, y, s, t, o) -> ret: generic dive support vessel at night — NO name, NO logo.
@@ -1179,6 +1230,7 @@ function cap0(ctx, x, y, s) { const r = 300 * s; ctx.beginPath(); ctx.moveTo(x -
 // ret: {moonpool [x,y] (where the bell wire leaves the hull), tower, bridge, crane, bow, stern, lights}
 // LM.swell(ctx, y, t, amp = 14, o) -> yAt(x): sea surface line (night sky above unless o.sky = false,
 //  o.caps 0..1 whitecaps, o.under .5 bright underside of the surface seen from below, o.seed). ctx = null -> yAt.
+//  Order for a ship on the swell: LM.swell(sky) -> LM.ship -> LM.swell(ctx, y, t, amp, {front: true}) (water over the hull).
 // =====================================================================================================
 LM.ship = function (ctx, x, y, s, t, o = {}) {
   if (o.view === 'top') return shipTop(ctx, x, y, s, t, o);
@@ -1191,7 +1243,7 @@ LM.ship = function (ctx, x, y, s, t, o = {}) {
   ctx.save(); ctx.globalAlpha *= a;
   for (const [fx, fy] of FL) { const p = map(fx, fy + 60); LM.glow(ctx, p[0], p[1], 260 * s, COL.amber, .12 * lit); }   // haze around the deck floods
   ctx.translate(x, y); ctx.rotate(roll); ctx.scale(dir * s, s);
-  const hull = COL.hull, sup = '#10181c', rim = o.rim || '#7fa4b2';
+  const hull = COL.hull, sup = '#141e23', gear = '#1d292f', rim = o.rim || '#8fb4c2';
   if (under > 0) {
     ctx.fillStyle = rgba('#0a1416', .85 * under); ctx.beginPath(); ctx.moveTo(400, 0); ctx.quadraticCurveTo(436, 26, 412, 54); ctx.quadraticCurveTo(390, 70, 340, 66); ctx.lineTo(-404, 66); ctx.quadraticCurveTo(-430, 60, -428, 0); ctx.closePath(); ctx.fill();
     ctx.fillStyle = rgba('#05090a', .9 * under);
@@ -1210,24 +1262,26 @@ LM.ship = function (ctx, x, y, s, t, o = {}) {
   rect(178, -160, 352, -112, sup);
   ctx.beginPath(); ctx.moveTo(198, -160); ctx.lineTo(198, -202); ctx.lineTo(352, -202); ctx.lineTo(370, -160); ctx.closePath(); ctx.fill();
   rect(150, -152, 186, -112, sup);                                                                   // funnel
-  ctx.fillStyle = '#0a1012'; ctx.fillRect(296, -216, 178, 8); ctx.strokeStyle = '#0a1012'; ctx.lineWidth = 5; ctx.beginPath(); ctx.moveTo(330, -208); ctx.lineTo(372, -116); ctx.moveTo(452, -208); ctx.lineTo(418, -100); ctx.stroke();   // helideck
+  ctx.fillStyle = gear; ctx.fillRect(296, -216, 178, 8); ctx.strokeStyle = gear; ctx.lineWidth = 5; ctx.beginPath(); ctx.moveTo(330, -208); ctx.lineTo(372, -116); ctx.moveTo(452, -208); ctx.lineTo(418, -100); ctx.stroke();   // helideck
   ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(272, -202); ctx.lineTo(272, -270); ctx.moveTo(256, -248); ctx.lineTo(288, -248); ctx.moveTo(250, -228); ctx.lineTo(294, -228); ctx.stroke();   // mast
   rect(-74, -122, 112, -50, sup);                                                                     // dive hangar
-  ctx.strokeStyle = '#0d1518'; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(-6, -122); ctx.lineTo(10, -262); ctx.moveTo(46, -122); ctx.lineTo(30, -262); ctx.stroke();    // tower
+  ctx.strokeStyle = gear; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(-6, -122); ctx.lineTo(10, -262); ctx.moveTo(46, -122); ctx.lineTo(30, -262); ctx.stroke();    // tower
   ctx.lineWidth = 2.5; ctx.beginPath(); for (let k = 0; k < 6; k++) { const y0 = -122 - k * 23, y1 = y0 - 23; ctx.moveTo(lerp(-6, 10, (k) / 6), y0); ctx.lineTo(lerp(46, 30, (k + 1) / 6), y1); } ctx.stroke();
-  ctx.fillStyle = '#0d1518'; ctx.beginPath(); ctx.arc(20, -264, 9, 0, TAU); ctx.fill();
+  ctx.fillStyle = gear; ctx.beginPath(); ctx.arc(20, -264, 9, 0, TAU); ctx.fill();
   rect(-278, -118, -244, -50, sup); rect(-292, -134, -238, -116, sup);                              // crane pedestal + cab
-  ctx.strokeStyle = '#0d1518'; ctx.lineWidth = 3; ctx.beginPath();
+  ctx.strokeStyle = gear; ctx.lineWidth = 3; ctx.beginPath();
   const b0 = [-258, -128], b1 = [-70, -304], bl = Math.hypot(b1[0] - b0[0], b1[1] - b0[1]), nx = -(b1[1] - b0[1]) / bl * 7, ny = (b1[0] - b0[0]) / bl * 7;
   ctx.moveTo(b0[0] + nx, b0[1] + ny); ctx.lineTo(b1[0] + nx, b1[1] + ny); ctx.moveTo(b0[0] - nx, b0[1] - ny); ctx.lineTo(b1[0] - nx, b1[1] - ny);
   for (let k = 0; k < 12; k++) { const u0 = k / 12, u1 = (k + 1) / 12, sgn = k % 2 ? 1 : -1; ctx.moveTo(lerp(b0[0], b1[0], u0) + nx * sgn, lerp(b0[1], b1[1], u0) + ny * sgn); ctx.lineTo(lerp(b0[0], b1[0], u1) - nx * sgn, lerp(b0[1], b1[1], u1) - ny * sgn); }
-  ctx.moveTo(-70, -304); ctx.lineTo(-70, -176); ctx.stroke(); ctx.fillStyle = '#0d1518'; ctx.fillRect(-77, -178, 14, 16);
+  ctx.moveTo(-70, -304); ctx.lineTo(-70, -176); ctx.stroke(); ctx.fillStyle = gear; ctx.fillRect(-77, -178, 14, 16);
   rect(-404, -84, -334, -50, '#0e1417'); rect(-326, -76, -288, -50, '#0e1417');                    // deck containers
-  ctx.lineWidth = 3; ctx.strokeStyle = '#0d1518'; ctx.beginPath(); for (const [fx, fy] of FL) { ctx.moveTo(fx, -50); ctx.lineTo(fx, fy); } ctx.stroke();
+  ctx.lineWidth = 3; ctx.strokeStyle = gear; ctx.beginPath(); for (const [fx, fy] of FL) { ctx.moveTo(fx, -50); ctx.lineTo(fx, fy); } ctx.stroke();
   // hull
   ctx.fillStyle = hull; ctx.beginPath(); ctx.moveTo(-432, -52); ctx.lineTo(262, -52); ctx.quadraticCurveTo(384, -58, 446, -98); ctx.lineTo(454, -102); ctx.quadraticCurveTo(432, -40, 400, 0); ctx.lineTo(-428, 0); ctx.closePath(); ctx.fill();
   ctx.strokeStyle = rgba(rim, .22); ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-432, -52); ctx.lineTo(262, -52); ctx.quadraticCurveTo(384, -58, 446, -98); ctx.lineTo(454, -102); ctx.stroke();
-  ctx.strokeStyle = rgba(rim, .12); ctx.beginPath(); ctx.moveTo(150, -114); ctx.lineTo(352, -114); ctx.moveTo(198, -202); ctx.lineTo(352, -202); ctx.moveTo(-74, -122); ctx.lineTo(112, -122); ctx.stroke();
+  ctx.strokeStyle = rgba(rim, .28); ctx.beginPath(); ctx.moveTo(150, -114); ctx.lineTo(178, -114); ctx.lineTo(178, -160); ctx.lineTo(198, -160); ctx.lineTo(198, -202); ctx.lineTo(352, -202); ctx.lineTo(370, -160);
+  ctx.moveTo(-74, -50); ctx.lineTo(-74, -122); ctx.lineTo(112, -122); ctx.moveTo(296, -216); ctx.lineTo(474, -216); ctx.moveTo(-292, -134); ctx.lineTo(-238, -134);
+  ctx.moveTo(b0[0] + nx, b0[1] + ny); ctx.lineTo(b1[0] + nx, b1[1] + ny); ctx.moveTo(10, -262); ctx.lineTo(-6, -122); ctx.moveTo(-404, -84); ctx.lineTo(-334, -84); ctx.stroke();
   ctx.fillStyle = 'rgba(0,0,0,.4)'; ctx.fillRect(-428, -18, 830, 4);
   // lights: bridge windows, accommodation windows, deck floods, nav lights
   if (lit > 0) {
@@ -1282,9 +1336,13 @@ LM.swell = function (ctx, y, t, amp = 14, o = {}) {
   if (!ctx) return yAt;
   const pts = []; for (let xx = -40; xx <= W + 40; xx += 12) pts.push([xx, yAt(xx)]);
   ctx.save();
-  if (o.sky !== false) {
+  if (o.front) {   // water in FRONT of a hull at the waterline: call after the ship (sky drawn by an earlier call)
+    ctx.beginPath(); pts.forEach((p, i) => (i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]))); ctx.lineTo(W + 40, y + 160); ctx.lineTo(-40, y + 160); ctx.closePath();
+    const gf = ctx.createLinearGradient(0, y - amp, 0, y + 160); gf.addColorStop(0, rgba(o.frontColor || '#173a3f', .75)); gf.addColorStop(1, rgba(o.frontColor || '#173a3f', 0)); ctx.fillStyle = gf; ctx.fill();
+  }
+  if (o.sky !== false && !o.front) {
     ctx.beginPath(); ctx.moveTo(-40, -80); pts.forEach(p => ctx.lineTo(p[0], p[1])); ctx.lineTo(W + 40, -80); ctx.closePath();
-    const g = ctx.createLinearGradient(0, y - 700, 0, y); g.addColorStop(0, '#020405'); g.addColorStop(1, '#0a1416'); ctx.fillStyle = g; ctx.fill();
+    const g = ctx.createLinearGradient(0, y - 700, 0, y); g.addColorStop(0, '#020405'); g.addColorStop(.6, '#0b171b'); g.addColorStop(1, '#172a30'); ctx.fillStyle = g; ctx.fill();
   }
   const ua = o.under == null ? .5 : o.under;
   if (ua > 0) { const g2 = ctx.createLinearGradient(0, y - amp, 0, y + 90); g2.addColorStop(0, rgba('#6fb8c2', .2 * ua)); g2.addColorStop(1, 'rgba(111,184,194,0)'); ctx.fillStyle = g2; ctx.beginPath(); pts.forEach((p, i) => (i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]))); ctx.lineTo(W + 40, y + 90); ctx.lineTo(-40, y + 90); ctx.closePath(); ctx.fill(); }
@@ -1389,7 +1447,9 @@ LM.rovFeed = function (ctx, x, y, w, h, t, o = {}) {
   const bw = w * .9, by = ty + h * .07;
   ctx.fillStyle = '#26343a'; ctx.fillRect(tx - bw / 2, by, bw, h * .05); ctx.fillStyle = 'rgba(200,230,240,.35)'; ctx.fillRect(tx - bw / 2, by, bw, 2);
   ctx.fillStyle = '#1a2428'; for (const k of [-.36, 0, .36]) ctx.fillRect(tx + k * bw - 5, by + h * .05, 10, h * .3);
-  const sw2 = w * .13, sh = h * .07; ctx.fillStyle = '#0b1215'; ctx.beginPath(); ctx.ellipse(tx, by - sh * .6, sw2, sh * .75, 0, Math.PI, TAU); ctx.lineTo(tx + sw2, by); ctx.lineTo(tx - sw2, by); ctx.closePath(); ctx.fill();
+  const sw2 = w * .13, sh = h * .07;
+  LM.glow(ctx, tx, by - sh * .4, Math.min(w, h) * .45, '#d8f0ff', .28 * found);
+  const gl = ctx.createLinearGradient(0, by - sh * 1.4, 0, by); gl.addColorStop(0, mix('#0b1215', '#7d969c', found)); gl.addColorStop(1, '#0b1215'); ctx.fillStyle = gl; ctx.beginPath(); ctx.ellipse(tx, by - sh * .6, sw2, sh * .75, 0, Math.PI, TAU); ctx.lineTo(tx + sw2, by); ctx.lineTo(tx - sw2, by); ctx.closePath(); ctx.fill();
   ctx.beginPath(); ctx.arc(tx + sw2 * .85, by - sh * .55, sh * .62, 0, TAU); ctx.fill();
   ctx.strokeStyle = rgba('#d8f0ff', .45 * found); ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(tx, by - sh * .6, sw2, sh * .75, 0, Math.PI * 1.05, Math.PI * 1.7); ctx.stroke();
   if (o.life > 0) LM.glow(ctx, tx - sw2 * .1, by - sh * .5, sh * 1.4, COL.amber, .5 * o.life);
@@ -1417,13 +1477,13 @@ LM.rovFeed = function (ctx, x, y, w, h, t, o = {}) {
 // cover (render.cjs --cover): its own strong hook frame (the lattice in darkness, the taut umbilical parting under
 // the transponder bucket with a white flash, the diver's amber life-light and the gas clock) under the big title
 window.COVER = function (ctx, TL) {
-  const LM = window.PK.LM, COL = LM.COL, t = 3.2, cut = { at: 3.12, frac: .3 };
+  const LM = window.PK.LM, COL = LM.COL, t = 3.2, cut = { at: 3.12, frac: .36 };
   ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
-  const SX = 400, SY = 1225, SS = 1.24;
+  const SX = 330, SY = 1225, SS = 1.24;
   const st = LM.structure(null, SX, SY, SS, t);
   const DO = { pose: 'crouch', dir: -1, anchor: 'base', life: 1, bpm: 96, adj: { T: .7, h: .1 }, rim: '#9fd8ff', light: [1080, 420], halo: .28 };
-  const dv = LM.diver(null, 560, st.topY + 6, .64, t, DO);
-  const pts = [[1180, 250], [st.hook[0] + 4, st.hook[1] + 9], [dv.umb[0] + 70, dv.umb[1] + 40], dv.umb];
+  const dv = LM.diver(null, 500, st.topY + 6, .64, t, DO);
+  const pts = [[1050, -80], [st.hook[0] + 4, st.hook[1] + 9], [dv.umb[0] + 70, dv.umb[1] + 40], dv.umb];
   const UO = { tension: 1, w: 15, lit: .45, cut };
   const um = LM.umbilical(null, pts, t, UO);
   const lights = dv.lights.concat([LM.light(um.cut[0], um.cut[1], 560, COL.lamp, .85 * um.flash + .25), LM.light(st.hook[0], st.hook[1], 240, COL.amber, .2)]);
@@ -1431,7 +1491,7 @@ window.COVER = function (ctx, TL) {
   LM.seabed(ctx, SY - 6, t, { dark: .55, lights });
   LM.structure(ctx, SX, SY, SS, t, { lights, amb: .06 });
   LM.umbilical(ctx, pts, t, UO);
-  LM.diver(ctx, 560, st.topY + 6, .64, t, DO);
+  LM.diver(ctx, 500, st.topY + 6, .64, t, DO);
   LM.gasClock(ctx, dv.chest[0], dv.chest[1], 150, .78, t, { w: 4.5 });
   L.flash(ctx, .06 * um.flash, '#e8f6ff');
   ctx.restore();

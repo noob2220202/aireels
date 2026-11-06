@@ -296,7 +296,7 @@ function subtitles(ctx, t, chunks, { y = 1270, size = 74, maxW = 900, color = '#
   ctx.save(); ctx.translate(W / 2, y); ctx.scale(sc, sc); ctx.globalAlpha = a;
   lines.forEach((ln, i) => {
     const words = ln.split(' '); const segs = [];
-    words.forEach((w, j) => { const isH = (c.hl || []).some(h => h && w.includes(h)); segs.push({ s: w + (j < words.length - 1 ? ' ' : ''), color: isH ? hlColor : base }); });
+    words.forEach((w, j) => { const isH = (c.hl || []).some(h => { h = (h || '').replace(/[.,!?…]+$/, ''); return h && w.includes(h); }); segs.push({ s: w + (j < words.length - 1 ? ' ' : ''), color: isH ? hlColor : base }); });
     richLine(ctx, segs, 0, (i - (lines.length - 1) / 2) * size * 1.22, { size, strokeW: size * .2 });
   });
   // optional: speaker label above, original-language line below (real quotes)

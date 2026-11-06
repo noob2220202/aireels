@@ -92,7 +92,7 @@ window.PK.scenes.memorial = function (ctx, t, d, info) {
 
   // ---- text (subtitles are off here, so the dedication is carried from the first word) ----
   const line = D.line || '', rip = D.rip || '', v0 = info.sc.voice_t - info.sc.t0;
-  const am = P(t, v0 - .05, v0 + .75, E.outQ);
+  const amT = Math.max(v0, tS - .1), am = P(t, amT, amT + .8, E.outQ);   // after the rising lights have cleared the line
   if (line && am > 0) {
     let ls = 38; while (ls > 30 && measure(ctx, line, ls, FONT.sub, 700, 2) > 900) ls--;
     const w = measure(ctx, line, ls, FONT.sub, 700, 2), bl = Math.max(0, Math.min(50, (1040 - w) / 2 - 24));

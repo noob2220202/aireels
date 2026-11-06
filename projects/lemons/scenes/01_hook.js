@@ -1,146 +1,152 @@
-// TEMPORARY KIT SHOWCASE (PK.LM) — restored to the placeholder after review.
+// hook: "북해 수심 약 90미터, 잠수사의 생명줄이 끊겼습니다."
+// Cold open in black-green North Sea water. From the first frame the camera is sinking down a braided umbilical (amber pulses
+// running down it) through drifting silt; a depth ruler scrolls on the left. On '90미터,' the descent settles on the seabed
+// lattice structure: a lone faceless sat diver crouched on its top deck (amber life-light, cold helmet lamp), his line running
+// down under the protruding bucket and up into the dark; a '수심 약 90m' chip pops. '잠수사의' -> slow push. '생명줄이' -> the line
+// is dragged into a bowstring: it straightens, vibrates and grinds at the bucket lip, the diver is pulled back. '끊겼습니다.' -> it
+// SNAPS: white flash, sparks, frayed ends whip away, the helmet lamp flickers out, the world freezes for a beat and jolts, then
+// only his amber heartbeat is left. The gas clock rings in around him, full, and starts draining; the camera pushes into it so
+// the cut to 'math' lands on the same ring, big and centred (RING).
 (function () {
-const LM = PK.LM, COL = LM.COL;
-const _post = PROJECT.post;
-PROJECT.post = function (ctx, T, TL) { if (T < 3.9) { L.grain(ctx, T, .07, 30); return; } _post(ctx, T, TL); };
-const lab = (ctx, s, x, y) => L.text(ctx, s, x, y, { size: 24, weight: 800, color: '#ffd28a', align: 'left', stroke: '#000', strokeW: 5 });
-// panel: clip to rect, then draw fn in a full-frame coordinate system scaled to the panel
-function panel(ctx, x, y, w, h, fn) { ctx.save(); ctx.beginPath(); ctx.rect(x, y, w, h); ctx.clip(); ctx.translate(x, y); ctx.scale(w / 1080, h / 1920); fn(ctx); ctx.restore(); ctx.save(); ctx.strokeStyle = 'rgba(255,255,255,.25)'; ctx.lineWidth = 2; ctx.strokeRect(x, y, w, h); ctx.restore(); }
-function cell(ctx, x, y, w, h, fn) { ctx.save(); ctx.beginPath(); ctx.rect(x, y, w, h); ctx.clip(); fn(ctx); ctx.restore(); ctx.save(); ctx.strokeStyle = 'rgba(255,255,255,.2)'; ctx.lineWidth = 2; ctx.strokeRect(x, y, w, h); ctx.restore(); }
+'use strict';
+const { W, H, E, P, clamp, lerp, rgba } = L;
+const PK = window.PK, LM = PK.LM, COL = LM.COL, { hi, nz, fb } = LM;
 
-function pageSea(ctx, t) {
-  panel(ctx, 0, 0, 540, 960, c => { LM.sea(c, t, { surface: .9, seed: 1 }); });
-  panel(ctx, 540, 0, 540, 960, c => { const Ls = [LM.light(380, 900, 420, COL.amber, .8), LM.light(760, 1100, 520, COL.lamp, .7)]; LM.sea(c, t, { dark: .35, lights: Ls, seed: 2 }); LM.seabed(c, 1500, t, { dark: .35, lights: Ls }); });
-  panel(ctx, 0, 960, 540, 960, c => { const Ls = [LM.light(540, 900, 300, COL.amber, .8)]; LM.sea(c, t, { dark: .8, lights: Ls, seed: 3 }); LM.life(c, t, 540, 900, 1, { bpm: 90 }); });
-  panel(ctx, 540, 960, 540, 960, c => { LM.sea(c, t, { dark: 1, seed: 4, lights: [LM.light(540, 1000, 180, COL.amber, .5)] }); LM.life(c, t, 540, 1000, .5, { bpm: 50, s: .7 }); });
-  lab(ctx, 'sea: surface .9', 16, 30); lab(ctx, 'sea: dark .35 + lights + seabed', 556, 30); lab(ctx, 'sea: dark .8 + life', 16, 990); lab(ctx, 'sea: dark 1', 556, 990);
-}
-function pageStruct(ctx, t) {
-  cell(ctx, 0, 0, 1080, 640, c => {
-    const dv = LM.diver(null, 520, 0, .5, t, { pose: 'crouch', life: 1, anchor: 'base' });
-    const st0 = LM.structure(null, 470, 590, .95, t); const d2 = LM.diver(null, 520, st0.topY + 4, .5, t, { pose: 'crouch', life: 1, anchor: 'base' });
-    const Ls = d2.lights.concat([LM.light(1000, 100, 500, COL.lamp, .5)]);
-    LM.sea(c, t, { dark: .5, lights: Ls }); LM.seabed(c, 590, t, { dark: .5, lights: Ls });
-    LM.structure(c, 470, 590, .95, t, { lights: Ls, amb: .07 });
-    LM.diver(c, 520, st0.topY + 4, .5, t, { pose: 'crouch', life: 1, anchor: 'base' });
-    c.fillStyle = '#ff2d55'; c.beginPath(); c.arc(st0.hook[0], st0.hook[1], 6, 0, 7); c.fill();
-    c.strokeStyle = '#4ade80'; c.lineWidth = 2; c.beginPath(); st0.hose.forEach((p, i) => (i ? c.lineTo(p[0], p[1]) : c.moveTo(p[0], p[1]))); c.stroke();
-  });
-  cell(ctx, 0, 640, 540, 640, c => {
-    const Ls = [LM.light(150, 760, 300, COL.lamp, .9)];
-    LM.sea(c, t, { dark: .85, lights: Ls }); LM.structure(c, 300, 1230, .62, t, { lights: Ls, amb: .03 }); LM.lampBeam(c, t, 120, 700, .6, .8, { len: 500, s: .6 });
-  });
-  cell(ctx, 540, 640, 540, 640, c => {
-    const Ls = [LM.light(810, 960, 380, COL.amber, .8), LM.light(1000, 700, 300, COL.lamp, .6)];
-    LM.sea(c, t, { dark: .7, lights: Ls }); LM.structure(c, 810, 960, .7, t, { view: 'top', lights: Ls, amb: .05 });
-    LM.diver(c, 790, 950, .3, t, { pose: 'curl', life: .7, bpm: 50, rot: 0 });
-  });
-  cell(ctx, 0, 1280, 1080, 640, c => {     // close-up s=2.2 on the bucket with lamp
-    const Ls = [LM.light(700, 1500, 420, COL.lamp, .9), LM.light(400, 1700, 300, COL.amber, .7)];
-    LM.sea(c, t, { dark: .6, lights: Ls }); LM.structure(c, -220, 2180, 2.2, t, { lights: Ls, amb: .04 });
-    const st = LM.structure(null, -220, 2180, 2.2, t); c.fillStyle = '#ff2d55'; c.beginPath(); c.arc(st.hook[0], st.hook[1], 8, 0, 7); c.fill();
-  });
-  lab(ctx, 'structure side .95 · life light + cold ambient · hook(red) hose(green)', 16, 30); lab(ctx, 'dark .85 + lamp', 16, 670); lab(ctx, 'top view + curl', 556, 670); lab(ctx, 'close-up s 2.2', 16, 1310);
-}
-function pageDivers(ctx, t) {
-  const P = [['stand', { lamp: 1 }], ['crouch', { life: 1 }], ['climb', { life: 1 }], ['curl', { life: .8, bpm: 50 }], ['float', { life: .3, bpm: 40 }], ['drag', { lamp: 1, dir: -1 }],
-    ['swim', { lamp: 1, kick: .25 }], ['sit', { kind: 'bellman', rim: COL.warm, warm: .6 }], ['lean', { kind: 'bellman', rim: COL.warm, warm: .6 }], ['huddle', { life: 1 }], ['float', { helmet: false, life: .4, label: 'helmet off' }], ['stand', { bailoutLit: 1, life: 1, label: 'bailoutLit' }]];
-  P.forEach(([pose, o], i) => {
-    const cx = (i % 3) * 360, cy = Math.floor(i / 3) * 480;
-    cell(ctx, cx, cy, 360, 480, c => {
-      const pre = LM.diver(null, cx + 180, cy + 420, .62, t, Object.assign({ pose, anchor: 'base' }, o));
-      LM.sea(c, t, { dark: .55, lights: pre.lights, seed: i + 1 });
-      c.fillStyle = 'rgba(80,110,110,.25)'; c.fillRect(cx, cy + 420, 360, 2);
-      LM.diver(c, cx + 180, cy + 420, .62, t, Object.assign({ pose, anchor: 'base' }, o));
-    });
-    lab(ctx, o.label || pose, cx + 12, cy + 26);
-  });
-}
-function pageLine(ctx, t) {
-  cell(ctx, 0, 0, 1080, 1920, c => LM.sea(c, t, { dark: .6 }));
-  // slack w/ pulse
-  LM.umbilical(ctx, [[40, 90], [540, 150], [1040, 110]], t, { sag: 120, pulse: 1, glow: .6, lit: .7 }); lab(ctx, 'slack + pulse + glow', 20, 60);
-  // taut over a hook
-  LM.umbilical(ctx, [[40, 330], [700, 480], [1040, 300]], t, { tension: 1, lit: .6 }); ctx.fillStyle = '#ff2d55'; ctx.beginPath(); ctx.arc(700, 480, 5, 0, 7); ctx.fill(); lab(ctx, 'tension 1 (vibrating, snag point)', 20, 300);
-  // cuts at several moments
-  [[.04, 640], [.2, 860], [.7, 1080], [2.2, 1300]].forEach(([u, y], i) => { LM.umbilical(ctx, [[40, y], [1040, y - 60]], t, { tension: 1, lit: .6, w: 16, cut: { at: t - u, frac: .5 } }); lab(ctx, 'cut +' + u + 's', 20, y - 70); });
-  // gas clocks
-  [1, .62, .22, .04].forEach((f, i) => { LM.gasClock(ctx, 150 + i * 260, 1560, 90, f, t, { w: 4 }); lab(ctx, 'frac ' + f, 90 + i * 260, 1680); });
-  LM.alarm(ctx, 120, 1860, t, { s: 1 }); LM.alarm(ctx, 300, 1860, t + .3, { color: COL.red, mode: 'blink', s: 1 }); LM.alarm(ctx, 470, 1860, t, { on: 0 });
-  LM.rovFeed(ctx, 620, 1740, 400, 150, t, { lock: .8, on: 1 });
-}
-function pageBell(ctx, t) {
-  cell(ctx, 0, 0, 540, 1100, c => {
-    const pre = LM.bell(null, 270, 560, .9, t, { glow: 1, hatch: 1, swing: .06 * Math.sin(t), lamps: .8, wireTop: -20 });
-    LM.sea(c, t, { dark: .55, lights: pre.lights }); LM.bell(c, 270, 560, .9, t, { glow: 1, hatch: 1, swing: .06 * Math.sin(t), lamps: .8, wireTop: -20 });
-    LM.diver(c, 220, 1010, .32, t, { pose: 'swim', lamp: 1, rot: -.3 });
-  });
-  cell(ctx, 540, 0, 540, 1100, c => {
-    const pre = LM.bell(null, 810, 560, .9, t, { glow: .35, hatch: 0, amb: .15 });
-    LM.sea(c, t, { dark: .8, lights: pre.lights }); LM.bell(c, 810, 560, .9, t, { glow: .35, hatch: 0, amb: .15 });
-  });
-  cell(ctx, 0, 1100, 1080, 820, c => {
-    c.fillStyle = '#020303'; c.fillRect(0, 1100, 1080, 820);
-    LM.bell(c, 300, 1510, .42, t, { inside: true, bellmanPose: 'sit' });
-    LM.bell(c, 780, 1510, .42, t, { inside: true, bellmanMix: 1, glow: .9 });
-  });
-  lab(ctx, 'bell: glow + hatch + lamps + swing', 16, 30); lab(ctx, 'bell: dim, hatch shut', 556, 30); lab(ctx, 'interior: sit / lean', 16, 1130);
-}
-function pageShip(ctx, t) {
-  cell(ctx, 0, 0, 1080, 960, c => {
-    LM.sea(c, t, { dark: .35, surface: .5, surfaceY: 380 });
-    const yAt = LM.swell(null, 380, t, 14);
-    const roll = Math.atan2(yAt(840) - yAt(240), 600) * .6;
-    const sh = LM.ship(null, 540, yAt(540) + 6, 1.05, t, { roll, under: 1, thrust: 1 });
-    LM.swell(c, 380, t, 14, { caps: .9 });
-    LM.ship(c, 540, yAt(540) + 6, 1.05, t, { roll, under: 1, thrust: 1 });
-    c.strokeStyle = 'rgba(168,182,186,.5)'; c.lineWidth = 3; c.beginPath(); c.moveTo(sh.moonpool[0], sh.moonpool[1]); c.lineTo(sh.moonpool[0] - 30, 960); c.stroke();
-  });
-  cell(ctx, 0, 960, 1080, 960, c => {
-    c.fillStyle = '#05100f'; c.fillRect(0, 960, 1080, 960);
-    c.strokeStyle = 'rgba(160,220,230,.15)'; c.lineWidth = 2; c.beginPath(); c.moveTo(540, 1100); c.lineTo(540, 1800); c.moveTo(200, 1440); c.lineTo(880, 1440); c.stroke();
-    LM.ship(c, 540, 1440, .95, t, { view: 'top', rot: -.25, thrust: 1 });
-    LM.alarm(c, 900, 1820, t, { s: 1.2 });
-  });
-  lab(ctx, 'ship side + swell caps + under + thrust', 16, 30); lab(ctx, 'ship top + thrust · alarm', 16, 990);
-}
-function pageContext(ctx, t) {
-  // a hook-like frame with the title + subtitle overlays on, to judge the layout and the claustrophobic look
-  const cutAt = 4.12, sh = LM.shake(t, .6, 3), j = LM.jolt(t, cutAt, 1);
-  const SX = 420, SY = 1190, SS = 1.15;
-  const st = LM.structure(null, SX, SY, SS, t);
-  const DO = { pose: 'crouch', dir: -1, anchor: 'base', life: 1, bpm: 100, adj: { T: .7, h: .1 }, light: [1080, 420] };
-  const dv = LM.diver(null, 560, st.topY + 6, .6, t, DO);
-  const pts = [[1180, 300], [st.hook[0] + 4, st.hook[1] + 9], [dv.umb[0] + 70, dv.umb[1] + 40], dv.umb];
-  const UO = { tension: 1, w: 14, lit: .45, cut: { at: cutAt, frac: .3 } };
-  const um = LM.umbilical(null, pts, t, UO);
-  const lights = dv.lights.concat([LM.light(um.cut[0], um.cut[1], 520, COL.lamp, .9 * um.flash)]);
-  LM.sea(ctx, t, { dark: .6, lights, cam: [sh.x * 3, sh.y * 3] });
-  ctx.save(); ctx.translate(sh.x + j.x, sh.y + j.y);
-  LM.seabed(ctx, SY - 6, t, { dark: .6, lights }); LM.structure(ctx, SX, SY, SS, t, { lights, amb: .05 });
-  LM.umbilical(ctx, pts, t, UO); LM.diver(ctx, 560, st.topY + 6, .6, t, DO);
-  LM.gasClock(ctx, dv.chest[0], dv.chest[1], 140, t < cutAt ? 1 : 1 - (t - cutAt) * .08, t, { w: 4 });
-  ctx.restore();
-  L.flash(ctx, .1 * um.flash, '#e8f6ff');
-  LM.subBand(ctx, .8);
-  if (t > 4.7) { // perf probe (stderr)
-    const [, x] = L.buf('perf'); const time = (n, f) => { const t0 = performance.now(); for (let i = 0; i < 6; i++) f(); return ((performance.now() - t0) / 6).toFixed(2) + 'ms'; };
-    const r = {
-      sea: time('sea', () => LM.sea(x, t, { dark: .5, lights })), seabed: time('bed', () => LM.seabed(x, 1200, t, { lights })),
-      struct: time('st', () => LM.structure(x, SX, SY, SS, t, { lights })), structBig: time('st2', () => LM.structure(x, -220, 2180, 2.2, t, { lights })),
-      diver: time('dv', () => LM.diver(x, 540, 900, .6, t, { life: 1, lamp: 1 })), diverBig: time('dv2', () => LM.diver(x, 540, 900, 1.3, t, { life: 1, lamp: 1 })),
-      umb: time('um', () => LM.umbilical(x, pts, t, UO)), umbIntact: time('um2', () => LM.umbilical(x, pts, t, { tension: .5, pulse: 1 })),
-      bell: time('bell', () => LM.bell(x, 540, 800, 1, t, { hatch: 1, lamps: 1 })), bellIn: time('bi', () => LM.bell(x, 540, 900, .9, t, { inside: true })),
-      ship: time('ship', () => LM.ship(x, 540, 500, 1, t, { under: 1, thrust: 1 })), shipTop: time('sht', () => LM.ship(x, 540, 900, 1, t, { view: 'top', thrust: 1 })),
-      swell: time('sw', () => LM.swell(x, 400, t, 14, { caps: 1 })), clock: time('gc', () => LM.gasClock(x, 540, 900, 140, .3, t)),
-      alarm: time('al', () => LM.alarm(x, 540, 900, t)), rov: time('rov', () => LM.rovFeed(x, 300, 600, 400, 260, t, { lock: 1 })),
-    };
-    console.warn('KITPERF ' + JSON.stringify(r));
+// ---- world (identity camera = the establishing frame) ----
+const SX = 330, SY = 1215, SS = 1.22;                 // structure base centre / scale (top deck at SY - 344*SS)
+const DX = 505, DS = .64;                             // diver on the top deck
+const TOP = [1030, -1700];                            // the umbilical runs up to the bell, far above
+const RING = { x: 540, y: 830, r: 300 };              // where the gas clock lands for the cut into 'math'
+const DOPT = { pose: 'crouch', dir: -1, anchor: 'base', rim: '#9fd8ff', halo: .26 };
+
+function wordT(info, w, frac) { return PK.at(info, w, frac); }
+// screen <- world for camera c = {ax, ay, cx, cy, z}
+const toS = (c, x, y) => [(x - c.cx) * c.z + c.ax, (y - c.cy) * c.z + c.ay];
+
+// near-field silt streaks that show vertical camera motion (vy px/s on screen, + = the camera sinks, silt rises)
+function streaks(ctx, t, vy, a, seed, lights, camY) {
+  if (a <= .004) return;
+  const n = 46, len = clamp(Math.abs(vy) * .045, 2, 90), dirY = vy >= 0 ? 1 : -1;
+  ctx.save(); ctx.lineCap = 'round'; ctx.globalCompositeOperation = 'lighter';
+  for (let i = 0; i < n; i++) {
+    const z = .5 + hi(i * 7 + seed) * .9, x = hi(i * 3 + seed) * (W + 80) - 40 + fb(t * .2 + i, seed + 3) * 30;
+    const y = ((hi(i * 5 + seed) * (H + 200) - t * 26 * z - camY * z) % (H + 200) + H + 200) % (H + 200) - 100;
+    let lum = .1;
+    for (const Lt of lights) { const dx = x - Lt.x, dy = y - Lt.y, d2 = dx * dx + dy * dy; if (d2 < Lt.r * Lt.r) lum += (1 - Math.sqrt(d2) / Lt.r) * (Lt.a == null ? 1 : Lt.a) * .8; }
+    ctx.strokeStyle = rgba('#bcd9d4', Math.min(.6, a * lum * z)); ctx.lineWidth = .8 + z * 1.4;
+    ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y + dirY * len * z); ctx.stroke();
   }
+  ctx.restore();
 }
+
 window.PK.scenes.hook = function (ctx, t, d, info) {
-  ctx.fillStyle = '#000'; ctx.fillRect(0, 0, 1080, 1920);
-  if (t < .6) pageSea(ctx, t); else if (t < 1.2) pageStruct(ctx, t); else if (t < 1.8) pageDivers(ctx, t); else if (t < 2.4) pageLine(ctx, t);
-  else if (t < 3.0) pageBell(ctx, t); else if (t < 3.9) pageShip(ctx, t); else pageContext(ctx, t);
+  const D = info.sc.data || {};
+  const tDep = wordT(info, '90미터', .22), tJam = wordT(info, '잠수사의', .45), tLine = wordT(info, '생명줄이', .6), tCut = wordT(info, '끊겼습니다', .75);
+  const cutU = t - tCut, after = cutU >= 0 ? 1 : 0;
+  // world clock: holds for a beat on the snap (freeze), then runs on
+  const tm = t < tCut ? t : t < tCut + .1 ? tCut : t - .1;
+  const strain = P(t, tLine - .35, tCut - .05, E.inQ);              // the line drags into a bowstring
+  const pull = strain * (1 - after);
+
+  // ---- geometry (no drawing): structure, diver, line ----
+  const st = LM.structure(null, SX, SY, SS, tm);
+  const fallK = P(t, tCut, tCut + .5, E.outQ);
+  const dOpt = Object.assign({}, DOPT, {
+    adj: { T: lerp(.7, .5, pull) + .22 * fallK, h: lerp(.1, -.08, pull) + .12 * fallK },
+    life: 1, bpm: after ? 112 : lerp(80, 104, strain), tremble: .5 * pull,
+  });
+  const dX = DX + 9 * pull - 4 * fallK + fb(tm * .4, 7) * 3, dY = st.topY + 6;
+  const lampOn = t < tCut ? 1 : (hi(Math.floor(t * 38)) > .45 ? .75 : .08) * (1 - P(t, tCut + .04, tCut + .34));
+  dOpt.lamp = lampOn; dOpt.lampAng = 2.25 + fb(tm * .3, 9) * .08 - .25 * pull;
+  const dv = LM.diver(null, dX, dY, DS, tm, dOpt);
+  const hook = [st.hook[0] + 4, st.hook[1] + 9];
+  const umbPts = () => [TOP, hook, [dv.umb[0] + 70, dv.umb[1] + 44 - 20 * pull], dv.umb];
+  const tension = lerp(.58, 1, strain);
+  const UO = { w: 15, lit: .5 + .12 * pull, tension, vib: 6.5, sway: 9, pulse: .9 * (1 - pull * .4), pulseSpeed: 560, glow: .35, pulseColor: COL.amber };
+  // the line parts in the open water above the deck (world y ~ 640), computed from the intact line at the moment of the snap
+  const pre = LM.umbilical(null, umbPts(), tCut - .001, Object.assign({}, UO, { tension: 1 }));
+  let acc = 0, best = 1e9, frac = .6;
+  for (let i = 1; i < pre.pts.length; i++) { acc += Math.hypot(pre.pts[i][0] - pre.pts[i - 1][0], pre.pts[i][1] - pre.pts[i - 1][1]); const e = Math.abs(pre.pts[i][1] - 640); if (pre.pts[i][1] < hook[1] - 40 && e < best) { best = e; frac = acc / pre.len; } }
+  UO.cut = { at: tCut, frac, recoil: 260, whip: 1.25 };
+  const um = LM.umbilical(null, umbPts(), t, UO);
+  const fl = after ? um.flash : 0;
+  const cutP = um.cut || pre.cut || [900, 640];
+
+  // ---- camera: sinking down the line -> establishing frame (on '90미터,') -> slow push -> push into the ring ----
+  const pD = P(t, -.45, tDep + .3, E.inOutQ), pPush = P(t, tJam - .3, tCut, E.inOutQ), pIn = P(t, tCut + .5, d + .05, E.inOutC);
+  const chest0 = LM.diver(null, DX, dY, DS, tCut, Object.assign({}, dOpt, { adj: { T: .92, h: .22 } })).chest;
+  let cx = lerp(905, 540, pD), cy = lerp(60, 960, pD), z = lerp(1.32, 1, pD), ax = 540, ay = 960;
+  cx = lerp(cx, 600, pPush * .5); cy = lerp(cy, 860, pPush * .5); z *= 1 + .1 * pPush;
+  ax = lerp(ax, RING.x, pIn); ay = lerp(ay, RING.y, pIn); cx = lerp(cx, chest0[0], pIn); cy = lerp(cy, chest0[1], pIn); z = lerp(z, RING.r / 150, pIn);
+  const dr = { x: fb(t * .35, 41) * 10, y: fb(t * .3, 50) * 10, r: fb(t * .25, 45) * .004 };
+  const sk = LM.shake(t, .25 + .65 * pull, 3), jo = LM.jolt(t, tCut, 1.4);
+  const kick = after ? .05 * Math.exp(-cutU * 7) : 0;
+  const C = { ax, ay, cx, cy, z: z * (1 + kick) };
+  // vertical camera speed (screen px/s) for the silt streaks
+  const camY = tt => { const q = P(tt, -.45, tDep + .3, E.inOutQ); return lerp(60, 960, q) * lerp(1.32, 1, q); };
+  const vy = (camY(t + .02) - camY(t - .02)) / .04;
+  const cY = camY(t);
+
+  // ---- lights ----
+  const lifeL = dv.lights[0];
+  const wl = [lifeL];
+  if (lampOn > .01 && dv.lights[1]) wl.push(dv.lights[1]);
+  if (fl > .01) wl.push(LM.light(cutP[0], cutP[1], 1100, COL.lamp, 1.3 * fl));
+  if (!after) wl.push(LM.light(hook[0], hook[1], 200, COL.amber, .12 + .25 * pull));    // the line grinds at the bucket lip
+  const sl = wl.map(Lt => ({ x: (Lt.x - C.cx) * C.z + C.ax, y: (Lt.y - C.cy) * C.z + C.ay, r: Lt.r * C.z, color: Lt.color, a: Lt.a }));
+  const darkK = lerp(.5, .9, P(t, tCut, tCut + .4)) + .08 * pIn;
+
+  // ---- draw ----
+  LM.sea(ctx, tm, { dark: darkK, cam: [(C.cx - 540) * .3, clamp((C.cy - 960) * C.z * .45, -400, 400)], lights: sl, seed: 5, haze: .85, snow: 1.1 });
+  streaks(ctx, tm, vy, .9 * (1 - P(t, tDep, tDep + .6)) + .25, 17, sl, cY);
+
+  ctx.save();
+  ctx.translate(C.ax + sk.x + jo.x + dr.x, C.ay + sk.y + jo.y + dr.y); ctx.rotate(sk.r + dr.r); ctx.scale(C.z, C.z); ctx.translate(-C.cx, -C.cy);
+  LM.seabed(ctx, SY - 6, tm, { dark: darkK, lights: wl, seed: 4 });
+  LM.structure(ctx, SX, SY, SS, tm, { lights: wl, amb: lerp(.08, .03, P(t, tCut, tCut + .4)) });
+  // dust puff where the line grinds on the bucket lip
+  if (pull > .05) for (let i = 0; i < 10; i++) {
+    const u = ((t * 1.3 + hi(i * 7)) % 1), px = hook[0] + (hi(i * 3) - .3) * 40 + u * 30 * (hi(i * 5) - .5), py = hook[1] + 8 + u * 46 * hi(i * 11);
+    ctx.fillStyle = rgba('#c9d6cf', .35 * pull * (1 - u)); ctx.beginPath(); ctx.arc(px, py, 1.5 + 3 * u, 0, 7); ctx.fill();
+  }
+  LM.umbilical(ctx, umbPts(), t, UO);
+  // breath: a slow rhythm, quicker as the line drags, a big gasp burst on the snap
+  const bursts = [];
+  for (let b = -2; b < 6; b++) { const tb = .4 + b * 1.55 - (b > 1 ? (b - 1) * .4 : 0); if (tb < tCut - .1) bursts.push(tb); }
+  bursts.push(tCut + .06, tCut + .9);
+  LM.bubbles(ctx, tm, dv.head[0] - 14, dv.head[1] - 40, { bursts, a: .55, s: .8, seed: 5, n: 12 });
+  LM.diver(ctx, dX, dY, DS, tm, dOpt);
+  // gas clock: rings in full around him just after the snap, then starts draining
+  const ga = P(t, tCut + .14, tCut + .5, E.outQ);
+  if (ga > 0) {
+    const sc = lerp(1.35, 1, E.outBack(P(t, tCut + .14, tCut + .6)));
+    const frac = 1 - .035 * P(t, tCut + .55, d + .3);
+    LM.gasClock(ctx, dv.chest[0], dv.chest[1], 150 * sc, frac, t, { a: ga, w: 3.5, bpm: 112 });
+  }
+  ctx.restore();
+
+  // ---- screen-space overlays ----
+  // depth ruler: ticks scroll while the camera sinks, settle on '90미터,'
+  const ra = P(t, .05, .4) * (1 - P(t, tLine - .2, tLine + .3));
+  if (ra > 0) {
+    ctx.save(); ctx.globalAlpha = ra; const rx = 64, off = ((cY * .6) % 40 + 40) % 40;
+    ctx.strokeStyle = 'rgba(190,225,230,.28)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(rx, 520); ctx.lineTo(rx, 1160); ctx.stroke();
+    ctx.beginPath();
+    for (let y = 520 - off; y < 1160; y += 40) { if (y < 520) continue; const k = Math.round((y + off + cY * .6) / 40) % 5 === 0; ctx.moveTo(rx, y); ctx.lineTo(rx + (k ? 22 : 11), y); }
+    ctx.stroke();
+    ctx.fillStyle = rgba(COL.amber, .9); ctx.beginPath(); ctx.moveTo(rx - 4, 700); ctx.lineTo(rx - 18, 690); ctx.lineTo(rx - 18, 710); ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+  // depth chip on '90미터,'
+  const dA = P(t, tDep - .05, tDep + .15) * (1 - P(t, tLine - .2, tLine + .2));
+  if (dA > 0) { const k = lerp(.8, 1, E.outBack(P(t, tDep - .05, tDep + .3))); ctx.save(); ctx.translate(212, 700); ctx.scale(k, k); PK.chip(ctx, '수심 약 90m', 0, 0, dA, { size: 40, color: '#fff', border: 'rgba(160,220,255,.6)' }); ctx.restore(); }
+
+  LM.subBand(ctx, .8);
+  // warning (first ~2.5 s), tag (slides up into its place when the warning goes)
+  PK.chip(ctx, D.warning || '', 540, 492, P(t, .04, .3) * (1 - P(t, 2.3, 2.6)), { size: 32, color: '#ffd9a0', border: 'rgba(255,180,90,.45)' });
+  const tagY = lerp(556, 492, P(t, 2.45, 2.85, E.inOutQ));
+  PK.chip(ctx, D.tag || '', 540, tagY, P(t, .25, .55) * (1 - P(t, tCut + .2, tCut + .6)), { size: 28, color: '#cfe8ff', border: 'rgba(150,210,255,.35)' });
+  // snap: cold flash
+  if (after) L.flash(ctx, .5 * Math.exp(-cutU * 11), '#e8f6ff');
 };
 })();
