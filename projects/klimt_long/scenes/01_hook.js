@@ -357,7 +357,7 @@ window.KL.scenes.hook = function (ctx, t, d, info) {
     },
     after(c) {
       // "도둑맞은 명화가": a see-through glimpse of the portrait behind the closed door (0 at t = 0, so the loop seam is untouched)
-      const gh = .55 * Math.sin(Math.PI * P(t, tSt, tM + .45));
+      const gh = .55 * Math.sin(Math.PI * P(t, tSt, tM + .12)); // ends before the 1997 label appears (no 'in the wall since 1997' implication)
       if (gh > 0) {
         c.save(); c.beginPath(); c.rect(HX - HS / 2, HY - HS / 2, HS, HS); c.clip();
         c.globalCompositeOperation = 'screen'; c.globalAlpha = gh; LW.canvasSprite(c, HX, HY - 5, .3, .04);
@@ -458,7 +458,7 @@ window.KL.scenes.hook = function (ctx, t, d, info) {
   }
 
   // timeline: 1997.2 도난 -> 2019.12.10 발견 (the year counter rides the progress head)
-  const ta = P(t, tSt + .08, tSt + .35, E.outC) * (1 - P(t, tBaro - .05, tBaro + .2, E.inQ));
+  const ta = P(t, tM + .1, tM + .35, E.outC) * (1 - P(t, tBaro - .05, tBaro + .2, E.inQ));
   if (ta > 0) {
     const y = 1172, xa = 150, xb = 930, lp = P(t, t22 - .02, tMan + .02, E.inOutQ), hx = lerp(xa, xb, lp);
     ctx.save(); ctx.globalAlpha = ta; ctx.translate(0, 14 * (1 - ta));
@@ -466,7 +466,7 @@ window.KL.scenes.hook = function (ctx, t, d, info) {
     ctx.strokeStyle = 'rgba(255,255,255,.22)'; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(xa, y); ctx.lineTo(xb, y); ctx.stroke();
     for (let i = 1; i < 22; i++) { const x = lerp(xa, xb, i / 22); ctx.fillStyle = x <= hx ? 'rgba(255,230,170,.8)' : 'rgba(255,255,255,.2)'; ctx.fillRect(x - 1.5, y - 8, 3, 16); }
     if (lp > 0) { const g = ctx.createLinearGradient(xa, 0, xb, 0); g.addColorStop(0, K.red); g.addColorStop(1, K.goldHi); ctx.strokeStyle = g; ctx.lineWidth = 7; ctx.shadowColor = K.gold; ctx.shadowBlur = 14; ctx.beginPath(); ctx.moveTo(xa, y); ctx.lineTo(hx, y); ctx.stroke(); ctx.shadowBlur = 0; }
-    const n1 = OB(P(t, tSt + .08, tSt + .38));
+    const n1 = OB(P(t, tM + .1, tM + .4));
     ctx.fillStyle = K.red; ctx.beginPath(); ctx.arc(xa, y, 12 * n1, 0, 7); ctx.fill();
     label(ctx, '1997.2 도난', xa + 95, y - 66, { size: 36, color: '#fff', bg: 'rgba(130,14,22,.94)', a: clamp(n1 * 1.5) });
     const n2 = OB(P(t, tMan - .06, tMan + .22), 2.2);
