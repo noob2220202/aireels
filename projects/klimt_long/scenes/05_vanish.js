@@ -393,11 +393,11 @@ window.KL.scenes.vanish = function (ctx, t, d, info) {
     ctx.restore();
   }
   // discovery label after the loss
-  // it lands right on "사라졌다"; during a push into the next scene it is held at the same screen y (the push lifts this frame by
-  // up to .3 H), and the roof scene draws the same label pinned at the same spot, so it reads as one label staying on screen
+  // it lands right on "사라졌다"; during a push into the next scene it is held at the same screen y (the push lifts this frame a
+  // little), and the roof scene draws the same label pinned at the same spot, so it reads as one label staying on screen
   const lA = P(t, tGo + .08, tGo + .3, E.outBack);
   if (lA > 0) {
-    let pinY = 0; { const sc = info.TL.scenes, nx = sc[sc.indexOf(info.sc) + 1], tr = nx && nx.trans; if (tr && tr.type === 'push') { const dd = tr.dur || .4; pinY = E.inOutQ(clamp((t - (d - dd / 2)) / dd)) * H * .3; } }
+    let pinY = 0; { const sc = info.TL.scenes, nx = sc[sc.indexOf(info.sc) + 1], tr = nx && nx.trans; if (tr && tr.type === 'push') { const dd = tr.dur || .4; pinY = E.inOutC(clamp((t - (d - dd / 2)) / dd)) * H * .05; } }   // mirrors L.TRANS.push (outgoing lifts by .05 H)
     ctx.save(); ctx.translate(540, 1196 + pinY); const s = lerp(.65, 1, clamp(lA)); ctx.scale(s, s);
     label(ctx, '1997.2.22 아침 도난 확인', 0, 0, { size: 42, color: '#fff', bg: 'rgba(120,10,16,.92)', border: '#ff5a62', a: clamp(lA * 1.6), padX: 28, padY: 14 });
     ctx.restore();

@@ -2,17 +2,21 @@
 // "곧 자기들이 훔쳤다가 선물로 돌려줬다는 편지가 신문사에 왔지만 확인된 건 없다."
 // A newsroom desk seen from above, low-key: warm banker's lamp + cold daylight through blinds.
 //  (push in)   an envelope addressed "지역 일간지 앞" skids onto the leather blotter (rustle), bounces, settles
-//  곧/자기들이  the folded letter is drawn out of the envelope, flies to camera and unfolds (tri-fold panels)
-//  자기들이     typed line '“우리가 훔쳤고,' strikes in letter by letter on the typing sfx
+//              (framed high enough that it stays above the subtitle band)
+//  곧/자기들이  the folded letter is drawn out of the envelope, flies to camera and unfolds (tri-fold panels);
+//               as it lies flat the claim tag "'도시에 주는 선물' 주장" drops in above it (framing from the start)
+//  자기들이     third-person gist (mirrors the narration, no quote marks, no first-person confession):
+//               '자기들이 훔쳤다가,' strikes in letter by letter on the typing sfx (10 chars = 10 sfx)
 //  선물로       '도시에 주는 선물로' writes on; "선물" turns gold, a gold loop is drawn around it + sparkles
-//  돌려줬다는   '돌려놓았다”' writes on with a gold "return" arrow underneath; attribution "— 자칭 범인들의 주장"
-//  편지가       camera pulls back: the desk is revealed (envelope, newspaper, lamp, coffee steam); the cast
-//               shadow of an editor leans in over the letter from the window side (F.figure silhouette)
+//  돌려줬다는   '돌려줬다는 주장' writes on with a gold "return" arrow underneath; attribution "— 편지 내용 (요지)"
+//  편지가       camera pulls back: the desk is revealed (envelope, newspaper, lamp, coffee steam); a soft band
+//               of window light sweeps across the desk (no person, no cast shadow)
 //  신문사에     brackets lock on the envelope address, chip "2020.1 · 지역 일간지 「Libertà」 앞" pops
-//  왔지만       push back in, tag "'도시에 주는 선물' 주장" drops in above the letter
+//  왔지만       push back in
 //  확인된 건    a verification scan sweeps the page: text and gold fade to grey, "?" badges pop per line,
 //               the rubber stamp hovers in (anticipation, growing shadow)
-//  없다         slam: "진위 미확인" imprint, shake + flash + ink specks; the stamp lifts away, the shadow withdraws
+//  없다         slam: "진위 미확인" imprint, shake + flash + ink specks; the tag completes to the approved label
+//               "'도시에 주는 선물' 주장 · 진위 미확인"
 // The desk / letter / lights are shared with 15_closed.js through window.KL.newsDesk so the fade between the
 // two scenes is one continuous shot (the case folder slams down onto this same letter).
 (function () {
@@ -35,7 +39,8 @@ const ND = (function () {
   const END_CAM = [541, 950, 1.085, -.009];                   // letter's last camera = closed's first camera
   const SH_ROT = .2;                                          // cast-shadow direction (window top-right)
   const INK = '#1d2a44', GREY = '#8a8d94';
-  const L1 = '“우리가 훔쳤고,', L2a = '도시에 주는 ', L2b = '선물', L2c = '로', L3 = '돌려놓았다”';
+  // third-person gist of the claim (mirrors the narration); never a first-person quote
+  const L1 = '자기들이 훔쳤다가,', L2a = '도시에 주는 ', L2b = '선물', L2c = '로', L3 = '돌려줬다는 주장';
   const LY1 = -192, LY2 = -98, LY3 = -4, LYA = 92, TX = -232, FS = 50;
   const STAMP_XY = [28, 218];
   let S = null;
@@ -215,7 +220,6 @@ const ND = (function () {
     S.flapSp = makeEnvelope(); S.envFront = makeEnvFront(); S.bokeh = makeBokeh();
     S.stamps = {};
     [S.face, S.fx] = mk(LET.w, LET.h);
-    [S.shc, S.shx] = mk(260, 320);
     return S;
   }
   function stampSprite(s, size, color) { const k = s + '|' + size + '|' + color; return S.stamps[k] || (S.stamps[k] = makeStamp(s, size, color)); }
@@ -303,7 +307,7 @@ const ND = (function () {
       text(x, L2c, TX + wa + wb, LY2, { size: FS, family: FONT.serif, weight: 900, color: col(1), align: 'left' });
     });
     wipe(st.w3, LY3, () => text(x, L3, TX, LY3, { size: FS, family: FONT.serif, weight: 900, color: col(2), align: 'left' }));
-    if (st.attrib > 0) text(x, '— 자칭 범인들의 주장 (요지)', TX + 6, LYA, { size: 27, weight: 700, color: '#6b6457', align: 'left', alpha: st.attrib });
+    if (st.attrib > 0) text(x, '— 편지 내용 (요지)', TX + 6, LYA + 4, { size: 32, weight: 800, color: '#5f584b', align: 'left', alpha: st.attrib });
     return { wa, wb, w3: measure(x, L3, FS, FONT.serif, 900) };
   }
   function mixHex(a, b, k) { // always returns #rrggbb (safe for L.rgba / glow)
@@ -427,15 +431,22 @@ const ND = (function () {
     ctx.restore();
     motes(ctx, k * 3, { n: 26, color: '#efe2c4', a: .6 * (1 - k / .7), area: [x - 360, y - 220, 720, 440], size: 3.5, speed: 160, seed: 3 + seed });
   }
-  // cast shadow of a standing person behind the top edge (window light), F.figure silhouette
-  function castShadow(ctx, x, y, h, k, a, pose, rot = SH_ROT, upright = false) {
-    if (a <= 0) return;
-    const sc = 5, sx = S.shx; sx.setTransform(1, 0, 0, 1, 0, 0); sx.clearRect(0, 0, 260, 320);
-    F.figure(sx, 130, 312, h / sc, Object.assign({ fill: '#000', shadow: false }, pose));
+  // non-figurative light cue (world space): a soft band of window light, or a group of blind bars, sliding across
+  // the desk from the window side (top right) towards the bottom left. u: 0..1 position, a: peak alpha.
+  // Clipped above the subtitle band in screen space.
+  function lightSweep(ctx, u, a, bars = 0, color = '214,228,255') {
+    if (a <= .002) return;
+    const w = bars ? 760 : 620, x = lerp(-1500, 1500, u);
     ctx.save();
-    if (upright) { const m = ctx.getTransform(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.beginPath(); ctx.rect(0, 0, W, 1440); ctx.clip(); ctx.setTransform(m); } // below the subtitles nobody sees it
-    ctx.translate(x, y); ctx.rotate(rot); ctx.scale(sc, (upright ? 1 : -1) * sc * k); ctx.globalAlpha *= a; ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'low';
-    ctx.drawImage(S.shc, -130, -312); ctx.restore();
+    { const m = ctx.getTransform(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.beginPath(); ctx.rect(0, 0, W, 1250); ctx.clip(); ctx.setTransform(m); }
+    ctx.globalCompositeOperation = 'lighter'; ctx.translate(560, 880); ctx.rotate(2.25);
+    const g = ctx.createLinearGradient(x - w / 2, 0, x + w / 2, 0), c0 = `rgba(${color},0)`;
+    if (!bars) { g.addColorStop(0, c0); g.addColorStop(.5, `rgba(${color},${a})`); g.addColorStop(1, c0); }
+    else for (let i = 0; i < bars; i++) { // soft slats under a sine envelope
+      const f0 = i / bars, fw = 1 / bars, ea = (a * Math.sin(Math.PI * (i + .5) / bars)).toFixed(4);
+      g.addColorStop(f0 + fw * .12, c0); g.addColorStop(f0 + fw * .34, `rgba(${color},${ea})`); g.addColorStop(f0 + fw * .62, `rgba(${color},${ea})`); g.addColorStop(f0 + fw * .86, c0);
+    }
+    ctx.fillStyle = g; ctx.fillRect(x - w / 2, -1700, w, 3400); ctx.restore();
   }
   // out-of-focus foreground bokeh in screen space with parallax against the camera
   function bokeh(ctx, T, cam, a = 1) {
@@ -450,8 +461,8 @@ const ND = (function () {
     ctx.fillStyle = g; ctx.fillRect(0, 1180, W, 400);
   }
   const FINAL_LETTER = { final: true, n1: 99, w2: 1, w3: 1, gold: 1, attrib: 1, ribbon: 1, arrow: 1, grey: [1, 1, 1], ann: .55, annGrey: 1, q: [1, 1, 1], stampP: 1, uT: 1, uB: 1, lift: 0 };
-  return { ensure, camAt, OB, deskLayer, lampLight, blinds, steam, envelope, letter, imprint, stampDrop, soft, stampSprite, slamBurst, castShadow, bokeh, subBand, mixHex,
-    LET, ENV, LAMP, CUP, NEWS, END_CAM, FINAL_LETTER, STAMP_XY, SH_ROT };
+  return { ensure, camAt, OB, deskLayer, lampLight, blinds, steam, envelope, letter, imprint, stampDrop, soft, stampSprite, slamBurst, lightSweep, bokeh, subBand, mixHex,
+    LET, ENV, LAMP, CUP, NEWS, END_CAM, FINAL_LETTER, STAMP_XY, SH_ROT, L1 };
 })();
 window.KL.newsDesk = ND;
 
@@ -459,8 +470,8 @@ window.KL.newsDesk = ND;
 // scene: letter
 // =====================================================================================================
 const CAM = [ // t, x, y, zoom, rot   (world (540,860) ~ screen (540,860) when y = 860 + 100/zoom)
-  [-.4, 470, 1075, 1.16, .02],
-  [.1, 476, 1068, 1.14, .016],
+  [-.4, 470, 1122, 1.16, .02],      // envelope landing framed high: its lower edge stays above the subtitle band
+  [.1, 476, 1114, 1.14, .016],
   [.75, 538, 948, 1.10, -.004],
   [1.6, 543, 945, 1.125, -.01],
   [2.42, 547, 942, 1.15, -.013],
@@ -470,6 +481,17 @@ const CAM = [ // t, x, y, zoom, rot   (world (540,860) ~ screen (540,860) when y
   [4.95, 542, 951, 1.07, -.008],
   [5.6, ND.END_CAM[0], ND.END_CAM[1], ND.END_CAM[2], ND.END_CAM[3]],
 ];
+
+// claim tag (screen space, centred on the origin): s1, then s2 wipes in (k 0..1) and the box grows to fit
+function claimTag(ctx, k) {
+  const s1 = "'도시에 주는 선물' 주장", s2 = ' · 진위 미확인', size = 38, padX = 20, h = size + 24;
+  const w1 = measure(ctx, s1, size, FONT.sub, 800), w2 = measure(ctx, s2, size, FONT.sub, 800), ke = E.outC(clamp(k));
+  const w = w1 + w2 * ke + padX * 2, x0 = -w / 2;
+  ctx.save(); ctx.fillStyle = 'rgba(8,10,14,.86)'; roundRect(ctx, x0, -h / 2, w, h, 8); ctx.fill();
+  ctx.strokeStyle = ND.mixHex(K.gold, K.red, ke); ctx.globalAlpha *= .75; ctx.lineWidth = 3; ctx.stroke(); ctx.restore();
+  text(ctx, s1, x0 + padX, 2, { size, weight: 800, color: '#ffe7a8', align: 'left' });
+  if (ke > 0) { ctx.save(); ctx.beginPath(); ctx.rect(x0 + padX + w1, -h / 2, w2 * ke + 2, h); ctx.clip(); text(ctx, s2, x0 + padX + w1, 2, { size, weight: 800, color: '#ff6b70', align: 'left' }); ctx.restore(); }
+}
 
 window.KL.scenes.letter = function (ctx, t, d, info) {
   const S = ND.ensure(), T = info.T;
@@ -503,8 +525,8 @@ window.KL.scenes.letter = function (ctx, t, d, info) {
   };
   const inside = fly <= 0;
 
-  // typing: '“우리가 훔쳤고,' on the typing sfx (자기들이 +0.05 … +1.04)
-  const nT = Array.from('“우리가 훔쳤고,').length, typ0 = tJa + .05, typStep = .118;
+  // typing: '자기들이 훔쳤다가,' (10 chars) on the 10 typing sfx (자기들이 +0.05 … +1.04)
+  const nT = Array.from(ND.L1).length, typ0 = tJa + .05, typStep = .11;
   const nTyped = t < typ0 ? 0 : Math.min(nT, 1 + Math.floor((t - typ0) / typStep));
   st.n1 = nTyped; st.pop1 = nTyped ? clamp((t - (typ0 + (nTyped - 1) * typStep)) / .07) : 1; st.caret = nTyped < nT && t > typ0 - .1;
   st.w2 = P(t, tSun - .12, tSun + .34, E.inOutQ); st.gold = P(t, tSun + .02, tSun + .2);
@@ -547,30 +569,15 @@ window.KL.scenes.letter = function (ctx, t, d, info) {
   ND.lampLight(ctx, T, 1);
   if (fly >= 1) ND.blinds(ctx, T, 1, st.x, st.y, ND.LET.w, ND.LET.h, st.r);
 
-  // editor's cast shadow, thrown up the desk from the camera side: someone steps up to the desk on 편지가,
-  // leans in and points at the letter, tilts the head on 왔지만, steps back after the stamp
-  const sIn = P(t, tPyun - .25, tSin + .1, E.inOutQ), sOut = P(t, tSlam + .05, d - .15, E.inOutQ);
-  const vis = P(t, tPyun - .3, tPyun) * (1 - P(t, d - .55, d - .15));
-  if (vis > 0) {
-    const lean = sIn * (1 - sOut);
-    // pointing arm (keyed, always raised so it never swings through a flat pose): taps on 신문사에,
-    // follows the scan down the lines on 확인된, sinks after the stamp
-    const [a1, a2] = ND.camAt([[tPyun - .3, -2.5, .2], [tSin - .08, -2.62, .28], [tSin + .06, -2.66, .62], [tSin + .22, -2.6, .26], [tWat + .1, -2.74, .3],
-      [tHwak, -2.8, .24], [tGeon, -2.5, .3], [tSlam, -2.44, .42], [d, -2.3, .7]], t);
-    const tilt = Math.sin(Math.PI * P(t, tWat - .1, tHwak + .4)) * .8;
-    const breathe = .01 * Math.sin(T * 1.7);
-    ND.castShadow(ctx, 900, 2080, 1000, lerp(.62, 1.3, lean) + breathe, .5 * vis, {
-      female: true, hair: 'bun', headTurn: -tilt, lean: 0,
-      armL: [a1, a2],
-      armR: [lerp(-.08, .3, lean), lerp(.1, -.25, lean)],
-    }, lerp(-.02, -.09, lean), true);
-  }
+  // window light: one slow, soft band of daylight drifts across the desk as the camera pulls back (편지가 → 왔지만)
+  const sw = P(t, tPyun - .35, tWat + .35, E.inOutQ);
+  ND.lightSweep(ctx, sw, .085 * Math.sin(Math.PI * sw));
   ctx.restore();
 
   // ---------- screen-space FX + HUD ----------
   ND.bokeh(ctx, T, cam, 1);
   motes(ctx, T, { n: 34, color: '#ffe2b0', a: .32, seed: 41, area: [60, 470, 960, 760], size: 2.6, speed: 14 });
-  ND.subBand(ctx, 1);
+  ND.subBand(ctx, lerp(1.6, 1, P(t, tJa + .3, tJa + .9)));   // denser while the light envelope sits low in frame
 
   // brackets on the envelope address + chip
   const brk = P(t, tSin - .06, tSin + .2) * (1 - P(t, tWat + .1, tWat + .35));
@@ -586,11 +593,12 @@ window.KL.scenes.letter = function (ctx, t, d, info) {
     chip(ctx, '2020.1 · 지역 일간지 「Libertà」 앞', 0, 0, clamp(chA * 2), { size: 34 });
     ctx.restore();
   }
-  // tag: the claim
-  const tg = P(t, tWat - .05, tWat + .2, E.outBack), tgOut = P(t, tSlam + .5, d + .3);
+  // tag: the claim framing, from the moment the letter lies flat; on the stamp it completes to the approved label
+  // "'도시에 주는 선물' 주장 · 진위 미확인"
+  const tg = P(t, tJa + .3, tJa + .56, E.outBack), tgOut = P(t, tSlam + .5, d + .3), tgK = P(t, tSlam + .02, tSlam + .3);
   if (tg > 0) {
     ctx.save(); ctx.translate(540, 506 - 30 * (1 - clamp(tg))); ctx.globalAlpha = clamp(tg * 2) * (1 - tgOut * .4);
-    label(ctx, "'도시에 주는 선물' 주장", 0, 0, { size: 38, color: '#ffe7a8', bg: 'rgba(8,10,14,.86)', border: rgba(K.gold, .7) });
+    claimTag(ctx, tgK);
     ctx.restore();
   }
   // impact flash + red tint pulse at the slam

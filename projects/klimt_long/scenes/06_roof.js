@@ -646,7 +646,7 @@ window.KL.scenes.roof = function (ctx, t, d, info) {
   // carry-over from the vanish scene: the approved theft-date label stays put through the push, then clears before "빈 액자"
   // (while this scene pushes in from below it is drawn offset so the label stays at the same screen y as the outgoing one)
   const dl = t < tAc ? 1 - P(t, tAc - .22, tAc - .04) : 0;
-  if (dl > 0) { let pinY = 0; { const tr = info.sc.trans; if (tr && tr.type === 'push') { const dd = tr.dur || .4; pinY = -(1 - E.inOutQ(clamp((t + dd / 2) / dd))) * H; } }
+  if (dl > 0) { let pinY = 0; { const tr = info.sc.trans; if (tr && tr.type === 'push') { const dd = tr.dur || .4; pinY = -(1 - E.inOutC(clamp((t + dd / 2) / dd))) * H * .12; } }   // mirrors L.TRANS.push (incoming settles from +.12 H)
     ctx.save(); ctx.translate(540, 1196 + pinY); label(ctx, '1997.2.22 아침 도난 확인', 0, 0, { size: 42, color: '#fff', bg: 'rgba(120,10,16,.92)', border: '#ff5a62', a: dl, padX: 28, padY: 14 }); ctx.restore(); }
 
   // red slash on "컸다" + verdict chip

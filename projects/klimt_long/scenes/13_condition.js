@@ -19,8 +19,11 @@ const ITALY_ = () => window.KL.ITALY;
 //          ivy wall seen in "found"/"bag" (the wall closes in around it, big out-of-focus leaves fly past)
 //  검찰은    tick: quote card types the approved label "검찰: '내내 거기 있었는지 지금은 알 수 없다'"
 //  내내      a 1997.2 → 2019.12 timeline draws; the year counter runs while the ivy grows back around the
-//  벽 속에   hatch (time-lapse: leaves creep in, light passes over the wall); "22년" span bracket
-//  있었는지  the canvas in the cavity flickers present / absent, the timeline turns to dashes with "?" marks
+//  벽 속에   hatch (time-lapse: leaves creep in, light passes over the wall). The canvas has already faded to a
+//            grey dashed-outline ghost: nothing on screen says it was in the wall during those years
+//  있었는지  the 2019.12 marker lights and the canvas eases back in full colour (found there), then eases away
+//            to absent (every state change is an eased crossfade >= .14 s, no hard blinks); "22년" bracket,
+//            the timeline turns to dashes with "?" marks
 //  모른다고  piano: a big red "?" lands over the cavity (shockwave), "알 수 없다" is underlined in red
 //  했다      hold: ghost canvas breathes, leaves sway, dust drifts, slow push-in into the "letter" push
 // ---------------------------------------------------------------------------
@@ -98,6 +101,14 @@ function makeFront() {
   const g = x.createLinearGradient(0, 0, IW, IH); g.addColorStop(0, 'rgba(255,250,235,.06)'); g.addColorStop(.5, 'rgba(255,250,235,0)'); g.addColorStop(1, 'rgba(0,0,0,.12)');
   x.fillStyle = g; x.fillRect(10, 10, 600, 700);
   return c;
+}
+// grey, slightly cool "uncertain" version of the canvas for the ghost states
+function makeGhostFront(src) { const [c, x] = mk(IW, IH); x.filter = 'grayscale(1) brightness(.92) contrast(.9)'; x.drawImage(src, 0, 0); x.filter = 'none'; x.globalCompositeOperation = 'source-atop'; x.fillStyle = 'rgba(150,180,220,.18)'; x.fillRect(0, 0, IW, IH); return c; }
+// piecewise eased keyframes [[t, v], ...]
+function kf(t, ks) {
+  if (t <= ks[0][0]) return ks[0][1];
+  for (let i = 1; i < ks.length; i++) if (t <= ks[i][0]) return lerp(ks[i - 1][1], ks[i][1], E.inOutQ(clamp((t - ks[i - 1][0]) / (ks[i][0] - ks[i - 1][0]))));
+  return ks[ks.length - 1][1];
 }
 function makeLit(src) { const [c, x] = mk(IW, IH); x.filter = 'brightness(1.55) contrast(1.18) saturate(1.2)'; x.drawImage(src, 0, 0); x.filter = 'none'; return c; }
 function makeStudio() {
@@ -210,7 +221,7 @@ function initGrid() {
 function initV() {
   const LV = genLeaves();
   const front = makeFront();
-  V = { front, lit: makeLit(front), studio: makeStudio(), wall: makeWall(LV), soft: makeSoft(), grid: initGrid(),
+  V = { front, ghost: makeGhostFront(front), lit: makeLit(front), studio: makeStudio(), wall: makeWall(LV), soft: makeSoft(), grid: initGrid(),
     live: LV.filter(L0 => L0.late && !L0.cover), fgl: [makeFGLeaf(4), makeFGLeaf(2), makeFGLeaf(5)],
   };
   V.dleaf = [0, 1, 2, 3, 4, 5].map(lv => T.leaf.map(S0 => { const [c, x] = mk(S0.width, S0.height); x.filter = `brightness(${(.66 * (1 - .9 * lv / 5)).toFixed(3)})`; x.drawImage(S0, 0, 0); x.filter = 'none'; return c; }));
@@ -366,27 +377,26 @@ window.KL.scenes.condition = function (ctx, t, d, info) {
     }
   }
   // the canvas (shared by both parts once the dolly starts)
-  const pres = (() => { // presence in the cavity: solid → flicker → ghost
-    if (t < tWas - .04) return 1;
-    if (t < tK) { const f = Math.floor(t * 15); return hash(f * 7 + 3) > .5 ? (hash(f + 11) > .3 ? 1 : .55) : .06; }
-    return .3 + .14 * Math.sin((t - tK) * 4.2);
-  })();
+  // presence in the cavity, all eased crossfades (>= .14 s each, no hard cuts):
+  //  col = full-colour canvas: solid through the dolly → gone while the years run → back on the lit 2019.12
+  //        marker (it was found there) → eases away to absent before 모른다고
+  //  gho = grey ghost + dashed outline: carries the "unknown" years and breathes after 모른다고
+  const col = kf(t, [[tN - .14, 1], [tN + .14, 0], [tWas - .1, 0], [tWas + .08, .8], [tWas + .34, 0]]);
+  const gho = kf(t, [[tN - .14, 0], [tN + .14, .34], [tWas - .1, .34], [tWas + .08, .14], [tWas + .34, .06], [tK + .05, .3]]) + (t > tK + .05 ? .1 * Math.sin((t - tK - .05) * 4.2) : 0);
   if (m > 0) {
-    const glitch = t >= tWas - .04 && t < tK ? (hash(Math.floor(t * 30)) - .5) * 26 : 0;
     ctx.save(); ctx.beginPath(); ctx.rect(bX - HS / 2 * zw, bY - HS / 2 * zw, HS * zw, HS * zw); if (m > .02) ctx.clip();
     ctx.save(); ctx.translate(pX, pY); ctx.scale(pS, pS);
-    ctx.globalAlpha *= pres;
-    ctx.drawImage(V.front, -IW / 2 + glitch / pS, -IH / 2, IW, IH);
-    if (glitch) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha *= .35; ctx.drawImage(V.front, 0, 120, IW, 90, -IW / 2 - glitch * 1.6 / pS, -IH / 2 + 120, IW, 90); ctx.restore(); }
-    // the black bag around the lower part
-    const bagA = P(m, .45, .9);
+    if (col > .003) { ctx.save(); ctx.globalAlpha *= col; ctx.drawImage(V.front, -IW / 2, -IH / 2, IW, IH); ctx.restore(); }
+    if (gho > .003) { ctx.save(); ctx.globalAlpha *= gho * (1 - col); ctx.drawImage(V.ghost, -IW / 2, -IH / 2, IW, IH); ctx.restore(); }
+    // the black bag around the lower part (follows the canvas' presence)
+    const bagA = P(m, .45, .9) * clamp(col + gho * 1.4);
     if (bagA > 0) { ctx.save(); ctx.globalAlpha *= bagA; drawBag(ctx, 0, 345, 800, 380, .15, t); ctx.restore(); }
     // cavity shade: top catches the daylight, bottom falls into the dark
     const sh = P(m, .3, .9);
     if (sh > 0) { const g = ctx.createLinearGradient(0, -IH / 2, 0, IH / 2); g.addColorStop(0, `rgba(0,0,0,${.1 * sh})`); g.addColorStop(1, `rgba(0,0,0,${.6 * sh})`); ctx.fillStyle = g; ctx.fillRect(-IW / 2 - 100, -IH / 2, IW + 200, IH + 120); }
     ctx.restore();
-    // dashed outline of where it is / was
-    const ol = P(t, tWas - .05, tWas + .2);
+    // dashed outline of where it is / was (from the moment the years start running)
+    const ol = P(t, tN - .1, tN + .16, E.inOutQ);
     if (ol > 0) { ctx.save(); ctx.globalAlpha *= ol * .85; ctx.setLineDash([16, 12]); ctx.lineDashOffset = -t * 50; ctx.strokeStyle = '#e9edf3'; ctx.lineWidth = 3; ctx.strokeRect(pX - IW / 2 * pS, pY - IH / 2 * pS, IW * pS, IH * pS); ctx.restore(); }
     // a sliver of cold daylight into the cavity
     glow(ctx, pX - 40 * pS, pY - 300 * pS, 200 * pS, '#bcd2f0', .18 * m);

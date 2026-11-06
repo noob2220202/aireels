@@ -4,14 +4,16 @@
 //  (fade in)   the case folder drops from above the camera onto the stamped letter — slam (sfx), dust ring, shake
 //  절도        cover: "RITRATTO DI SIGNORA / 여인의 초상 · 도난 사건", slow push in
 //  공소시효는  row 1 types in "절도죄 공소시효", an hourglass pops (tick) and its sand runs out
-//  지났고      the last grain falls: "만료" punches in red, the hourglass tips over and goes grey
-//  발견        an investigator's cast shadow (fedora, coat) steps up; the cover swings open to the left,
-//              the camera pulls back to the spread: inside cover = discovery photo "2019.12 발견"
-//  후/수사도   pages on the prong fastener flip up one after another: 엑스레이 대조 → 뒷면 봉인 대조
+//  지났고      the last grain falls: "만료" punches in red, the hourglass tips over and goes grey; the approved
+//              sub-line "장물죄는 시효 남음" fades in under it (why there was still an investigation)
+//  발견        the cover swings open to the left (no person, no cast shadow), the camera pulls back to the
+//              spread: inside cover = discovery photo "2019.12 발견"
+//  후/수사도   pages on the prong fastener flip up one after another: 엑스레이 대조 → 뒷면 봉인 대조; two passes
+//              of window-blind light slide across the desk (time passing 2019 → 2021)
 //  2021년      last page: split-flap year rolls and locks on "2021" (tick), "수사 종결"
 //  기소 없이   the cover slaps shut; rows type in: "발견 후 수사 … 2021 종결", "기소 … 없음"
 //  종결됐다    stamp shadow converges, "미제 종결" slams (stamp + impact sfx), approved chip
-//              "2021.11 판사 결정 · 기소 없이 종결"; the shadow steps back and the desk lamp clicks off → dip
+//              "2021.11 판사 결정 · 기소 없이 종결"; the desk lamp clicks off → dip
 (function () {
 'use strict';
 const { W, H, C, P, E, clamp, lerp, hash, rng, noise1, fbm, rgba, buf, text, measure, glitchText, typeSub, countUp,
@@ -196,8 +198,8 @@ window.KL.scenes.closed = function (ctx, t, d, info) {
   ND.soft(ctx, -FW / 2 + 14 + 90 * hgt, -FH / 2 - 40 + 22 + 150 * hgt, FW, FH + 40, 34 + 110 * hgt, .72);
   // back panel + tab
   ctx.fillStyle = '#b8955a'; ctx.fillRect(-FW / 2, -FH / 2, FW, FH);
-  ctx.fillStyle = '#c4a165'; roundRect(ctx, 96, -FH / 2 - 40, 200, 52, 10); ctx.fill();
-  text(ctx, 'CASE 1997-PC', 196, -FH / 2 - 16, { size: 25, family: FONT.type, color: '#4a3a20', weight: 400 });
+  ctx.fillStyle = '#c4a165'; roundRect(ctx, 46, -FH / 2 - 40, 250, 52, 10); ctx.fill();
+  text(ctx, '피아첸차 · 1997–2021', 171, -FH / 2 - 15, { size: 24, weight: 700, color: '#4a3a20' });
   // pages (visible while open): D at the bottom, C, B on top — fastener at the top
   if (open > 0) {
     const px = 8, py = 12;
@@ -247,6 +249,9 @@ window.KL.scenes.closed = function (ctx, t, d, info) {
       const ex = P(t, tJi + .02, tJi + .18);
       if (ex > 0) { const fk = 1 - P(t, tJi + .05, tJi + .6); if (fk > 0) { c.fillStyle = `rgba(227,38,47,${.16 * fk})`; c.fillRect(-282, -160, 564, 68); } L.hline(c, 205, -98, 80 * E.outC(ex), RED, 4); }
       if (ex > 0) { c.save(); c.translate(244, -126); const k = lerp(1.9, 1, E.outBack(ex, 2.2)); c.scale(k, k); text(c, '만료', 0, 0, { size: 46, weight: 900, color: RED, alpha: clamp(ex * 3) }); c.restore(); }
+      // approved sub-line: the receiving-stolen-goods statute had not run out
+      const jm = P(t, tJi + .14, tJi + .4);
+      if (jm > 0) text(c, '장물죄는 시효 남음', -212, -84 + 6 * (1 - jm), { size: 25, weight: 800, color: '#6b5a3a', align: 'left', alpha: jm });
     }
     // rows 2 + 3 (after the case is closed again)
     const r2 = P(t, tGi - .02, tGi + .2, E.outC), r3 = P(t, tGi + .02, tGi + .22, E.outC);
@@ -294,20 +299,10 @@ window.KL.scenes.closed = function (ctx, t, d, info) {
    ND.lampLight(ctx, T, lampOn);
   if (fall >= 1) ND.blinds(ctx, T, .6 + .4 * lampOn, FO.x, FO.y, FW, FH, FO.r);
 
-  // investigator's cast shadow (fedora, coat): steps up before 발견, opens the cover, flips the pages,
-  // closes it, reaches for the stamp, then steps back as the lamp goes out
-  const vis = P(t, tJi + .15, tBal - .2) * (1 - P(t, tSlam + .35, tOff + .1));
-  if (vis > 0) {
-    const lean = P(t, tJi + .15, tBal - .1, E.inOutQ) * (1 - P(t, tSlam + .2, tOff + .2, E.inOutQ));
-    // right arm stays raised and sweeps over the top (never through a flat pose): cover edge → open to the left →
-    // flicks the pages → back left for the cover → closes it to the right → presses the stamp
-    const [a1, a2] = ND.camAt([[tJi + .1, 2.35, -.2], [tBal - .15, 2.25, -.25], [tBal + .3, 3.75, .2], [tSu - .3, 3.2, .2], [tSu - .1, 3.45, .5], [tSu + .08, 3.05, .1],
-      [tSu + .2, 3.45, .5], [tSu + .36, 3.1, .15], [tY + .25, 3.2, .3], [tGi - .3, 3.8, .2], [tGi + .05, 2.4, -.2], [tSlam - .25, 2.95, .3], [tSlam, 3.0, .62], [tSlam + .3, 2.8, .1], [d, 2.6, 0]], t);
-    const sweep = Math.sin(Math.PI * P(t, tGi - .3, tGi + .1));
-    ND.castShadow(ctx, 800 - 40 * sweep, 2150, 1060, lerp(.6, 1.16, lean) + .01 * Math.sin(T * 1.5), .52 * vis, {
-      hat: 'fedora', coat: true, headTurn: .4 * Math.sin(Math.PI * P(t, tY - .2, tY + .5)) - .3 * Math.sin(Math.PI * P(t, tBal - .2, tBal + .5)),
-      armL: [lerp(.12, .2, lean), lerp(-.1, -.15, lean)], armR: [a1, a2],
-    }, lerp(.02, -.1, lean) + .06 * sweep, true);
+  // time passing during the investigation (발견 → 2021년): two passes of window-blind light slide across the desk
+  // (non-figurative lighting cue: no person, no cast shadow)
+  for (const [s0, s1] of [[tBal - .05, tSu + .12], [tSu + .02, tY + .2]]) {
+    const u = P(t, s0, s1, E.inOutQ); if (u > 0 && u < 1) ND.lightSweep(ctx, u, .07 * Math.sin(Math.PI * u), 5, '255,226,180');
   }
   ctx.restore();
 

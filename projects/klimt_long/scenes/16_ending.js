@@ -1,5 +1,9 @@
-// scene module: ending (68.96 – 74.20 s). The two hypotheses are acted out on the wall, then the ivy regrows and the
+// scene module: ending (69.14 – 74.38 s). The two hypotheses are acted out on the wall, then the ivy regrows and the
 // hatch slams shut back to the exact framing of the first frame of 01_hook.js (shared renderer: window.KL.loopWall).
+// (1) 처음부터 벽 속에 있었을까: the bag materialises in the cavity, the door closes, 22-year time-lapse (1997 → 2019).
+// rewind in the pause before 누군가 (the year counter dissolves mid-spin: no year is paired with hypothesis 2).
+// (2) 누군가 몰래 돌려놓았을까: an anonymous, neutral-rimmed silhouette is already stepping in on 누군가, pushes the bag
+// into the hatch and walks off; its legs dissolve above the subtitle band. No closing card (nothing beyond the labels).
 (function () {
 'use strict';
 const { W, H, P, E, clamp, lerp, hash, noise1, rgba, text, measure, roundRect, glow, motes, tint, FONT } = L;
@@ -48,17 +52,18 @@ window.KL.scenes.ending = function (ctx, t, d, info) {
   // ---- phases
   const gA = P(t, tA + .05, tA + .55, E.inOutQ);                       // (1) the bag appears inside the cavity
   const c1 = E.inOutC(P(t, tWall - .05, tSok + .28));                  // (1) door closes over it
-  const tl = P(t, tQ1 - .02, tB - .14, E.inOutQ);                      // (1) 22 years time-lapse
-  const rw = P(t, tB - .1, tB + .28, E.inOutQ);                        // rewind
+  const tR0 = tB - .4, tR1 = tB - .08;                                 // rewind window (in the pause before 누군가)
+  const tl = P(t, tQ1 - .1, tR0 - .02, E.inOutQ);                      // (1) 22 years time-lapse
+  const rw = P(t, tR0, tR1, E.inOutQ);                                 // rewind
   const rwA = Math.sin(Math.PI * rw);
-  const tWalk0 = tB + .2, tStop = tSec + .04, tRel = tRet + .06, tTurn = tRel + .26, tGone = ve + .02;
+  const tWalk0 = tB - .12, tStop = tSec + .04, tRel = tRet + .06, tTurn = tRel + .26, tGone = ve + .02;
   const reach = P(t, tStop - .04, tRel, E.inOutQ), retract = P(t, tRel + .02, tTurn, E.inOutQ);
   const tSlam = ve + .6, close = E.inQ(P(t, ve + .1, tSlam));
   const slamK = t > tSlam ? Math.exp(-(t - tSlam) * 7) : 0, settle = 1 - P(t, d - .45, d - .08);
 
   // ---- door
   let open;
-  if (t < tB - .1) open = 1 - c1;
+  if (t < tR0) open = 1 - c1;
   else if (t < ve + .1) open = lerp(1 - c1, 1, rw);
   else open = 1 - close;
   if (t > tSlam) open += .05 * Math.abs(Math.sin((t - tSlam) * 26)) * slamK * settle;
@@ -68,25 +73,28 @@ window.KL.scenes.ending = function (ctx, t, d, info) {
   // ---- ivy
   const regrow = P(t, ve + .05, ve + .78);
   const lateFade = P(t, tQ1 - .05, tQ1 + .45) * (1 - rw);           // (1) time-lapse: ring fades in (cheap cached path)
-  const cov = P(t, tQ1 + .14, tB - .12) * (1 - rw);
+  const cov = P(t, tQ1 + .05, tR0) * (1 - rw);
   const sway = 1 + .9 * rwA + .5 * Math.sin(Math.PI * tl) + .6 * Math.sin(Math.PI * regrow);
   const gust = .7 * rwA * Math.sin(t * 30) + .4 * Math.sin(Math.PI * regrow);
 
-  // ---- camera: slow push during (1), kick on the rewind, widen for (2), then settle on the hook framing
-  const zoom = keys(t, [[0, 1.16], [tB - .1, 1.27, E.inOutQ], [tB + .22, 1.13, E.inOutC], [tSec, .9, E.inOutC], [ve - .1, .95, E.inOutQ], [d - .02, 1, E.inOutC]]) - .025 * pulse(t, tSok + .3, 8);
-  const cx = keys(t, [[0, 540], [tB + .22, 540], [tSec, 640, E.inOutC], [ve - .1, 628, E.inOutQ], [d - .02, 540, E.inOutC]]);
-  const cy = keys(t, [[0, 842], [tB - .1, 850, E.inOutQ], [tB + .22, 842, E.inOutC], [tSec, 905, E.inOutC], [ve - .1, 898, E.inOutQ], [d - .02, 805, E.inOutC]]);
+  // ---- camera: slow push during (1), kick on the rewind, widen for (2) right on 누군가 (so the figure is
+  // already in frame), then settle on the hook framing
+  const tWide = tB + .32;
+  const zoom = keys(t, [[0, 1.16], [tR0, 1.27, E.inOutQ], [tR1, 1.13, E.inOutC], [tWide, .9, E.outC], [ve - .1, .95, E.inOutQ], [d - .02, 1, E.inOutC]]) - .025 * pulse(t, tSok + .3, 8);
+  const cx = keys(t, [[0, 540], [tR1, 540], [tWide, 640, E.outC], [ve - .1, 628, E.inOutQ], [d - .02, 540, E.inOutC]]);
+  const cy = keys(t, [[0, 842], [tR0, 850, E.inOutQ], [tR1, 842, E.inOutC], [tWide, 905, E.outC], [ve - .1, 898, E.inOutQ], [d - .02, 805, E.inOutC]]);
   const shake = .35 * rwA + .45 * slamK * settle;
   const seep = t > tSlam ? LW.seepRest(tau) : 0;
 
-  // ---- the figure for hypothesis (2): an anonymous silhouette, never a face
-  const FX = 900, FY = 1330, FH = 700;
+  // ---- the figure for hypothesis (2): an anonymous silhouette, never a face (smaller + higher so the feet stay
+  // above the subtitle band; the shoulder still lines up with the hatch)
+  const FX = 900, FY = 1262, FH = 610, WALK0 = 260;
   const walkIn = P(t, tWalk0, tStop, E.outQ), walkOut = P(t, tTurn, tGone + .3, E.inQ);
   const figA = P(t, tWalk0 - .05, tWalk0 + .2) * (1 - P(t, ve - .35, tGone)) * (.9 + .1 * noise1(t * 6, 3));
   let fig = null;
   if (figA > 0) {
     const out = t > tTurn;
-    const x = out ? lerp(FX, FX + 380, walkOut) : lerp(FX + 360, FX, walkIn);
+    const x = out ? lerp(FX, FX + 380, walkOut) : lerp(FX + WALK0, FX, walkIn);
     const walking = out ? walkOut > 0 && walkOut < 1 : walkIn < 1;
     const phase = out ? walkOut * Math.PI * 2 : walkIn * Math.PI * 2;
     const armR = out ? [-.05, .12] : [lerp(.12, 1.48, reach) * (1 - retract) + .12 * retract, lerp(.1, .04, reach)];
@@ -113,7 +121,7 @@ window.KL.scenes.ending = function (ctx, t, d, info) {
       // (2) the bag that was put back
       if (bagIn) drawBag(c, cavBag[0], cavBag[1], cavBag[2], cavBag[3], 0, t);
     },
-    after(c) {
+    after(c, m) {
       // (1) X-ray view through the closed door: the bag stays visible inside the wall while the ivy grows over it
       const xa = c1 * (1 - rw) * (t < tB + .3 ? 1 : 0);
       if (xa > 0) {
@@ -130,12 +138,15 @@ window.KL.scenes.ending = function (ctx, t, d, info) {
       // (2) anonymous silhouette carries a bag to the hatch, pushes it in, walks away
       if (fig) {
         const [b, bx] = L.buf('kl_end_fig', 800, 1040); bx.clearRect(0, 0, 800, 1040);
-        const o = { coat: true, coatLen: 2.1, face: 1, flip: !fig.out, rim: 'rgba(227,38,47,.9)', rimX: fig.out ? -5 : 5, rimY: -3, rimBlur: 10, shadow: false, fill: '#05060a', lean: fig.lean, armR: fig.armR };
+        const o = { coat: true, coatLen: 2.1, face: 1, flip: !fig.out, rim: 'rgba(236,206,160,.72)', rimX: fig.out ? -4 : 4, rimY: -3, rimBlur: 8, shadow: false, fill: '#05060a', lean: fig.lean, armR: fig.armR };
         if (fig.walking) { o.walk = fig.phase; o.stride = .36; }
         const fi = F.figure(bx, 400, 1000, FH, o);
         // reconstruction look (it is a hypothesis, not footage): fine scanlines cut through the silhouette
         bx.globalCompositeOperation = 'destination-out'; bx.fillStyle = 'rgba(0,0,0,.32)';
         const so = Math.floor(t * 40) % 7; for (let y = 240 + so; y < 1010; y += 7) bx.fillRect(0, y, 800, 2);
+        // legs dissolve into the dark before the subtitle band (screen y 1170 → 1250, mapped into the buffer)
+        const by0 = (1170 - m.f) / m.d - (FY - 1000), by1 = (1250 - m.f) / m.d - (FY - 1000);
+        if (by0 < 1040) { const fg = bx.createLinearGradient(0, by0, 0, by1); fg.addColorStop(0, 'rgba(0,0,0,0)'); fg.addColorStop(1, 'rgba(0,0,0,1)'); bx.fillStyle = fg; bx.fillRect(0, Math.max(0, by0), 800, 1040 - Math.max(0, by0)); }
         bx.globalCompositeOperation = 'source-over';
         // world position of the right hand (figure() returns it in its local, un-flipped, lean-rotated frame)
         const [hx0, hy0] = fi.hands[1], cl = Math.cos(fig.lean), sl = Math.sin(fig.lean), fs = o.flip ? -1 : 1;
@@ -187,15 +198,17 @@ window.KL.scenes.ending = function (ctx, t, d, info) {
     for (let i = 0; i < 7; i++) { const yy = Math.floor(hash(f * 13 + i) * H), hh = 14 + Math.floor(hash(f * 7 + i) * 70), off = Math.round((hash(f * 3 + i) - .5) * 90 * rwA); ctx.drawImage(sb, 0, yy, W, hh, off, yy, W, hh); }
     ctx.save(); ctx.globalCompositeOperation = 'lighter'; for (let i = 0; i < 3; i++) { ctx.fillStyle = rgba('#ffffff', .1 * rwA); ctx.fillRect(0, ((hash(f + i * 5) * H) + t * 900) % H, W, 2 + 3 * hash(i + f)); } ctx.restore();
   }
-  // year counter: 1997 -> 2019 during (1), spins back on the rewind
-  const yc = P(t, tQ1 - .08, tQ1 + .1) * (1 - P(t, tB + .22, tB + .36));
+  // year counter: 1997 -> 2019 during (1); on the rewind it starts spinning back and dissolves mid-spin, so no year
+  // is ever shown next to hypothesis (2); the rewind glyph slides to the centre and carries the rest of the rewind
+  const ycOut = P(t, tR0 + .04, tR0 + .17);
+  const yc = P(t, tQ1 - .16, tQ1 + .02) * (1 - ycOut);
   if (yc > 0) {
-    const yf = t < tB - .1 ? lerp(1997, 2019, tl) : lerp(2019, 1997, rw);
+    const yf = t < tR0 ? lerp(1997, 2019, tl) : lerp(2019, 1997, rw);
     LW.yearCounter(ctx, 540, 650, Math.min(yf, 2019), yc, 66);
-    rewindIcon(ctx, 540 - 230, 650, 34, rwA * 1.4);
   }
+  rewindIcon(ctx, lerp(540 - 230, 540 - 20, E.inOutQ(ycOut)), 650, lerp(34, 44, ycOut), clamp(rwA * 1.4));
   // hypothesis tabs
-  const a1 = OB(P(t, tA - .02, tA + .3)), out1 = P(t, tB - .14, tB + .1, E.inQ);
+  const a1 = OB(P(t, tA - .02, tA + .3)), out1 = P(t, tB - .2, tB + .05, E.inQ);
   const a2 = OB(P(t, tB, tB + .3));
   const sum = OB(P(t, ve - .08, ve + .2)), sumOut = P(t, tSlam - .12, tSlam + .12);
   if (sum <= 0) {
@@ -211,8 +224,5 @@ window.KL.scenes.ending = function (ctx, t, d, info) {
       glow(ctx, 0, 0, 130, K.red, .4); text(ctx, '?', 0, 8, { size: 170, family: FONT.disp, weight: 400, color: K.red, stroke: '#000', strokeW: 12 }); ctx.restore();
     }
   }
-  // closing card (existing fact): it travelled to Seoul
-  const sa = P(t, ve + .32, ve + .55) * (1 - P(t, d - .42, d - .2));
-  if (sa > 0) label(ctx, '이 그림, 서울에도 왔었다 · 2025.12–2026.03', 540, 1345 + 10 * (1 - sa), { size: 38, color: K.goldHi, bg: 'rgba(8,10,14,.82)', border: rgba(K.gold, .6), a: sa });
 };
 })();
