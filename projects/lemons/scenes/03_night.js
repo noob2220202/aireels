@@ -29,7 +29,7 @@ function camAt(t, T, lemHead) {
   // slow settle drift on the seabed, then the push toward Lemons' helmet (umbilical rising above it)
   c.y += 10 * P(t, T.dive1, T.push0, E.inOutQ);
   const pu = E.inOutQ(P(t, T.push0, T.push1));
-  if (pu > 0) { c = { x: lerp(c.x, lemHead[0] + 30, pu), y: lerp(c.y, lemHead[1] - 40, pu), z: lerp(c.z, 1.72, pu) }; }
+  if (pu > 0) { c = { x: lerp(c.x, lemHead[0] + 30, pu), y: lerp(c.y, lemHead[1] - 40, pu), z: lerp(c.z, 1.6, pu) }; }
   return Object.assign(c, { h, u });
 }
 
@@ -70,8 +70,7 @@ function rewindFX(ctx, t, k, wipeY) {
   for (let i = 0; i < 44; i++) {           // bubbles streaking DOWN (time running backwards)
     const z = .45 + hi(i * 11 + 3) * .55, y = ((hi(i * 7 + 1) * (H + 300) + t * 5200 * z) % (H + 300)) - 150;
     const x = hi(i * 3 + 5) * W + Math.sin(t * 9 + i) * 10, len = (40 + 260 * k) * z, r = 3 + 9 * z * hi(i * 13), a = (.14 + .3 * z) * k;
-    const g = ctx.createLinearGradient(x, y - len, x, y); g.addColorStop(0, 'rgba(216,246,255,0)'); g.addColorStop(1, rgba('#d8f6ff', a));
-    ctx.strokeStyle = g; ctx.lineWidth = r * .9; ctx.beginPath(); ctx.moveTo(x, y - len); ctx.lineTo(x, y); ctx.stroke();
+    ctx.strokeStyle = rgba('#d8f6ff', a * .35); ctx.lineWidth = r * .9; ctx.beginPath(); ctx.moveTo(x, y - len); ctx.lineTo(x, y - r); ctx.stroke();
     ctx.strokeStyle = rgba('#e8f6ff', a * 1.3); ctx.lineWidth = 1.6; ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.stroke();
   }
   for (let i = 0; i < 4; i++) {            // VHS tracking bands rolling up
@@ -81,7 +80,7 @@ function rewindFX(ctx, t, k, wipeY) {
     ctx.fillStyle = rgba('#ff4a55', .14 * k); ctx.fillRect(0, y + 4, W, 1.5); ctx.fillStyle = rgba('#3fe0ff', .14 * k); ctx.fillRect(0, y - 3, W, 1.5);
   }
   const f = Math.floor(t * 30);           // horizontal tear strips (shifted copies of the frame)
-  if (k > .1) for (let i = 0; i < 3; i++) {
+  if (k > .3 && t > .25) for (let i = 0; i < 2; i++) {     // (not inside the dip: self-copies of an offscreen buffer are slow)
     const y = Math.floor(470 + hi(f * 7 + i * 31) * 760), h = Math.floor(14 + hi(f * 3 + i) * 46), off = Math.round((hi(f * 5 + i * 9) - .5) * 140 * k);
     ctx.drawImage(ctx.canvas, 0, y, W, h, off, y, W, h);
   }
@@ -94,7 +93,8 @@ function rewindFX(ctx, t, k, wipeY) {
   // ◀◀
   const ia = clamp(k * 2.2) * (Math.sin(t * 22) > -.4 ? 1 : .35);
   if (ia > 0) {
-    ctx.globalAlpha = ia; ctx.fillStyle = '#e8f6ff'; ctx.shadowColor = '#7fd6ff'; ctx.shadowBlur = 16;
+    LM.glow(ctx, 556, 760, 90, '#7fd6ff', .5 * ia);
+    ctx.globalAlpha = ia; ctx.fillStyle = '#e8f6ff';
     for (const dx of [0, -40]) { ctx.beginPath(); ctx.moveTo(574 + dx + 21, 760 - 24); ctx.lineTo(574 + dx - 19, 760); ctx.lineTo(574 + dx + 21, 760 + 24); ctx.closePath(); ctx.fill(); }
   }
   ctx.restore();
@@ -191,11 +191,16 @@ window.PK.scenes.night = function (ctx, t, d, info) {
   const lemP = map(LEM.x, stW.topY + 3), yuaP = map(YUA.x, SEABED + 2);
   const lemR = bedVis ? LM.diver(null, lemP[0], lemP[1], LEM.s * zs, t, lemO) : null;
   const yuaR = bedVis ? LM.diver(null, yuaP[0], yuaP[1], YUA.s * zs, t, yuaO) : null;
+  const onS = (p, r) => p[0] > -r && p[0] < W + r && p[1] > -r && p[1] < H + r;
   const lights = [].concat(shipR ? shipR.lights : [], bellR.lights, lemR ? lemR.lights : [], yuaR ? yuaR.lights : []);
-  const deep = clamp(c.y / 2200);
+  const deep = clamp(c.y / 2200), bellLamps = bellR.lights.slice(2);   // frame-lamp beams draw their own lit silt
+
+  // during the rewind wipe only the part above the tracking line shows the night (the rest is tape noise): skip drawing it
+  const wipeY = lerp(-20, H + 20, E.inOutQ(P(t, .02, .5))), clipW = t < .5;
+  if (clipW) { ctx.save(); ctx.beginPath(); ctx.rect(0, 0, W, Math.max(1, wipeY + 2)); ctx.clip(); }
 
   // ---- water ----
-  LM.sea(ctx, t, { dark: lerp(.3, .55, deep), lights, seed: 3, snow: .55, murk: .9, haze: .9, current: [-4, 0],
+  LM.sea(ctx, t, { dark: lerp(.3, .55, deep), lights: lights.filter(L2 => !bellLamps.includes(L2) && onS([L2.x, L2.y], L2.r)), seed: 3, snow: .55, murk: .9, haze: .9, current: [-4, 0],
     surface: .9 * (1 - deep), surfaceY: surfY + 10, surfaceColor: '#a99a74', top: '#15363b', mid: '#0a1c1d', bottom: '#020808' });
 
   // ---- surface: night sky, rough swell, the ship (hull seen through the water) ----
@@ -232,8 +237,9 @@ window.PK.scenes.night = function (ctx, t, d, info) {
     const yuaPts = [[ex[0] - 14 * zs, ex[1]], [ex[0] - 120 * zs, ex[1] + 70 * zs], [st.topL[0] + 60 * zs, st.topY - 60 * zs], [yuaR.umb[0] + 70 * zs, yuaR.umb[1] - 60 * zs], yuaR.umb];
     LM.umbilical(ctx, yuaPts, t + 1.3, { w: 9 * zs, lit: .35, sag: 30 * zs, pulse: .45, pulseSpeed: 260 * zs, glow: .15, sway: 5 });
     LM.umbilical(ctx, lemPts, t, { w: 10 * zs, lit: .5, sag: 40 * zs, pulse: pu, pulseSpeed: 300 * zs, glow: .35, sway: 5 });
-    LM.diver(ctx, yuaP[0], yuaP[1], YUA.s * zs, t, yuaO);
-    LM.diver(ctx, lemP[0], lemP[1], LEM.s * zs, t, lemO);
+    // (a diver pushed out of frame still throws his lamp beam into it)
+    const dv = (P0, s0, o, R0) => { if (onS(R0.chest, 300 * s0)) LM.diver(ctx, P0[0], P0[1], s0, t, o); else if (o.lamp) LM.lampBeam(ctx, t, R0.lamp[0], R0.lamp[1], R0.lampAng, o.lamp, { len: 820 * s0, spread: .27, s: Math.max(.4, s0), seed: 9 }); };
+    dv(yuaP, YUA.s * zs, yuaO, yuaR); dv(lemP, LEM.s * zs, lemO, lemR);
     // working breaths: exhaled bubbles from both helmets
     LM.bubbles(ctx, t, lemR.head[0] + 12 * zs, lemR.head[1] - 40 * zs, { every: 3.1, from: tWork - .25, a: .7, s: zs * .8, seed: 5 });
     LM.bubbles(ctx, t, yuaR.head[0] + 8 * zs, yuaR.head[1] - 40 * zs, { every: 3.4, from: tWork + .9, a: .5, s: zs * .7, seed: 9 });
@@ -257,9 +263,9 @@ window.PK.scenes.night = function (ctx, t, d, info) {
   const ds = lerp(.9, 1, E.outBack(P(t, tSea, tSea + .32)));
   ctx.save(); ctx.translate(540, 1182); ctx.scale(ds, ds); chip(ctx, D.depth || '수심 약 90m (보도에 따라 80~100m)', 0, 0, deA, { size: 33, color: '#e8f6ff', border: 'rgba(160,220,235,.5)' }); ctx.restore();
   // bell label (as the bell settles into frame), left of the bell
-  const bA = P(t, tLem - .45, tLem - .2) * (1 - P(t, tWork - .35, tWork - .1));
+  const bA = P(t, tLem - .45, tLem - .2) * (1 - P(t, tWork - .35, tWork - .1)) * clamp((1000 - bellP[1]) / 160);
   if (bA > 0) {
-    const bp = [bellP[0] - 96 * zs, bellP[1] - 40 * zs], lx = bp[0] - 120, ly = bp[1] - 62;
+    const bp = [bellP[0] - 96 * zs, bellP[1] - 40 * zs], lx = bp[0] - 110, ly = bp[1] - 84;
     lead(ctx, bp[0], bp[1], lx + 60, ly + 24, bA, rgba(COL.amber, .7));
     const bs = lerp(.9, 1, E.outBack(P(t, tLem - .45, tLem - .1)));
     ctx.save(); ctx.translate(lx, ly); ctx.scale(bs, bs); chip(ctx, D.bell || '다이빙 벨', 0, 0, bA, { size: 32, color: '#ffe3b8', border: rgba(COL.amber, .6) }); ctx.restore();
@@ -268,7 +274,7 @@ window.PK.scenes.night = function (ctx, t, d, info) {
   if (lemR) {
     const wA = P(t, tLem - .05, tLem + .2, E.outQ) * (1 - quiet);
     const [l1, l2] = (() => { const s = D.who || '포화잠수사 크리스 레몬스 (당시 32세)'; const i = s.indexOf(' ('); return i > 0 ? [s.slice(0, i), s.slice(i + 1)] : [s, '']; })();
-    const bx = 44, by = 590, ts = lerp(.92, 1, E.outBack(P(t, tLem - .05, tLem + .3)));
+    const bx = 44, by = 628, ts = lerp(.92, 1, E.outBack(P(t, tLem - .05, tLem + .3)));
     if (wA > 0) {
       const box = tag2(ctx, l1, l2, 0, 0, 0, { s1: 38, s2: 28 });
       const ax = bx + box.w - 40, ay = by + box.h;
@@ -290,8 +296,9 @@ window.PK.scenes.night = function (ctx, t, d, info) {
   // plunge: a cold flash band as the camera breaks the surface
   const pl = P(t, T.dive0 + .08, T.dive0 + .16) * (1 - P(t, T.dive0 + .16, T.dive0 + .5));
   if (pl > 0) L.flash(ctx, .1 * pl, '#cfeaff');
+  if (clipW) ctx.restore();
   // rewind wipe (first ~0.55 s)
   const rk = 1 - P(t, .18, .55, E.inQ);
-  rewindFX(ctx, t, rk, lerp(-20, H + 20, E.inOutQ(P(t, .02, .5))));
+  rewindFX(ctx, t, rk, wipeY);
 };
 })();

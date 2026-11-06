@@ -591,7 +591,7 @@
       "src0": 1065.66,
       "src1": 1069.04,
       "text": "갑자기, 패닉과 빛의 세계에서",
-      "en": "Suddenly, a plunge from this world of panic and light"
+      "en": "Suddenly you plunge from this world of panic and light"
      },
      {
       "src0": 1069.04,
@@ -770,7 +770,7 @@
   },
   {
    "id": "bridge",
-   "say": "그사이 선장과 일등항해사는 배를 직접 몰아 되돌아오고 있었습니다.",
+   "say": "그사이 선장과 항해사는 배를 직접 몰아 되돌아오고 있었습니다.",
    "new_block": true,
    "hl": [
     "직접"
@@ -808,7 +808,7 @@
   },
   {
    "id": "yuasa",
-   "say": "배가 돌아오자, 동료 데이브 유아사가 그를 벨까지 끌고 왔습니다.",
+   "say": "배가 돌아오자, 동료 데이브 유아사가 그를 다이빙 벨로 끌고 왔습니다.",
    "hl": [
     "데이브",
     "유아사가"

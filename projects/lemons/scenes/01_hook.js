@@ -18,6 +18,22 @@ const DX = 470, DS = .64;                             // diver on the top deck
 const TOP = [985, -1700];                            // the umbilical runs up to the bell, far above
 const RING = { x: 540, y: 830, r: 300 };              // where the gas clock lands for the cut into 'math'
 const DOPT = { pose: 'crouch', dir: -1, anchor: 'base', rim: '#9fd8ff', halo: .26 };
+// cheap big glows: in this renderer a radial-gradient fill is ~2.5x cheaper than a scaled sprite at large radii, so the
+// water haze and the big part of his life-light are drawn here (the kit diver gets a tiny lifeS so its own glows stay small)
+const GS = [[0, 1], [.12, .68], [.32, .34], [.6, .09], [1, 0]], LIFE_S = .14;
+function softGlow(ctx, x, y, r, color, a = 1) {
+  if (!(a > .003) || !(r > .5)) return;
+  const g = ctx.createRadialGradient(x, y, 0, x, y, r); for (const [o, k] of GS) g.addColorStop(o, rgba(color, Math.min(1, a) * k));
+  ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = g; ctx.fillRect(x - r, y - r, r * 2, r * 2); ctx.restore();
+}
+function haze(ctx, lights, k = 1, cap = 640) { for (const Lt of lights) softGlow(ctx, Lt.x, Lt.y, Math.min(Lt.r * .9, cap), Lt.color, .24 * (Lt.a == null ? 1 : Lt.a) * k); }
+function lifeGlow(ctx, t, x, y, a, s, bpm) {
+  if (a <= 0) return; const b = PK.beat(t, bpm);
+  softGlow(ctx, x, y, 300 * s * (1 + .08 * b), COL.amber, (.12 + .07 * b) * a);
+  softGlow(ctx, x, y, 105 * s * (1 + .14 * b), COL.warm, (.3 + .22 * b) * a * .9);
+  LM.glow(ctx, x, y, 30 * s * (1 + .2 * b), COL.core, (.8 + .2 * b) * a * .8);
+}
+const lifeLight = (c, r, a, t, bpm) => ({ x: c[0], y: c[1], r, color: COL.amber, a: .9 * a * (.85 + .15 * PK.beat(t, bpm)) });
 
 function wordT(info, w, frac) { return PK.at(info, w, frac); }
 // screen <- world for camera c = {ax, ay, cx, cy, z}
@@ -53,7 +69,7 @@ window.PK.scenes.hook = function (ctx, t, d, info) {
   const fallK = P(t, tCut, tCut + .5, E.outQ);
   const dOpt = Object.assign({}, DOPT, {
     adj: { T: lerp(.7, .5, pull) + .22 * fallK, h: lerp(.1, -.08, pull) + .12 * fallK },
-    life: 1, bpm: after ? 112 : lerp(80, 104, strain), tremble: .5 * pull,
+    life: 1, lifeS: LIFE_S, bpm: after ? 112 : lerp(80, 104, strain), tremble: .5 * pull,
     rim: after ? '#ffc58a' : '#9fd8ff', rimA: lerp(1, .5, fallK), rim2A: lerp(.18, .08, fallK), halo: lerp(.26, .1, fallK),
   });
   const dX = DX + 9 * pull - 4 * fallK + fb(tm * .4, 7) * 3, dY = st.topY + 6;
@@ -77,7 +93,7 @@ window.PK.scenes.hook = function (ctx, t, d, info) {
   const pD = P(t, -.45, tDep + .3, E.inOutQ), pPush = P(t, tJam - .3, tCut, E.inOutQ), pIn = P(t, tCut + .5, d + .05, E.inOutC);
   const chest0 = LM.diver(null, DX, dY, DS, tCut, Object.assign({}, dOpt, { adj: { T: .92, h: .22 } })).chest;
   let cx = lerp(585, 540, pD), cy = lerp(585, 960, pD), z = lerp(1.34, 1, pD), ax = 540, ay = 960;
-  cx = lerp(cx, 600, pPush * .5); cy = lerp(cy, 860, pPush * .5); z *= 1 + .1 * pPush;
+  cx = lerp(cx, 615, pPush * .9); cy = lerp(cy, 800, pPush * .9); z *= 1 + .28 * pPush;
   ax = lerp(ax, RING.x, pIn); ay = lerp(ay, RING.y, pIn); cx = lerp(cx, chest0[0], pIn); cy = lerp(cy, chest0[1], pIn); z = lerp(z, RING.r / 150, pIn);
   const dr = { x: fb(t * .35, 41) * 10, y: fb(t * .3, 50) * 10, r: fb(t * .25, 45) * .004 };
   const sk = LM.shake(t, .25 + .65 * pull, 3), jo = LM.jolt(t, tCut, 1.4);
@@ -89,22 +105,24 @@ window.PK.scenes.hook = function (ctx, t, d, info) {
   const cY = camY(t);
 
   // ---- lights ----
-  const lifeL = dv.lights[0];
+  const lifeL = lifeLight(dv.chest, 520 * DS, 1, tm, dOpt.bpm);
   const wl = [lifeL];
   if (lampOn > .01 && dv.lights[1]) wl.push(dv.lights[1]);
-  if (fl > .01) wl.push(LM.light(cutP[0], cutP[1], 1100, COL.lamp, 1.3 * fl));
+  if (fl > .01) wl.push(LM.light(cutP[0], cutP[1], 950, COL.lamp, 1.35 * fl));
   if (!after) wl.push(LM.light(hook[0], hook[1], 200, COL.amber, .12 + .25 * pull));    // the line grinds at the bucket lip
   const sl = wl.map(Lt => ({ x: (Lt.x - C.cx) * C.z + C.ax, y: (Lt.y - C.cy) * C.z + C.ay, r: Lt.r * C.z, color: Lt.color, a: Lt.a }));
   const darkK = lerp(.5, .9, P(t, tCut, tCut + .4)) + .08 * pIn;
 
   // ---- draw ----
-  LM.sea(ctx, tm, { dark: darkK, cam: [(C.cx - 540) * .3, clamp((C.cy - 960) * C.z * .45, -400, 400)], lights: sl, seed: 5, haze: .85, snow: 1.1 });
+  LM.sea(ctx, tm, { dark: darkK, cam: [(C.cx - 540) * .3, clamp((C.cy - 960) * C.z * .45, -400, 400)], lights: sl, seed: 5, haze: 0, snow: 1.1 });
+  haze(ctx, sl, .85, 460);
   streaks(ctx, tm, vy, .9 * (1 - P(t, tDep, tDep + .6)) + .25, 17, sl, cY);
 
   ctx.save();
   ctx.translate(C.ax + sk.x + jo.x + dr.x, C.ay + sk.y + jo.y + dr.y); ctx.rotate(sk.r + dr.r); ctx.scale(C.z, C.z); ctx.translate(-C.cx, -C.cy);
-  const stA = 1 - P(pIn, .35, .8);
-  if (stA > 0) LM.seabed(ctx, SY - 6, tm, { dark: darkK, lights: wl, seed: 4 });
+  const stA = 1 - P(pIn, .12, .5);
+  // the seabed only when it rises above the (dark) subtitle band — it sits just under it in this framing
+  if (stA > 0 && (SY - 6 - C.cy) * C.z + C.ay < 1170) LM.seabed(ctx, SY - 6, tm, { dark: darkK, lights: wl, seed: 4 });
   // (the structure sinks into the black as the camera pushes into the ring; skipped once gone: it is costly at zoom 2)
   if (stA > 0) LM.structure(ctx, SX, SY, SS, tm, { lights: wl, amb: lerp(.08, .03, P(t, tCut, tCut + .4)), a: stA });
   // dust puff where the line grinds on the bucket lip
@@ -119,6 +137,7 @@ window.PK.scenes.hook = function (ctx, t, d, info) {
   bursts.push(tCut + .06, tCut + .9);
   LM.bubbles(ctx, tm, dv.head[0] - 14, dv.head[1] - 40, { bursts, a: .55, s: .8, seed: 5, n: 12 });
   LM.diver(ctx, dX, dY, DS, tm, dOpt);
+  lifeGlow(ctx, tm, dv.chest[0], dv.chest[1], 1, DS, dOpt.bpm);
   // gas clock: rings in full around him just after the snap, then starts draining
   const ga = P(t, tCut + .14, tCut + .5, E.outQ);
   if (ga > 0) {

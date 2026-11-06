@@ -1289,7 +1289,7 @@ LM.ship = function (ctx, x, y, s, t, o = {}) {
     for (let r2 = 0; r2 < 2; r2++) for (let k = 0; k < 9; k++) { if (hi(k * 7 + r2 * 31) < .35) continue; ctx.fillStyle = rgba('#ffcf86', .5 * lit * hi(k * 5 + r2)); ctx.fillRect(170 + k * 20, -102 - r2 * 40, 8, 8); }
     for (let k = 0; k < 5; k++) { ctx.fillStyle = rgba('#ffcf86', .45 * lit); ctx.fillRect(-60 + k * 30, -104, 10, 8); }
   }
-  ctx.restore();
+  ctx.restore(); ctx.save(); ctx.globalAlpha *= a;   // back to caller space (balanced with the final restore)
   if (lit > 0) {
     const bp = map(284, -186); LM.glow(ctx, bp[0], bp[1], 120 * s, COL.amber, .3 * lit);
     for (const [fx, fy] of FL) { const p = map(fx, fy); LM.glow(ctx, p[0], p[1], 46 * s, COL.amber, .9 * lit); LM.glow(ctx, p[0], p[1], 10 * s, '#fff1dc', lit); const q = map(fx, -52); LM.glow(ctx, q[0], q[1], 90 * s, COL.amber, .3 * lit); }

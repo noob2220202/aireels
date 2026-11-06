@@ -15,6 +15,22 @@ const RING = { x: 540, y: 830, r: 300 };
 const TAU = Math.PI * 2;
 // the hook ends with the ring at this level (1 - .035 * its drain progress at the cut)
 const F0 = .973;
+// cheap big glows: in this renderer a radial-gradient fill is ~2.5x cheaper than a scaled sprite at large radii, so the
+// water haze and the big part of his life-light are drawn here (the kit diver gets a tiny lifeS so its own glows stay small)
+const GS = [[0, 1], [.12, .68], [.32, .34], [.6, .09], [1, 0]], LIFE_S = .14;
+function softGlow(ctx, x, y, r, color, a = 1) {
+  if (!(a > .003) || !(r > .5)) return;
+  const g = ctx.createRadialGradient(x, y, 0, x, y, r); for (const [o, k] of GS) g.addColorStop(o, rgba(color, Math.min(1, a) * k));
+  ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = g; ctx.fillRect(x - r, y - r, r * 2, r * 2); ctx.restore();
+}
+function haze(ctx, lights, k = 1, cap = 640) { for (const Lt of lights) softGlow(ctx, Lt.x, Lt.y, Math.min(Lt.r * .9, cap), Lt.color, .24 * (Lt.a == null ? 1 : Lt.a) * k); }
+function lifeGlow(ctx, t, x, y, a, s, bpm) {
+  if (a <= 0) return; const b = PK.beat(t, bpm);
+  softGlow(ctx, x, y, 300 * s * (1 + .08 * b), COL.amber, (.12 + .07 * b) * a);
+  softGlow(ctx, x, y, 105 * s * (1 + .14 * b), COL.warm, (.3 + .22 * b) * a * .9);
+  LM.glow(ctx, x, y, 30 * s * (1 + .2 * b), COL.core, (.8 + .2 * b) * a * .8);
+}
+const lifeLight = (c, r, a, t, bpm) => ({ x: c[0], y: c[1], r, color: COL.amber, a: .9 * a * (.85 + .15 * PK.beat(t, bpm)) });
 
 // subtitle chunk start/end times (scene-relative) for this clip, falling back to fractions of the voice
 function chunks(info) {
@@ -48,19 +64,21 @@ window.PK.scenes.math = function (ctx, t, d, info) {
 
   // ---- him: the hook's last pose, slowly curling in ----
   const curl = P(t, .2, d, E.inOutQ) * .4;
-  const DO = { pose: 'crouch', pose2: 'huddle', mix: curl, dir: -1, adj: null, life: .85, bpm, lifeS: .8,
+  const DO = { pose: 'crouch', pose2: 'huddle', mix: curl, dir: -1, adj: null, life: .85, bpm, lifeS: LIFE_S,
     rim: '#ffc58a', rimA: .32, rim2A: .05, halo: .06, detail: .4, fill: '#030606', bailout: true, idle: .8 };
   if (curl < .05) DO.adj = { T: .92, h: .22 };
   const dv0 = LM.diver(null, 0, 0, 1.28, t, DO);
-  const lifeL = { x: RING.x, y: RING.y, r: dv0.lights[0].r * z, color: COL.amber, a: dv0.lights[0].a * .7 * fade };
+  const lifeL = lifeLight([RING.x, RING.y], 520 * 1.28 * .8 * z, .85 * .7 * fade, t, bpm);
 
   // ---- draw ----
-  LM.sea(ctx, t, { dark: .97, lights: [lifeL], seed: 8, haze: .6, snow: .9, cam: [0, t * 14] });
+  LM.sea(ctx, t, { dark: .97, lights: [lifeL], seed: 8, haze: 0, snow: .9, cam: [0, t * 14] });
+  haze(ctx, [lifeL], .6, 460);
   ctx.save();
   ctx.translate(RING.x + dr.x, RING.y + dr.y); ctx.rotate(dr.r); ctx.scale(z, z); ctx.translate(-RING.x, -RING.y);
   ctx.globalAlpha = fade;
   // the diver (chest at the ring centre), very dim
   const dv = LM.diver(ctx, RING.x, RING.y, 1.28, t, DO);
+  lifeGlow(ctx, t, dv.chest[0], dv.chest[1], .85, 1.28 * .8, bpm);
   // breath: bursts from the helmet, quicker as he counts
   const bursts = [];
   for (let k = 0; k < 6; k++) { const tb = .15 + k * 1.18 - (k > 2 ? (k - 2) * .12 : 0); if (tb < vEnd + .4) bursts.push(tb); }

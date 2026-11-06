@@ -86,10 +86,13 @@ function sprites() {
   const fg = f.createRadialGradient(C[0] - R * .3, C[1] - R * .3, 10, C[0], C[1], R); fg.addColorStop(0, 'rgba(160,190,190,.08)'); fg.addColorStop(1, 'rgba(0,0,0,.25)'); f.fillStyle = fg; f.fillRect(C[0] - R, C[1] - R, 2 * R, 2 * R);
   f.restore();
   // strength member: white braided rope
-  el(SM.x, SM.y, SM.r, '#9a9486'); el(SM.x, SM.y, SM.r * .82, '#c9c2b0');
-  { const [px, py] = fp(SM.x, SM.y); f.save(); el(SM.x, SM.y, SM.r * .82); f.clip(); f.strokeStyle = 'rgba(60,55,45,.45)'; f.lineWidth = 2.2;
-    for (let k = 0; k < 7; k++) { const q = k / 7 * TAU; f.beginPath(); f.moveTo(px, py); f.quadraticCurveTo(px + Math.cos(q + .6) * R * .14, py + Math.sin(q + .6) * R * .14 * K, px + Math.cos(q) * R * .2, py + Math.sin(q) * R * .2 * K); f.stroke(); }
-    f.restore(); }
+  el(SM.x, SM.y, SM.r, '#3a3833');                     // 7-strand rope: 6 strands around a core
+  for (let k = 0; k < 7; k++) {
+    const q = k / 6 * TAU + .3, rr = k === 6 ? 0 : SM.r * .62, sx = SM.x + Math.cos(q) * rr, sy = SM.y + Math.sin(q) * rr, r1 = SM.r * .34;
+    el(sx, sy, r1, '#a8a292'); const [px, py] = fp(sx, sy);
+    f.fillStyle = 'rgba(255,250,235,.35)'; f.beginPath(); f.ellipse(px - r1 * R * .25, py - r1 * R * K * .25, r1 * R * .45, r1 * R * K * .4, 0, 0, TAU); f.fill();
+    f.strokeStyle = 'rgba(40,36,30,.6)'; f.lineWidth = 1.5; f.beginPath(); f.ellipse(px, py, r1 * R, r1 * R * K, 0, 0, TAU); f.stroke();
+  }
   // hoses and cables
   for (const ch of CHS) {
     if (!ch.cab) {
@@ -112,7 +115,7 @@ function sprites() {
 
 // ---------------- labels ----------------
 function chLabel(ctx, l1, l2, x, y, align, a, col, s) {
-  if (a <= 0) return null; const s1 = 42, s2 = 28, w1 = measure(ctx, l1, s1, FONT.sub, 900), w2 = l2 ? measure(ctx, l2, s2, FONT.sub, 700) : 0, w = Math.max(w1, w2) + 60, h = l2 ? s1 + s2 + 34 : s1 + 28;
+  if (a <= 0) return null; const s1 = 46, s2 = 30, w1 = measure(ctx, l1, s1, FONT.sub, 900), w2 = l2 ? measure(ctx, l2, s2, FONT.sub, 700) : 0, w = Math.max(w1, w2) + 60, h = l2 ? s1 + s2 + 34 : s1 + 28;
   const x0 = align === 'right' ? x - w : x;
   ctx.save(); ctx.translate(x0 + (align === 'right' ? w : 0), y + h / 2); ctx.scale(s, s); ctx.translate(-(x0 + (align === 'right' ? w : 0)), -(y + h / 2));
   ctx.globalAlpha *= a; ctx.fillStyle = 'rgba(3,7,8,.86)'; roundRect(ctx, x0, y, w, h, 12); ctx.fill();
@@ -135,7 +138,7 @@ const BB = { bell: [806, 602], bellS: .62, st: [420, 1500], stS: .95, lem: [372]
 const LEMO = { pose: 'stand', dir: -1, anchor: 'base', life: 1, lamp: .85, bpm: 64, lifeS: .9, bailout: true, rim: '#9fd0e4', light: [806, 602], halo: .26, idle: 1,
   adj: { na: [.7, .5], h: .2 } };
 function geomB(t) {
-  const bellO = { glow: 1, hatch: .8, lamps: .55, swing: .02 * Math.sin(t * .55), amb: .2, wireTop: -600 };
+  const bellO = { glow: 1, hatch: .8, lamps: .4, swing: .02 * Math.sin(t * .55), amb: .2, wireTop: -600 };
   const bell = LM.bell(null, BB.bell[0], BB.bell[1], BB.bellS, t, bellO);
   const st = LM.structure(null, BB.st[0], BB.st[1], BB.stS, t);
   const lem = LM.diver(null, BB.lem[0], st.topY + 3, BB.lemS, t, LEMO);
@@ -157,28 +160,29 @@ window.PK.scenes.umbilical = function (ctx, t, d, info) {
   const tau = Math.atan2(PB2[1] - PB[1], PB2[0] - PB[0]);         // tangent toward the bell
   const rho0 = -Math.PI / 2 - tau, Z0 = R / 8;
   // pull back: log zoom Z0 -> 1, anchor C -> PB, rotation rho0 -> 0
-  const u = P(t, tDiv - .08, tDiv + .78), e = E.inOutC(u);
+  const u = P(t, tDiv - .12, tDiv + .9), e = E.inOutC(u);
   const push = E.inOutQ(P(t, tHang - .1, d + .2));
-  const Z = Math.exp(Math.log(Z0) * (1 - e)) * (1 + .1 * push), rho = rho0 * (1 - e);
+  const Z = Math.exp(Math.log(Z0) * (1 - e)) * (1 + .2 * push), rho = rho0 * (1 - e);
   const Q = [lerp(C[0], PB[0], e) + sh.x - 40 * push, lerp(C[1], PB[1], e) + sh.y - 30 * push];
-  const aA = 1 - P(u, .48, .78), aB = P(u, .4, .7);
+  const aA = 1 - P(u, .5, .8), aB = P(u, .3, .58);
   const mB = new DOMMatrix().translate(Q[0], Q[1]).rotate(rho * 180 / Math.PI).scale(Z).translate(-PB[0], -PB[1]);
   const toS = p => { const q = mB.transformPoint(new DOMPoint(p[0], p[1])); return [q.x, q.y]; };
 
   // ---- lights (screen space) for the water ----
   const aLights = [];
   for (const ch of CHS) { const lit = P(t, tw[ch.k] - .05, tw[ch.k] + .12); if (lit > 0) { const [px, py] = fp(ch.x, ch.y); aLights.push(LM.light(px, py, 420, ch.glow, .35 * lit * aA)); } }
-  const bLights = aB > 0 ? G.bell.lights.concat(G.lem.lights) : [];
+  const bLights = aB > 0 ? G.bell.lights.slice(0, 2).concat(G.lem.lights) : [];     // (frame-lamp beams draw their own lit silt)
   const dimB = 1 - .3 * P(t, tHang, tHang + .8);
-  const sLights = aLights.concat(bLights.map(L2 => { const p = toS([L2.x, L2.y]); return { x: p[0], y: p[1], r: L2.r * Z, color: L2.color, a: L2.a * aB * dimB }; }));
-  LM.sea(ctx, t, { dark: .62, lights: sLights, seed: 8, snow: .8, murk: .8, haze: .8, current: [-3, 2] });
+  const onS = (p, r) => p[0] > -r && p[0] < W + r && p[1] > -r && p[1] < H + r;
+  const sLights = aLights.concat(bLights.map(L2 => { const p = toS([L2.x, L2.y]); return { x: p[0], y: p[1], r: Math.min(900, L2.r * Z), color: L2.color, a: L2.a * aB * dimB }; }).filter(L2 => L2.a > .01 && onS([L2.x, L2.y], L2.r)));
+  LM.sea(ctx, t, { dark: .62, lights: sLights, seed: 8, snow: .8, murk: .8, haze: .8 * clamp((1.3 - Z) / .3), current: [-3, 2] });
 
   // =========================== B: the bell, the line, the diver ===========================
-  if (aB > 0) {
+  if (aB > .01) {
     ctx.save(); ctx.globalAlpha = aB; ctx.setTransform(ctx.getTransform().multiply(mB));
     const lights = G.bell.lights.concat(G.lem.lights).map(L2 => Object.assign({}, L2, { a: L2.a * dimB }));
-    LM.bell(ctx, BB.bell[0], BB.bell[1], BB.bellS, t, Object.assign({}, G.bellO, { glow: (.8 + .2 * P(t, tBell - .1, tBell + .3)) * dimB }));
-    LM.structure(ctx, BB.st[0], BB.st[1], BB.stS, t, { lights, amb: .07 });
+    if (onS(toS(BB.bell), 330 * BB.bellS * Z)) LM.bell(ctx, BB.bell[0], BB.bell[1], BB.bellS, t, Object.assign({}, G.bellO, { glow: (.8 + .2 * P(t, tBell - .1, tBell + .3)) * dimB, lamps: G.bellO.lamps * clamp((4 - Z) / 2.5) }));
+    if (Z < 1.5) LM.structure(ctx, BB.st[0], BB.st[1], BB.stS, t, { lights, amb: .07 });
     // the line: pulses travel bell -> helmet; brighter from "이어진"
     const con = P(t, tCon - .1, tCon + .3);
     const um = LM.umbilical(ctx, G.pts, t, { w: 16, sag: 20, sway: 4, lit: .55 + .15 * con, pulse: .45 + .55 * con, pulseN: 3, pulseSpeed: 330, glow: .3 + .5 * con, tension: .08 * P(t, tHang, d) });
@@ -193,7 +197,7 @@ window.PK.scenes.umbilical = function (ctx, t, d, info) {
     // the diver: his lamp kicks brighter as the trace arrives
     const arrive = Math.exp(-Math.max(0, t - (tCon + .55)) * 3) * P(t, tCon + .45, tCon + .55);
     const lo = Object.assign({}, LEMO, { lamp: (.75 + .25 * arrive) * dimB + .1, a: 1, rimA: dimB });
-    LM.diver(ctx, BB.lem[0], G.st.topY + 3, BB.lemS, t, lo);
+    if (onS(toS(G.lem.chest), 330 * BB.lemS * Z)) LM.diver(ctx, BB.lem[0], G.st.topY + 3, BB.lemS, t, lo);
     if (arrive > .01) LM.glow(ctx, G.lem.umb[0], G.lem.umb[1], 70, COL.warm, .6 * arrive);
     ctx.restore();
   }
@@ -225,9 +229,9 @@ window.PK.scenes.umbilical = function (ctx, t, d, info) {
       }
     }
     // "모두": one bright pulse down the whole line
-    const mp = P(t, tAll - .12, tAll + .26, E.inQ);
+    const mp = P(t, tAll - .06, tAll + .26, E.inQ);
     if (mp > 0 && mp < 1) {
-      const y = lerp(TOPY + 200, C[1], mp), { cx, hw } = bodyAt(y);
+      const y = lerp(500, C[1], mp), { cx, hw } = bodyAt(y);
       const gp = ctx.createLinearGradient(0, y - 140, 0, y + 30); gp.addColorStop(0, 'rgba(255,241,220,0)'); gp.addColorStop(.8, rgba('#fff1dc', .5)); gp.addColorStop(1, 'rgba(255,241,220,0)');
       ctx.fillStyle = gp; ctx.fillRect(cx - hw, y - 140, hw * 2, 170);
     }
@@ -275,7 +279,7 @@ window.PK.scenes.umbilical = function (ctx, t, d, info) {
         const nextT = tw[order[order.indexOf(ch.k) + 1]], dim = nextT != null ? 1 - .35 * P(t, nextT - .05, nextT + .2) : 1, a = a0 * la * clamp(dim + .5 * P(t, tAll + .2, tAll + .3) * (1 - P(t, tAll + .6, tAll + 1.1)));
         const s = lerp(.88, 1, E.outBack(P(t, t0 - .06, t0 + .28)));
         const [l1, l2] = split2(D[ch.k] || { gas: '호흡 기체 (헬륨+산소)', water: '온수 (잠수복 난방)', power: '전기·조명·영상', comms: '통신' }[ch.k]);
-        const y = ch.top ? 596 : 1092, x = ch.side < 0 ? 40 : 1040;
+        const y = ch.top ? 588 : 1094, x = ch.side < 0 ? 40 : 1040;
         const box = chLabel(ctx, l1, l2, x, y, ch.side < 0 ? 'left' : 'right', a, ch.glow, s);
         const [px, py] = sp2(fp(ch.x + ch.side * (ch.cab ? .2 : ch.r * .7), ch.y));
         lead(ctx, px, py, ch.side < 0 ? box.x0 + box.w : box.x0, box.y + box.h / 2, a * P(t, t0, t0 + .2), ch.glow);
@@ -286,7 +290,7 @@ window.PK.scenes.umbilical = function (ctx, t, d, info) {
   // =========================== B overlays ===========================
   if (aB > 0) {
     // "다이빙 벨" (generic label) on "벨과"
-    const ba = P(t, tBell, tBell + .25, E.outQ) * aB * (1 - P(t, tLine - .2, tLine + .05));
+    const ba = P(u, .86, 1, E.outQ) * aB * (1 - P(t, tLine - .2, tLine + .05));
     if (ba > 0) { const bp = toS([BB.bell[0] - 120, BB.bell[1] - 40]); PK.chip(ctx, '다이빙 벨', bp[0] - 110, bp[1] - 30, ba, { size: 32, color: '#ffe3b8', border: rgba(COL.amber, .6) }); }
     // data.name on "줄 하나에": the one message of the scene
     const na = P(t, tLine - .05, tLine + .2, E.outQ) * aB;

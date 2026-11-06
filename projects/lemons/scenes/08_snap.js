@@ -14,9 +14,25 @@ const { W, H, E, P, clamp, lerp, rgba } = L;
 const PK = window.PK, LM = PK.LM, COL = LM.COL, { hi, nz, fb } = LM;
 const TAU = Math.PI * 2;
 
-const DS = 1.95;                          // close-up scale of the diver
-const C0 = [600, 905];                    // chest (anchor) at rest
+const DS = 1.82;                          // close-up scale of the diver
+const C0 = [600, 890];                    // chest (anchor) at rest
 const FAR = [1190, -70];                   // the line runs up to the bell, off frame
+// cheap big glows: in this renderer a radial-gradient fill is ~2.5x cheaper than a scaled sprite at large radii, so the
+// water haze and the big part of his life-light are drawn here (the kit diver gets a tiny lifeS so its own glows stay small)
+const GS = [[0, 1], [.12, .68], [.32, .34], [.6, .09], [1, 0]], LIFE_S = .14;
+function softGlow(ctx, x, y, r, color, a = 1) {
+  if (!(a > .003) || !(r > .5)) return;
+  const g = ctx.createRadialGradient(x, y, 0, x, y, r); for (const [o, k] of GS) g.addColorStop(o, rgba(color, Math.min(1, a) * k));
+  ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = g; ctx.fillRect(x - r, y - r, r * 2, r * 2); ctx.restore();
+}
+function haze(ctx, lights, k = 1, cap = 640) { for (const Lt of lights) softGlow(ctx, Lt.x, Lt.y, Math.min(Lt.r * .9, cap), Lt.color, .24 * (Lt.a == null ? 1 : Lt.a) * k); }
+function lifeGlow(ctx, t, x, y, a, s, bpm) {
+  if (a <= 0) return; const b = PK.beat(t, bpm);
+  softGlow(ctx, x, y, 300 * s * (1 + .08 * b), COL.amber, (.12 + .07 * b) * a);
+  softGlow(ctx, x, y, 105 * s * (1 + .14 * b), COL.warm, (.3 + .22 * b) * a * .9);
+  LM.glow(ctx, x, y, 30 * s * (1 + .2 * b), COL.core, (.8 + .2 * b) * a * .8);
+}
+const lifeLight = (c, r, a, t, bpm) => ({ x: c[0], y: c[1], r, color: COL.amber, a: .9 * a * (.85 + .15 * PK.beat(t, bpm)) });
 
 // two-bone IK for the near arm (hand point) in the rig's angle convention (0 = down, +PI/2 = forward), elbow back
 function ik(sh, tg, l1 = 76, l2 = 84) {
@@ -45,22 +61,38 @@ function poseMap(x, y, s, dir, rot, T) {
   const ch = tw([16 * cT + 106 * sT, 16 * sT - 106 * cT]);
   return q => { const w = tw(q); return [x + w[0] - ch[0], y + w[1] - ch[1]]; };
 }
-// the reaching arm, re-drawn on top with its own rim so it reads against the body (same geometry as the kit's near arm)
-function armOver(ctx, map, T, na, s, rim, a, warm) {
+// the reaching arm, re-drawn on top with its own rim so it reads against the body (same geometry as the kit's near arm);
+// the glove sits on the valve wheel and twists with it
+function armOver(ctx, map, T, na, s, rim, a, warm, twist, chest) {
   if (a <= .01) return;
   const cT = Math.cos(T), sT = Math.sin(T), sh = [12 * cT + 140 * sT, 12 * sT - 140 * cT];
-  const e = [sh[0] + Math.sin(na[0]) * 76, sh[1] + Math.cos(na[0]) * 76], a2 = na[0] + na[1], w = [e[0] + Math.sin(a2) * 70, e[1] + Math.cos(a2) * 70], hd = [w[0] + Math.sin(a2) * 14, w[1] + Math.cos(a2) * 14];
-  const S = [sh, e, w].map(map), Hd = map(hd);
+  const e = [sh[0] + Math.sin(na[0]) * 76, sh[1] + Math.cos(na[0]) * 76], a2 = na[0] + na[1], w = [e[0] + Math.sin(a2) * 70, e[1] + Math.cos(a2) * 70], hd = [w[0] + Math.sin(a2) * 16, w[1] + Math.cos(a2) * 16];
+  const S = [sh, e, w].map(map), Hd = map(hd), ang = Math.atan2(Hd[1] - S[2][1], Hd[0] - S[2][0]);
   ctx.save(); ctx.globalAlpha *= a; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-  const run = (lw, col) => { ctx.strokeStyle = col; ctx.lineWidth = lw; ctx.beginPath(); ctx.moveTo(S[0][0], S[0][1]); ctx.lineTo(S[1][0], S[1][1]); ctx.lineTo(S[2][0], S[2][1]); ctx.stroke(); };
-  // only the forearm + glove are re-drawn fully (the upper arm sits on the back); the upper arm gets an edge line
-  ctx.strokeStyle = rgba(rim, .55); ctx.lineWidth = 34 * s + 5; ctx.beginPath(); ctx.moveTo(S[1][0], S[1][1]); ctx.lineTo(S[2][0], S[2][1]); ctx.stroke();
-  ctx.fillStyle = rgba(rim, .55); ctx.beginPath(); ctx.ellipse(Hd[0], Hd[1], 19 * s + 2.5, 15 * s + 2.5, 0, 0, 7); ctx.fill();
-  ctx.strokeStyle = '#05090b'; ctx.lineWidth = 34 * s; ctx.beginPath(); ctx.moveTo(S[1][0], S[1][1]); ctx.lineTo(S[2][0], S[2][1]); ctx.stroke();
-  ctx.fillStyle = '#05090b'; ctx.beginPath(); ctx.ellipse(Hd[0], Hd[1], 19 * s, 15 * s, 0, 0, 7); ctx.fill();
-  run(4, rgba(rim, .0));
-  if (warm > 0) { ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = rgba(COL.amber, .25 * warm); ctx.beginPath(); ctx.ellipse(Hd[0], Hd[1], 19 * s, 15 * s, 0, 0, 7); ctx.fill(); }
+  const arm = (lw, col) => { ctx.strokeStyle = col; ctx.lineWidth = lw; ctx.beginPath(); ctx.moveTo(S[0][0], S[0][1]); ctx.lineTo(S[1][0], S[1][1]); ctx.lineTo(S[2][0], S[2][1]); ctx.stroke(); };
+  const glove = (g) => { ctx.save(); ctx.translate(Hd[0], Hd[1]); ctx.rotate(ang + twist); ctx.beginPath();
+    ctx.ellipse(0, 0, 21 * s + g, 16 * s + g, 0, 0, 7); ctx.moveTo(4 * s, -12 * s); ctx.ellipse(6 * s, -16 * s, 9 * s + g, 6 * s + g, -.6, 0, 7); ctx.fill(); ctx.restore(); };
+  arm(35 * s + 7, rgba(rim, .85)); ctx.fillStyle = rgba(rim, .85); glove(3.5);
+  arm(35 * s, '#05090b'); ctx.fillStyle = '#05090b'; glove(0);
+  // cuff band + a faint sleeve seam
+  ctx.strokeStyle = rgba(rim, .35); ctx.lineWidth = 3; ctx.beginPath(); const c0 = [lerp(S[1][0], S[2][0], .82), lerp(S[1][1], S[2][1], .82)], nx = -Math.sin(ang) * 17 * s, ny = Math.cos(ang) * 17 * s;
+  ctx.moveTo(c0[0] - nx, c0[1] - ny); ctx.lineTo(c0[0] + nx, c0[1] + ny); ctx.stroke();
+  if (warm > 0) { ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = rgba(COL.amber, .3 * warm); glove(0); }
+  // the suit is warmed by his life-light near the chest, like the kit's body
+  if (chest) { ctx.globalCompositeOperation = 'lighter'; const g = ctx.createRadialGradient(chest[0], chest[1], 0, chest[0], chest[1], 230 * s);
+    g.addColorStop(0, rgba(COL.amber, .3)); g.addColorStop(.5, rgba(COL.amber, .08)); g.addColorStop(1, rgba(COL.amber, 0)); arm(35 * s, g); }
   ctx.restore();
+}
+// the small bailout cylinder on his back lights up (its outline in the torso frame, mapped to screen)
+function cylGlow(ctx, map, T, k, t) {
+  if (k <= .01) return;
+  const cT = Math.cos(T), sT = Math.sin(T), tor = (u, v) => [u * cT - v * sT, u * sT + v * cT], pts = [];
+  for (let i = 0; i < 28; i++) { const q = i / 28 * Math.PI * 2, cx = -64, cy = -97; pts.push(map(tor(cx + Math.cos(q) * 20, cy + Math.max(-1, Math.min(1, Math.sin(q) * 1.6)) * 61))); }
+  const c = map(tor(-64, -97)), top = map(tor(-64, -150)), bot = map(tor(-64, -40));
+  ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.beginPath(); pts.forEach((p, i) => (i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]))); ctx.closePath();
+  const g = ctx.createLinearGradient(top[0], top[1], bot[0], bot[1]); g.addColorStop(0, rgba(COL.warm, .5 * k)); g.addColorStop(.6, rgba(COL.amber, .2 * k)); g.addColorStop(1, rgba(COL.amber, .05 * k));
+  ctx.fillStyle = g; ctx.fill(); ctx.strokeStyle = rgba(COL.warm, .55 * k * (.8 + .2 * Math.sin(t * 9))); ctx.lineWidth = 3; ctx.stroke(); ctx.restore();
+  LM.glow(ctx, c[0], c[1], 150, COL.amber, .22 * k);
 }
 function streaks(ctx, t, vy, a, seed, lights, off) {
   if (a <= .004) return;
@@ -104,8 +136,8 @@ window.PK.scenes.snap = function (ctx, t, d, info) {
   const rimC = after ? '#ffc58a' : '#bfe6ff';
   const DO = {
     pose: 'crouch', dir: -1, adj: { T, h, na, fa, nl: [1.35, -1.4], fl: [.15, -1.3] }, idle: .6, tremble: .35 * creak + .3 * (1 - breathing) * (t < tCut ? 1 : 0),
-    life: after ? .8 : 1, bpm: after ? 118 : lerp(92, 112, creak), lifeS: .8, lamp: lampOn, lampAng: 2.55 + fb(tm * .4, 3) * .06 - .1 * kink, beamLen: 700,
-    bailout: true, bailoutLit: gas * (after ? .75 : 1), rim: rimC, rimA: after ? .3 : .9, rim2A: after ? .06 : .16, halo: after ? .08 : .2, light: [200, 300],
+    life: after ? .8 : 1, bpm: after ? 118 : lerp(92, 112, creak), lifeS: LIFE_S, lamp: lampOn, lampAng: 2.55 + fb(tm * .4, 3) * .06 - .1 * kink, beamLen: 700,
+    bailout: true, bailoutLit: gas * (after ? .75 : 1), rim: rimC, rimA: after ? .3 : .9, rim2A: 0, halo: 0, rimW: 3.6, light: [200, 300],
     rot: .5 * fall + .05 * P(t, tCut, tCut + .3, E.outQ),
   };
   const cx0 = C0[0] + 40 * fall + 6 * creak, cy0 = C0[1] + 150 * fall * fall;
@@ -113,10 +145,10 @@ window.PK.scenes.snap = function (ctx, t, d, info) {
   const hm = helMap(dv, -1);
 
   // ---- the line: [far end, fold, helmet] ----
-  const umb = dv.umb, Kc = [umb[0] + 125, umb[1] - 48], Kk = [umb[0] + 128, umb[1] + 112];
+  const umb = dv.umb, Kc = [umb[0] + 170, umb[1] - 40], Kk = [umb[0] + 185, umb[1] + 168];
   const K = [lerp(Kc[0], Kk[0], kink), lerp(Kc[1], Kk[1], kink)];
   const pts = [FAR, K, umb];
-  const UO = { w: 24, lit: .55 + .15 * creak, tension: lerp(.86, 1, Math.max(kink, creak)), vib: 3 + 7 * creak, sway: 6, pulse: 0, glow: .25 * (1 - kink * .6) };
+  const UO = { w: 21, lit: .55 + .15 * creak, tension: lerp(.86, 1, Math.max(kink, creak)), vib: 3 + 7 * creak, sway: 6, pulse: 0, glow: .25 * (1 - kink * .6) };
   const pre = LM.umbilical(null, pts, tCut - .001, Object.assign({}, UO, { tension: 1 }));
   let acc = 0, best = 1e9, frac = .4;
   for (let i = 1; i < pre.pts.length; i++) { acc += Math.hypot(pre.pts[i][0] - pre.pts[i - 1][0], pre.pts[i][1] - pre.pts[i - 1][1]); const e = Math.abs(pre.pts[i][1] - 610); if (e < best) { best = e; frac = acc / pre.len; } }
@@ -135,7 +167,7 @@ window.PK.scenes.snap = function (ctx, t, d, info) {
   const toS = (x, y) => [(x - fx) * z + fx + sk.x + jo.x + dr.x, (y - fy) * z + fy + sk.y + jo.y + dr.y - camOff * 0];
 
   // ---- lights (screen) ----
-  const wl = [dv.lights[0]];
+  const wl = [lifeLight(dv.chest, 520 * DS * .8, DO.life, tm, DO.bpm)];
   if (lampOn > .01 && dv.lights[1]) wl.push(dv.lights[1]);
   if (fl > .01) wl.push(LM.light(cutP[0], cutP[1], 1300, COL.lamp, 1.4 * fl));
   if (gas > 0) wl.push(LM.light(dv.valve[0], dv.valve[1], 260, COL.amber, .5 * gas));
@@ -143,12 +175,23 @@ window.PK.scenes.snap = function (ctx, t, d, info) {
   const darkK = after ? lerp(.62, .97, P(t, tCut + .05, tCut + .5)) : .62;
 
   // ---- draw ----
-  LM.sea(ctx, tm, { dark: darkK, lights: sl, seed: 12, haze: .8, snow: 1.15, cam: [0, -camOff * .4] });
+  LM.sea(ctx, tm, { dark: darkK, lights: sl, seed: 12, haze: 0, snow: 1.15, cam: [0, -camOff * .4] });
+  haze(ctx, sl, .8, 430);
   streaks(ctx, tm, vy, P(t, tCut + .6, tCut + 1.2) * .9, 23, sl, camOff + tm * 20);
   ctx.save();
   ctx.translate(fx + sk.x + jo.x + dr.x, fy + sk.y + jo.y + dr.y); ctx.rotate(sk.r + dr.r); ctx.scale(z, z); ctx.translate(-fx, -fy);
 
-  // the line (behind the helmet)
+  // breath
+  const bursts = [];
+  for (let k = 0; k < 2; k++) { const tb = -.5 + k * .55; if (tb < tMak) bursts.push(tb); }
+  bursts.push(tGi + .28); for (let k = 1; k < 4; k++) bursts.push(tGi + .28 + k * .62);
+  bursts.push(tCut + .05); bursts.push(tCut + 1.1);
+  const bub = hm(70, -10);
+  LM.bubbles(ctx, tm, bub[0], bub[1], { bursts: bursts.filter(b => b < tCut || b >= tCut), a: .7, s: 1.6, seed: 13, n: 14 });
+
+  LM.diver(ctx, cx0, cy0, DS, tm, DO);
+  lifeGlow(ctx, tm, dv.chest[0], dv.chest[1], DO.life, DS * .8, DO.bpm);
+  // the line (it leaves the back of the helmet toward us, over the bailout cylinder)
   LM.umbilical(ctx, pts, t, UO);
   if (!after) {
     // amber pulses (gas, heat, power) running down to him; after the fold they stop there and pile up
@@ -163,8 +206,9 @@ window.PK.scenes.snap = function (ctx, t, d, info) {
     }
     if (kink > 0) {   // blocked at the fold: a hot, choked ember
       const bk = PK.beat(t, 140), kp = P0[iK];
-      LM.glow(ctx, kp[0], kp[1], 110 + 30 * bk, COL.alarm, (.3 + .25 * bk) * kink * (1 - creak * .3));
-      LM.glow(ctx, kp[0], kp[1], 26, '#fff0d0', .5 * kink);
+      LM.glow(ctx, kp[0], kp[1], 150 + 40 * bk, COL.alarm, (.38 + .3 * bk) * kink * (1 - creak * .3));
+      LM.glow(ctx, kp[0], kp[1], 60, COL.red, (.25 + .2 * bk) * kink);
+      LM.glow(ctx, kp[0], kp[1], 30, '#fff0d0', .6 * kink);
     }
     // fibres popping at the weak point while it creaks
     if (creak > .05) {
@@ -180,18 +224,9 @@ window.PK.scenes.snap = function (ctx, t, d, info) {
       LM.glow(ctx, cutP[0], cutP[1], 90, COL.lamp, .18 * creak);
     }
   }
-  // breath
-  const bursts = [];
-  for (let k = 0; k < 2; k++) { const tb = -.5 + k * .55; if (tb < tMak) bursts.push(tb); }
-  bursts.push(tGi + .28); for (let k = 1; k < 4; k++) bursts.push(tGi + .28 + k * .62);
-  bursts.push(tCut + .05); bursts.push(tCut + 1.1);
-  const bub = hm(70, -10);
-  LM.bubbles(ctx, tm, bub[0], bub[1], { bursts: bursts.filter(b => b < tCut || b >= tCut), a: .7, s: 1.6, seed: 13, n: 14 });
-
-  LM.diver(ctx, cx0, cy0, DS, tm, DO);
   // (replicate the kit's idle / tremble offsets so the overlay sits exactly on the kit's arm)
   const idl = DO.idle, Ti = T + .012 * idl * Math.sin(tm * .5), naI = [na[0] + .05 * idl * Math.sin(tm * .9), na[1] + DO.tremble * .08 * nz(tm * 13, 3)];
-  armOver(ctx, poseMap(cx0, cy0, DS, -1, DO.rot, Ti), Ti, naI, DS, rimC, P(reach, .25, .6), gas);
+  armOver(ctx, poseMap(cx0, cy0, DS, -1, DO.rot, Ti), Ti, naI, DS, rimC, t < tGot - .75 ? P(reach, .15, .45) : P(reach, .6, .92), gas, .35 * Math.sin(turn * Math.PI * 3) * (turn > 0 && turn < 1 ? 1 : 0), dv.chest);
 
   // bailout: valve knob on the helmet side block turns; gas runs from the cylinder up the whip
   const kb = hm(-50, -50), kr = 13 * DS;
@@ -210,7 +245,7 @@ window.PK.scenes.snap = function (ctx, t, d, info) {
       const px = w * w * v[0] + 2 * w * u * c[0] + u * u * hb[0], py = w * w * v[1] + 2 * w * u * c[1] + u * u * hb[1];
       LM.glow(ctx, px, py, 34, COL.amber, .55 * gas * (after ? .6 : 1));
     }
-    LM.glow(ctx, dv.valve[0] + 40, dv.valve[1] + 110, 120, COL.amber, .16 * gas);     // the small cylinder glows
+    cylGlow(ctx, poseMap(cx0, cy0, DS, -1, DO.rot, T + .012 * DO.idle * Math.sin(tm * .5)), T + .012 * DO.idle * Math.sin(tm * .5), gas * (after ? .55 : 1) * (1 - .25 * fall), t);
   }
   // gas clock: rings in with the bailout, drains
   const ga = P(t, tGi + .2, tGi + .55, E.outQ);
