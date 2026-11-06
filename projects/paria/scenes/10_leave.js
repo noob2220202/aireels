@@ -16,17 +16,17 @@ const shake2 = (t, k, s) => ({ x: k * nz(t * 22, s + 1) * 18, y: k * nz(t * 22, 
 
 // ---- PK.dark look (same oily sheen), composed at quarter resolution and blitted once ----
 function sheenTexLite() {
-  if (window.PK._sheenLite) return window.PK._sheenLite;
+  if (window.PK._sheenLiteLPS) return window.PK._sheenLiteLPS;
   const c = document.createElement('canvas'); c.width = 270; c.height = 480; const x = c.getContext('2d');
   const id = x.createImageData(270, 480);
   for (let j = 0; j < 480; j++) for (let i = 0; i < 270; i++) {
     const u = i / 270, v = j / 480; const n = fbm(u * 3.1 + fbm(v * 2.3, 4) * 1.4, 7) + fbm(v * 4.2 + u, 9) * .7;
     const band = Math.sin(n * 9.0); const k = Math.pow(Math.max(0, band), 3);
-    const hue = (n * 360 * 1.3 + 200) % 360; const h6 = hue / 60, f = h6 - Math.floor(h6);
+    const hue = ((n * 360 * 1.3 + 200) % 360 + 360) % 360; const h6 = hue / 60, f = h6 - Math.floor(h6);
     const rgb = [[1, f, 0], [1 - f, 1, 0], [0, 1, f], [0, 1 - f, 1], [f, 0, 1], [1, 0, 1 - f]][Math.floor(h6) % 6];
     const o = (j * 270 + i) * 4; id.data[o] = 40 + 160 * rgb[0] * k; id.data[o + 1] = 40 + 150 * rgb[1] * k; id.data[o + 2] = 50 + 170 * rgb[2] * k; id.data[o + 3] = 255 * (.15 + .85 * k);
   }
-  x.putImageData(id, 0, 0); window.PK._sheenLite = c; return c;
+  x.putImageData(id, 0, 0); window.PK._sheenLiteLPS = c; return c;
 }
 function darkLite(ctx, t, k, seed, base = '#010203') {
   const [b, x] = L.buf('pkDarkFast', 270, 480);
