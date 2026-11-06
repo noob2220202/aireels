@@ -83,56 +83,33 @@ function lightY(t, tp) {
   y = lerp(y, -84, pu);
   return y + Math.sin(t * 1.7) * 3 * (1 - pu) + Math.sin(t * 2.3 + 1) * 2.5 * P(t, tp + .3, tp + .8);
 }
-function ik(sx, sy, hx, hy, a, b, side) {
-  let dx = hx - sx, dy = hy - sy, dd = Math.hypot(dx, dy) || 1;
-  const m = Math.min(dd, a + b - .5); hx = sx + dx / dd * m; hy = sy + dy / dd * m; dd = Math.max(m, Math.abs(a - b) + 1);
-  const ang = Math.atan2(dy, dx), off = Math.acos(clamp((a * a + dd * dd - b * b) / (2 * a * dd), -1, 1));
-  const ea = ang - side * off;
-  return [sx + Math.cos(ea) * a, sy + Math.sin(ea) * a, hx, hy];
+// ---- a volunteer diver, shown only as a cold-white helmet lamp (no figure): it kneels in at the mouth, its beam reaches down
+// the riser to his amber light, dips to the water on '그를' and rises with him on '끌어올렸습니다' ----
+function lampPos(t, side, o) {
+  let x = lerp(RX + side * 205, RX + side * 128, o.lean), y = lerp(-196, -112, o.lean);
+  x = lerp(x, RX + side * 104, o.dip); y = lerp(y, -58, o.dip);                 // leaning right over the water on '그를'
+  x = lerp(x, RX + side * 150, o.pull); y = lerp(y, -150, o.pull);               // and back up as he comes out
+  return [x + Math.sin(t * .9 + side * 2) * 2.5, y + Math.sin(t * 1.3 + side) * 2.5];
 }
-
-// ---- a faceless volunteer diver kneeling at the mouth (generic silhouette, rim-lit) ----
 function volunteer(ctx, t, side, o) {
   if (o.a <= 0) return;
-  const hip = [RX + side * 236, -80], knee = [RX + side * 196, -16], foot = [RX + side * 316, -12];
-  let sx = lerp(RX + side * 186, RX + side * 128, o.lean), sy = lerp(-198, -116, o.lean);
-  sx = lerp(sx, RX + side * 160, o.pull); sy = lerp(sy, -172, o.pull);
-  sy += Math.sin(t * 1.3 + side) * 2;
-  const tx = sx - hip[0], ty = sy - hip[1], tl = Math.hypot(tx, ty), ux = tx / tl, uy = ty / tl, px = -uy * side, py = ux * side; // p: towards the back
-  const hd = [sx + ux * 44 - side * 18 * o.lean, sy + uy * 44 + 14 * o.lean];
-  const [ex, ey, hx, hy] = ik(sx, sy, o.hand[0], o.hand[1], 104, 112, side);
-  const bk = [px * 34, py * 34];
-  const shape = (c, ex2) => {
-    c.lineWidth = 64 + ex2; c.beginPath(); c.moveTo(hip[0], hip[1]); c.lineTo(sx - ux * 6, sy - uy * 6); c.stroke();                      // torso
-    c.lineWidth = 30 + ex2; c.beginPath(); c.moveTo(hip[0] + bk[0] + ux * 22, hip[1] + bk[1] + uy * 22); c.lineTo(sx + bk[0] - ux * 14, sy + bk[1] - uy * 14); c.stroke(); // tank
-    c.lineWidth = 40 + ex2; c.beginPath(); c.moveTo(hip[0], hip[1]); c.lineTo(knee[0], knee[1]); c.stroke();
-    c.lineWidth = 30 + ex2; c.beginPath(); c.moveTo(knee[0], knee[1]); c.lineTo(foot[0], foot[1]); c.stroke();
-    c.beginPath(); c.moveTo(foot[0], foot[1] - 12 - ex2); c.lineTo(foot[0] + side * (92 + ex2), foot[1] - 2); c.lineTo(foot[0] + side * (92 + ex2), foot[1] + 7 + ex2); c.lineTo(foot[0], foot[1] + 13 + ex2); c.closePath(); c.fill();
-    c.lineWidth = 26 + ex2; c.beginPath(); c.moveTo(sx, sy); c.lineTo(ex, ey); c.stroke();
-    c.lineWidth = 22 + ex2; c.beginPath(); c.moveTo(ex, ey); c.lineTo(hx, hy); c.stroke();
-    c.beginPath(); c.arc(hx, hy, 14 + ex2 / 2, 0, 7); c.fill();
-    c.beginPath(); c.arc(hd[0], hd[1], 33 + ex2 / 2, 0, 7); c.fill();                      // helmet (no face)
-    c.save(); c.translate(hd[0], hd[1]); c.rotate(Math.atan2(uy, ux) + Math.PI / 2); roundRect(c, -9 - ex2 / 2, -46 - ex2 / 2, 18 + ex2, 16 + ex2, 4); c.restore(); c.fill(); // lamp housing
-  };
-  ctx.save(); ctx.globalAlpha *= o.a; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-  // umbilical up to the surface
-  ctx.strokeStyle = 'rgba(70,64,48,.9)'; ctx.lineWidth = 7; ctx.beginPath(); ctx.moveTo(hd[0] + px * 26, hd[1] + py * 10);
-  ctx.bezierCurveTo(hd[0] + px * 90, hd[1] - 120, hd[0] + side * 40 + Math.sin(t * .8 + side) * 14, -560, hd[0] + side * 70, -900); ctx.stroke();
-  // rims: cold from the light above, warm from below once he is out
-  ctx.save(); ctx.translate(side * -1.5, -3.5); ctx.fillStyle = ctx.strokeStyle = rgba('#d8efff', .42 * o.rim); shape(ctx, 1.5); ctx.restore();
-  if (o.warm > 0) { ctx.save(); ctx.translate(0, 3); ctx.fillStyle = ctx.strokeStyle = rgba('#ffb36b', .45 * o.warm); shape(ctx, 1); ctx.restore(); }
-  ctx.fillStyle = ctx.strokeStyle = '#05080a'; shape(ctx, 0);
+  const [lx, ly] = lampPos(t, side, o), [tx2, ty2] = o.aim;
+  // umbilical up to the surface (a faint line only)
+  ctx.save(); ctx.globalAlpha *= o.a * .55; ctx.lineCap = 'round'; ctx.strokeStyle = 'rgba(70,64,48,.9)'; ctx.lineWidth = 5; ctx.beginPath(); ctx.moveTo(lx + side * 14, ly - 10);
+  ctx.bezierCurveTo(lx + side * 70, ly - 140, lx + side * 40 + Math.sin(t * .8 + side) * 14, -560, lx + side * 70, -900); ctx.stroke(); ctx.restore();
+  // beam: a soft cone from the lamp down to his light
+  const ang = Math.atan2(ty2 - ly, tx2 - lx), len = Math.hypot(tx2 - lx, ty2 - ly) * 1.25, wd = .13;
+  ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha *= o.a * o.lamp;
+  for (const [w, al] of [[wd * 1.9, .07], [wd, .2]]) {
+    const bg = ctx.createLinearGradient(lx, ly, lx + Math.cos(ang) * len, ly + Math.sin(ang) * len);
+    bg.addColorStop(0, rgba('#e6f6ff', al)); bg.addColorStop(.75, rgba('#e6f6ff', al * .35)); bg.addColorStop(1, 'rgba(230,246,255,0)'); ctx.fillStyle = bg;
+    ctx.beginPath(); ctx.moveTo(lx, ly); ctx.lineTo(lx + Math.cos(ang - w) * len, ly + Math.sin(ang - w) * len); ctx.lineTo(lx + Math.cos(ang + w) * len, ly + Math.sin(ang + w) * len); ctx.closePath(); ctx.fill();
+  }
   ctx.restore();
-  // helmet lamp + its beam down into the riser
-  const la = Math.atan2(uy, ux), lx = hd[0] + Math.cos(la) * 40, ly = hd[1] + Math.sin(la) * 40;
-  ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha *= o.a;
-  const tx2 = RX + side * 10, ty2 = SURF + 60, ang = Math.atan2(ty2 - ly, tx2 - lx), len = Math.hypot(tx2 - lx, ty2 - ly) * 1.3, wd = .2;
-  const bg = ctx.createLinearGradient(lx, ly, lx + Math.cos(ang) * len, ly + Math.sin(ang) * len);
-  bg.addColorStop(0, rgba('#e6f6ff', .16 * o.lamp)); bg.addColorStop(1, 'rgba(230,246,255,0)'); ctx.fillStyle = bg;
-  ctx.beginPath(); ctx.moveTo(lx, ly); ctx.lineTo(lx + Math.cos(ang - wd) * len, ly + Math.sin(ang - wd) * len); ctx.lineTo(lx + Math.cos(ang + wd) * len, ly + Math.sin(ang + wd) * len); ctx.closePath(); ctx.fill();
-  ctx.restore();
-  glow(ctx, lx, ly, 26, '#e6f6ff', .5 * o.a * o.lamp);
-  ctx.save(); ctx.globalAlpha *= o.a * o.lamp; ctx.fillStyle = '#f4fbff'; ctx.beginPath(); ctx.arc(lx, ly, 3, 0, 7); ctx.fill(); ctx.restore();
+  // the lamp itself
+  glow(ctx, lx, ly, 120, '#cfe8ff', .12 * o.a * o.lamp);
+  glow(ctx, lx, ly, 34, '#eef8ff', .7 * o.a * o.lamp);
+  ctx.save(); ctx.globalAlpha *= o.a * o.lamp; ctx.fillStyle = '#f6fbff'; ctx.beginPath(); ctx.arc(lx, ly, 6.5, 0, 7); ctx.fill(); ctx.restore();
 }
 
 function timeStrip(ctx, t, a, p, lab, endA, tIn, tOut) {
@@ -189,12 +166,12 @@ window.PK.scenes.rescue = function (ctx, t, d, info) {
   cam(ctx, cx, cy, z, dr.r + shk * nz(t * 15, 5) * .01, sx, sy);
   const M = ctx.getTransform();
 
-  const lit = .25 + .45 * P(t, tKk - .3, tKk + .5, E.inOutQ) + .2 * P(t, tJa - .1, tJa + .4) + .35 * rel;   // light from above
+  const lit = .25 + .45 * P(t, tKk - .3, tKk + .5, E.inOutQ) + .2 * P(t, tJa - .1, tJa + .4) + .1 * rel;    // light from above (cold; the release itself is warm)
   const ly = lightY(t, tp), lx = RX + nz(t * .6, 3) * 14 * (1 - P(t, tp - .2, tp + .2));
 
   // ---- habitat interior above the floor (air) ----
   {
-    const g = ctx.createLinearGradient(0, -900, 0, 0); g.addColorStop(0, '#020304'); g.addColorStop(1, rel > 0 ? window.PK.lerp2('#0a0f12', '#1a1a17', rel) : '#0a0f12');
+    const g = ctx.createLinearGradient(0, -900, 0, 0); g.addColorStop(0, '#020304'); g.addColorStop(1, rel > 0 ? window.PK.lerp2('#0a0f12', '#21180d', rel) : '#0a0f12');
     if (cy < 1100) { ctx.fillStyle = g; ctx.fillRect(RX - 760, -1100, 1520, 1100); }
     ctx.fillStyle = rgba('#8aa0aa', .035 + .03 * rel); for (let x = RX - 700; x < RX + 760; x += 150) ctx.fillRect(x, -1100, 9, 1100);
     ctx.fillStyle = rgba('#8aa0aa', .05); ctx.fillRect(RX - 760, -420, 1520, 6);
@@ -286,17 +263,15 @@ window.PK.scenes.rescue = function (ctx, t, d, info) {
     souls(ctx, t, FAR.map((x, i) => ({ x, y: (crown(x) + WS) / 2 - 1 + nz(t * .4, 20 + i) * 1.5, a: .4, s: .68 })), { bpm: 64 });
   }
 
-  // ---- the volunteers ----
-  const va = P(t, tJa - .2, tJa + .2, E.outQ), lean = P(t, tJm - .25, tGe + .05, E.inOutQ), pull = P(t, tp - .02, tp + .42, E.outC);
-  const hands = [-1, 1].map(s => {
-    const rest = [RX + s * 158, -40], R1 = [RX + s * 42, SURF - 14], R2 = [RX + s * 36, SURF + 34];
-    let h = [lerp(rest[0], R1[0], lean), lerp(rest[1], R1[1], lean)];
-    const k2 = P(t, tGe, tGe + .35, E.inOutQ); h = [lerp(h[0], R2[0], k2), lerp(h[1], R2[1], k2)];
-    const k3 = P(t, tp - .2, tp, E.inOutQ); h = [lerp(h[0], lx + s * 26, k3), lerp(h[1], ly - 4, k3)];
-    return h;
-  });
+  // ---- the volunteers: two cold-white helmet lamps (no figures) ----
+  const va = P(t, tJa - .2, tJa + .25, E.outQ), lean = P(t, tJm - .25, tGe + .05, E.inOutQ), pull = P(t, tp - .02, tp + .42, E.outC);
+  const dip = P(t, tGe - .25, tGe + .2, E.inOutQ) * (1 - P(t, tp - .02, tp + .3, E.inOutQ));
   const vin = 1 - P(t, tJa - .2, tJa + .5, E.outC);
-  for (const s of [-1, 1]) { ctx.save(); ctx.translate(s * 110 * vin, -30 * vin); volunteer(ctx, t, s, { a: va, lean, pull, hand: hands[s < 0 ? 0 : 1], rim: .5 + .5 * lit, warm: rel, lamp: P(t, tJa, tJa + .5) }); ctx.restore(); }
+  for (const s of [-1, 1]) {
+    ctx.save(); ctx.translate(s * 110 * vin, -30 * vin);
+    volunteer(ctx, t, s, { a: va, lean, dip, pull, aim: [lx + s * 6, ly - 6], lamp: .55 + .45 * P(t, tJa, tJa + .5) + .25 * dip });
+    ctx.restore();
+  }
 
   // ---- him ----
   const under = ly > SURF;
@@ -316,8 +291,10 @@ window.PK.scenes.rescue = function (ctx, t, d, info) {
       ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x - vx * .025, y + (vy - 2200 * uu) * .025); ctx.stroke();
     }
     ctx.restore();
-    glow(ctx, RX, SURF - 10, 340, '#fff1d8', .55 * Math.exp(-Math.max(0, u) * 3.2) * clamp(u * 12 + .3));
   }
+  // golden bloom as he comes up into the air (rises over ~.3 s), then a warm halo that holds
+  const bloom = P(t, tBr - .08, tBr + .25, E.outQ) * (1 - .45 * P(t, tBr + .3, tBr + .9, E.inOutQ));
+  if (bloom > 0) { glow(ctx, lx, ly, 420, '#ffd27a', .5 * bloom); glow(ctx, lx, ly, 150, '#ffe7b0', .3 * bloom); }
   // silt drifting through the beam (faster while the hours pass)
   {
     const fast = P(t, t3 - .1, t3 + .4) * (1 - P(t, 1.25, 1.9));
@@ -357,6 +334,9 @@ window.PK.scenes.rescue = function (ctx, t, d, info) {
   const sa = P(t, t3 - .12, t3 + .22, E.outQ) * (1 - P(t, tJa + .2, tJa + .55, E.inQ));
   timeStrip(ctx, t, sa, P(t, t3 + .05, tDw + .45, E.inOutQ), P(t, t3 - .05, t3 + .3), P(t, tDw + .25, tDw + .55, E.outQ), (info.sc.data || {}).t_in || '오후 2:45경 사고', (info.sc.data || {}).t_out || '오후 5:45경 구조 (조사위원회)');
   // breaking through into the air: a warm flash
-  flash(ctx, .24 * Math.exp(-Math.max(0, t - tBr) * 5) * P(t, tBr - .06, tBr), '#fff1d8');
+  flash(ctx, .14 * Math.exp(-Math.max(0, t - tBr) * 5) * P(t, tBr - .06, tBr), '#ffd27a');
+  // settle into the dark under the push to 'blocked' (keeps the outgoing frame from ghosting over the next scene)
+  const tail = P(t, d - .22, d + .18, E.inOutQ);
+  if (tail > 0) { ctx.fillStyle = `rgba(1,2,3,${(.72 * tail).toFixed(3)})`; ctx.fillRect(0, 0, W, H); }
 };
 })();

@@ -1,9 +1,10 @@
 // swim (real audio): "To just move, swim, swim, swim."
 // First person, through the completely flooded line, in the dark. No torch: the only light is his own, faintly warming the
 // nearest girth welds. Ribs of steel come out of the black and rush past, silt streams back past the eyes, exhaled bubbles
-// fly backwards. "To just move" -> he gets going from a near stop. Each "swim" -> a surge forward: the tunnel stretches
-// (wider field of view), a dull pressure pulse runs ahead down the pipe, the dark closes in a little more, bubbles burst back.
-// Heartbeat drives the breathing iris. Attribution card stays up.
+// fly backwards. "To just move" -> he gets going from a near stop. Each "swim" -> a surge forward: a punch of field of view,
+// the two nearest welds flare in his light and rush past, radial speed streaks, a hard shake, a faint cold flash, a dull
+// pressure pulse running ahead down the pipe; the tunnel-vision iris snaps open for an instant, then clamps down past where
+// it was. Heartbeat drives the breathing iris. Attribution card stays up; the subtitle band is kept dark.
 (function () {
 const { W, H, E, P, clamp, lerp, fbm, rgba, glow } = L;
 const { beat, sourceCard } = window.PK;
@@ -46,7 +47,7 @@ function plan(info) {
   const S = [1.83, 2.8, 3.77].map(c => v0 + c), MOVE = v0 + .3;
   const kick = (u, A, rise = .07, fall = .5) => (u <= 0 ? 0 : A * (1 - Math.exp(-u / rise)) * Math.exp(-u / fall));
   const vel = t => {
-    let v = .7 + 1.5 * E.inOutQ(P(t, v0 - .1, v0 + 1.5)) + .5 * P(t, S[0], d + .5);
+    let v = .7 + 2.1 * E.inOutQ(P(t, v0 - .1, v0 + 1.5)) + .6 * P(t, S[0], d + .5);
     v += kick(t - MOVE, 1.4, .1, .6);
     S.forEach((s, i) => { v += kick(t - s + .04, [4.2, 4.8, 5.6][i]); });
     return v;
@@ -75,7 +76,7 @@ window.PK.scenes.swim = function (ctx, t, d, info) {
   let lunge = 0, roll = .025 * Math.sin(t * .9) + .012 * fb(t * .7, 4);
   pl.S.forEach((s, i) => { const u = t - s; if (u > -.2 && u < 1.2) { lunge += Math.sin(clamp((u + .2) / 1.0) * Math.PI) * (u < .1 ? -.4 : 1); roll += (i % 2 ? -1 : 1) * .03 * Math.sin(clamp((u + .1) / .9) * Math.PI); } });
   const cx = 540 + 16 * Math.sin(t * 1.6) + 10 * fb(t * .8, 7), cy = 800 + 9 * Math.sin(t * 3.2 + .5) + 26 * lunge + 6 * fb(t * .9, 9);
-  const F = 330 * (1 + .1 * surgeK + .04 * Math.sin(t * .6));
+  const F = 330 * (1 + .28 * surgeK + .04 * Math.sin(t * .6));
   const camOX = offX(Z) + .12 * Math.sin(t * 1.1), camOY = offY(Z) - .05 + .05 * Math.sin(t * 2.3);
   const proj = (px, py, zr, zw) => { const s = F / zr; return [ (px + offX(zw) - camOX) * s, (py + offY(zw) - camOY) * s, s ]; };
 
@@ -83,7 +84,7 @@ window.PK.scenes.swim = function (ctx, t, d, info) {
   ctx.save();
   ctx.translate(cx, cy); ctx.rotate(roll);
   // a little shake on each stroke
-  ctx.translate(surge * 7 * nz(t * 24, 3), surge * 7 * nz(t * 24, 5));
+  ctx.translate(surge * 18 * nz(t * 24, 3), surge * 18 * nz(t * 24, 5));
 
   // ---- the pressure pulse that runs ahead down the line on every "swim" ----
   const pingAt = zr => { let a = 0; pl.S.forEach(s => { const u = t - s; if (u < 0 || u > 1.3) return; const wz = .4 + u * 9; a += .9 * Math.exp(-Math.pow((zr - wz) / 1.1, 2)) * Math.pow(1 - u / 1.3, 1.5) * Math.exp(-wz / 5); }); return a; };
@@ -97,6 +98,8 @@ window.PK.scenes.swim = function (ctx, t, d, info) {
     const fog = Math.exp(-zr * .16), warm = .62 * Math.exp(-zr / 2.2), cold = .3 * Math.exp(-zr / 7), ping = pingAt(zr);
     rings.push({ zw, zr, ox, oy, s, fog, warm, cold, ping, hk: hi(k * 31 + 7) });
   }
+  // the two nearest welds: his light catches them hard, so the steel ribs flash past
+  for (let i = Math.max(0, rings.length - 2); i < rings.length; i++) { rings[i].warm *= 1 / .62; rings[i].near = 1; }
   // the steel walls: oily runs along the length of the pipe (a conic gradient around the vanishing point: they do not move
   // as he goes forward, exactly like streaks running along a pipe), lit faintly near him and lost to black in the distance
   const [vx, vy] = proj(0, 0, 9, Z + 9);
@@ -137,13 +140,14 @@ window.PK.scenes.swim = function (ctx, t, d, info) {
   }
   // the welds themselves: broken, dirty bands, brighter low down where his light reaches
   for (const r of rings) {
-    const R = r.s, lw = Math.max(1, 11 * R / F), SEG = Math.round(clamp(R / 12, 10, 36));
+    const R = r.s, lw = Math.max(1, (r.near ? 18 : 11) * R / F), SEG = Math.round(clamp(R / 12, 10, 36));
     const ac = (r.cold * .9 + .55 * r.ping) * r.fog, aw = r.warm * r.fog;
     if (ac + aw < .012) continue;
     for (let j = 0; j < SEG; j++) {
       const a0 = j / SEG * Math.PI * 2, a1 = a0 + Math.PI * 2 / SEG * 1.02, mid = (a0 + a1) / 2, down = Math.max(0, Math.sin(mid));
       const dirt = .25 + .75 * Math.pow(hi(Math.round(r.zw * 10) * 131 + j * 7), .7);
-      const c = ac * dirt * (.45 + .55 * down), w = aw * dirt * (.15 + .85 * down);
+      const sy = cy + r.oy + R * Math.sin(mid), sbd = 1 - .75 * P(sy, 1190, 1270) * (1 - P(sy, 1460, 1540));   // dim where it crosses the subtitle band
+      const c = ac * dirt * (.45 + .55 * down) * sbd, w = aw * dirt * (.15 + .85 * down) * sbd;
       if (c > .01) { ctx.strokeStyle = rgba('#8a9ba3', c * .8); ctx.lineWidth = lw; ctx.beginPath(); ctx.arc(r.ox, r.oy, R, a0, a1); ctx.stroke(); }
       if (w > .01) { ctx.strokeStyle = rgba('#ffb36b', w * .65); ctx.lineWidth = lw * 1.15; ctx.beginPath(); ctx.arc(r.ox, r.oy, R, a0, a1); ctx.stroke(); }
     }
@@ -162,12 +166,27 @@ window.PK.scenes.swim = function (ctx, t, d, info) {
     const px = Math.cos(th) * rr + .03 * nz(t * .5 + i, 2), py = Math.sin(th) * rr + .03 * nz(t * .5 + i, 6);
     const zw = Z + zr;
     const [x1, y1, s1] = proj(px, py, zr, zw), [x0, y0] = proj(px, py, zrp, zw);
-    const near = Math.exp(-zr / 1.6), a = (.05 + .4 * near) * P(zr, .12, .6) * Math.exp(-zr * .12);
+    const near = Math.exp(-zr / 1.6), a = (.1 + .6 * near) * P(zr, .12, .6) * Math.exp(-zr * .12);
     if (a < .01) continue;
     ctx.strokeStyle = rgba(near > .55 ? '#ffd2a0' : '#9cc9d6', a); ctx.lineWidth = Math.max(.7, (.0035 + .0035 * hi(i)) * s1);
     ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke();
   }
   ctx.restore();
+
+  // ---- speed streaks on each stroke: radial, out of the vanishing point (one path, additive) ----
+  if (surgeK > .01) {
+    const sp = new Path2D();
+    pl.S.forEach((s0, si) => {
+      const u = t - s0 + .04; if (u < 0 || u > 1.2) return;
+      for (let i = 0; i < 60; i++) {
+        const th = hi(i * 7 + si * 131 + 5) * Math.PI * 2, ph = (hi(i * 13 + si * 17 + 1) + u * (2.6 + 1.6 * hi(i * 3 + si))) % 1;
+        const ra = 70 + 980 * ph * ph, rb = ra + 30 + 300 * ph * ph, c = Math.cos(th), sn = Math.sin(th);
+        sp.moveTo(vx + c * ra, vy + sn * ra); sp.lineTo(vx + c * rb, vy + sn * rb);
+      }
+    });
+    ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.lineCap = 'round'; ctx.lineWidth = 2.2;
+    ctx.strokeStyle = rgba('#cfe8ff', Math.min(.3, .25 * surgeK)); ctx.stroke(sp); ctx.restore();
+  }
 
   // ---- out-of-focus specks drifting right in front of the mask ----
   for (let i = 0; i < 9; i++) {
@@ -197,15 +216,23 @@ window.PK.scenes.swim = function (ctx, t, d, info) {
   // ---- his own warmth at the edge of vision, with the heartbeat; a dull pulse on each stroke ----
   const hb = beat(t, bpm);
   glow(ctx, 540, 1120, 600, '#ff9a3c', .04 + .03 * hb);
-  ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = rgba('#0b2a33', .22 * surge); ctx.fillRect(0, 0, W, H); ctx.restore();
+  ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = rgba('#0b2a33', .22 * surge); ctx.fillRect(0, 0, W, H);
+  // a brief cold flash on each "swim", centred on the tunnel ahead (kept off the subtitle band)
+  if (surge > .01) { const fg = ctx.createRadialGradient(cx + vx, cy + vy, 0, cx + vx, cy + vy, 760); fg.addColorStop(0, rgba('#cfe8ff', .05 * surge)); fg.addColorStop(.6, rgba('#cfe8ff', .03 * surge)); fg.addColorStop(1, 'rgba(207,232,255,0)'); ctx.fillStyle = fg; ctx.fillRect(0, 0, W, H); }
+  ctx.restore();
 
-  // ---- tunnel vision: tightens through the scene and on every stroke, breathes with the heart ----
-  const k = lerp(.56, .7, P(t, pl.v0, d, E.inOutQ)) + .08 * surgeK;
+  // ---- tunnel vision: more open than before, so the strokes read; on each stroke it snaps open (0.15 s), then clamps
+  // down past where it was; it breathes with the heart. Elliptical: open to the sides where the steel rushes past. ----
+  let kS = 0; pl.S.forEach(s0 => { const u = t - s0; kS += -.12 * Math.exp(-Math.pow((u - .05) / .08, 2)) + .1 * P(u, .14, .26) * (1 - P(u, .4, .95, E.inOutQ)); });
+  const k = lerp(.4, .5, P(t, pl.v0, d, E.inOutQ)) + kS;
   const br = .5 * (.5 + .5 * Math.sin(t * Math.PI * 2 * .7)) + .5 * hb;
   const r0 = H * lerp(.4, .085, k) * (1 + .07 * br), r1 = r0 + H * lerp(.5, .3, k);
-  const ig = ctx.createRadialGradient(cx, cy - 10, r0, cx, cy - 10, r1);
+  ctx.save(); ctx.translate(cx, cy - 10); ctx.scale(1.2, .9);
+  const ig = ctx.createRadialGradient(0, 0, r0, 0, 0, r1);
   ig.addColorStop(0, 'rgba(1,2,3,0)'); ig.addColorStop(.5, `rgba(1,2,3,${(.5 + .3 * k).toFixed(3)})`); ig.addColorStop(1, 'rgba(1,2,3,.98)');
-  ctx.save(); ctx.fillStyle = ig; ctx.fillRect(0, 0, W, H); ctx.restore();
+  ctx.fillStyle = ig; ctx.fillRect(-W * 1.5, -H * 1.5, W * 3, H * 3); ctx.restore();
+  // keep the subtitle band dark under the brighter streaks
+  { const sb = ctx.createLinearGradient(0, 1200, 0, 1560); sb.addColorStop(0, 'rgba(1,2,3,0)'); sb.addColorStop(.25, 'rgba(1,2,3,.5)'); sb.addColorStop(.7, 'rgba(1,2,3,.5)'); sb.addColorStop(1, 'rgba(1,2,3,0)'); ctx.fillStyle = sb; ctx.fillRect(0, 1200, W, 360); }
 
   // attribution: up while the voice plays
   const ca = P(t, .02, .32, E.outQ) * (1 - P(t, d - .05, d + .15));                            // voice starts at ~0.35 s

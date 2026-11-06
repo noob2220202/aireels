@@ -15,4 +15,4 @@ projects/_klimt_preview/
 projects/_klimt_C/
 
 # third-party copyrighted source media (never commit)
-assets/paria_media/
+assets/*_media/

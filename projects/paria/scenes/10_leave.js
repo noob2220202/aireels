@@ -3,7 +3,8 @@
 // by the last thread of the chain. The front light turns back once ("Kaz was like"), then on "Chris" it starts to pull away in
 // slow, effortful drags with rests. On each "don't go and leave me" the rear light sends small voice rings and a bead of light
 // along the thread towards him. The thread stretches, trembles and thins strand by strand; it never snaps.
-// Camera: slow push-in, then eases back so both stay in frame; the dark is squeezed into a horizontal sliver.
+// Camera: slow push-in, then eases back only a little, weighted to the rear light: it stays large while the front light drags
+// to the frame edge and out by the last plea; the thread thins as it stretches off-screen. The dark is a horizontal sliver.
 (function () {
 const { W, H, E, P, clamp, lerp, fbm, rgba, glow, camera } = L;
 const { souls, beat, sourceCard } = window.PK;
@@ -127,7 +128,7 @@ window.PK.scenes.leave = function (ctx, t, d, info) {
   // ---- the two lights ----
   // camera zoom first (light size compensates a little as the camera eases back)
   const kaz = P(tc, .05, .7, E.inOutQ) * (1 - P(tc, .95, 1.9, E.inOutQ));      // "Kaz was like": attention turns to the rear light
-  const zoom = lerp(1.78, 1.9, P(t, -.2, v0 + .8, E.inOutQ)) - .9 * P(t, v0 + 1.0, d + .35, E.inOutQ);
+  const zoom = lerp(1.78, 1.9, P(t, -.2, v0 + .8, E.inOutQ)) - .45 * P(t, v0 + 1.0, d + .35, E.inOutQ);   // eases back only a little
   const ss = Math.pow(1.9 / zoom, .45);
   const mB = bMov(pl, t);
   const B = { x: bX(pl, t), y: LY - 5 * mB + nz(t * .8, 3) * 1.5, a: .9, s: 1.1 * ss };
@@ -135,8 +136,9 @@ window.PK.scenes.leave = function (ctx, t, d, info) {
   const K = { x: 640 - 16 * plea, y: LY - 3 * plea + nz(t * .7, 5) * 1.5, a: .84 * (1 + .14 * env(tc) * P(tc, .9, 1.1)) * (1 + .16 * kaz), s: 1.05 * ss * (1 + .12 * kaz) };
   B.a *= .92 + .08 * nz(t * 6, 11); K.a = clamp(K.a * (.93 + .07 * nz(t * 5, 12)));
 
-  // ---- camera: slow push-in, then ease back as the gap between them grows; tracks the pair with a lag ----
-  const bias = .56 + .14 * kaz;
+  // ---- camera: slow push-in, then eases back a little; weighted to the rear light, so it stays large in its third of the
+  // frame while the front light drags away towards the left edge and out (~58.4 s); tracks with a lag ----
+  const bias = .7 + .08 * kaz;
   let cxw = 0; for (let k = 0; k < 6; k++) { const tt = t - k * .12; cxw += (1 - bias) * bX(pl, tt) + bias * 640; } cxw /= 6;
   const dr = drift2(t, .9, 41);
   let sh = 0; for (const [a, du, dx] of pl) if (dx < 0) sh += .07 * Math.exp(-Math.pow((t - a - du * .35) / .12, 2));
@@ -248,15 +250,15 @@ window.PK.scenes.leave = function (ctx, t, d, info) {
     for (let s = strands.length - 1; s >= 0; s--) {
       const [sk2, ph, sa] = strands[s]; if (sa <= .01) continue;
       const pts = threadPts(ax, ay, ex, ey, sag * sk2, amp * (1 + s * .3), t, ph);
-      ctx.strokeStyle = rgba('#ff9a3c', base * sa * lerp(.12, .07, tens)); ctx.lineWidth = lerp(5, 3, tens) * px; strokePts(ctx, pts);
+      ctx.strokeStyle = rgba('#ff9a3c', base * sa * lerp(.12, .07, tens)); ctx.lineWidth = lerp(5, 1.2, tens) * px; strokePts(ctx, pts);
       if (s === 0 && fray > 0) {
         // fraying: brightness breaks up along the length (still one continuous hair)
-        ctx.lineWidth = lerp(1.4, .9, tens) * px;
+        ctx.lineWidth = lerp(1.4, .7, tens) * px;
         for (let i = 1; i < pts.length; i++) {
           const u = i / (pts.length - 1), k = 1 - fray * (.55 + .45 * nz(u * 9 - t * 1.4, 37));
           ctx.strokeStyle = rgba('#ffd9a0', base * .9 * clamp(k)); ctx.beginPath(); ctx.moveTo(pts[i - 1][0], pts[i - 1][1]); ctx.lineTo(pts[i][0], pts[i][1]); ctx.stroke();
         }
-      } else { ctx.strokeStyle = rgba('#ffd9a0', base * sa * (s ? .55 : .9)); ctx.lineWidth = (s ? .9 : lerp(1.4, .9, tens)) * px; strokePts(ctx, pts); }
+      } else { ctx.strokeStyle = rgba('#ffd9a0', base * sa * (s ? .55 : .9)); ctx.lineWidth = (s ? .9 : lerp(1.4, .7, tens)) * px; strokePts(ctx, pts); }
     }
     // "Kaz": his attention runs back along the thread (dimmer); the plea then travels along it to him
     for (const c of [.12].concat(BEADS)) {
@@ -276,7 +278,7 @@ window.PK.scenes.leave = function (ctx, t, d, info) {
   ctx.restore();
 
   // ---- tunnel vision squeezed into a horizontal sliver, breathing with the heartbeat ----
-  const m = { x: 540 + ((B.x + K.x) / 2 - cxw) * zoom, y: 960 + (LY - camY) * zoom };
+  const m = { x: 540 + ((.35 * B.x + .65 * K.x) - cxw) * zoom, y: 960 + (LY - camY) * zoom };
   const k = lerp(.6, .7, P(t, v0 + .8, d, E.inOutQ));
   const pulse = .55 * (.5 + .5 * Math.sin(t * Math.PI * 2 * .45)) + .45 * beat(t, bpm);
   const r0 = H * lerp(.4, .085, k) * (1 + .06 * pulse), r1 = r0 + H * lerp(.5, .3, k);
