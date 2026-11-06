@@ -3,9 +3,10 @@
 // dark (unchanged, they stay behind); his single light low in the riser. '3시간' -> time strip (오후 2:45경 사고 -> 오후 5:45경
 // 구조 (조사위원회), 약 3시간) while the silt streaks past (time passing). '수직관' -> the camera tilts up the riser, following the
 // light as it rises trailing bubbles. '끝에서' -> cold light pours down from the habitat opening above. '자원 잠수부들이' -> two
-// faceless volunteer-diver silhouettes kneel at the riser mouth and reach down; '그를' -> their hands break the water;
-// '끌어올렸습니다' -> he is pulled up through the surface into air: splash, warm bloom, the tunnel vision and the dark release
-// (the audio un-muffles here).
+// volunteer divers, shown only as cold-white helmet lamps (no figures, like everyone in this film), come in at the riser mouth
+// and lean in, their beams reaching down to his amber light; '그를' -> they dip right over the water; '끌어올렸습니다' -> he
+// rises up through the surface between them into air: splash, a golden bloom that settles into a warm halo, the tunnel
+// vision and the dark release (the audio un-muffles here). The four distant lights stay dim and unchanged.
 (function () {
 const { W, H, E, P, clamp, lerp, fbm, rgba, glow, godrays, text, measure, roundRect, flash, FONT } = L;
 const { at, souls, beat, chip } = window.PK;

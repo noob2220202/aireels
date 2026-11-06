@@ -1,9 +1,10 @@
 // verdict: "조사위원회는 파리아의 과실을 형사적 중과실로 볼 수 있다고 판단했지만, 과실치사로 기소된 사람이나 회사는 아직 없습니다."
 // Calm piano coda. The black of the pipe gives way to a cold dawn grey-blue. A code-drawn report cover (no logo) comes up
 // out of the dark under a raking cold light; on '과실을' it recedes and an excerpt sheet slides into focus: the English
-// finding in small type, the Korean in large serif, swept with a highlighter on '중과실로'; on '판단했지만' a second finding
-// is swept. On '과실치사로' the sheet dims and backs off, a status card rises; it waits (caret, dots) and on '없습니다'
-// the value lands: '없음 (2026.11 기준)'. The CoE caveat footnote stays visible, small, under the focal area.
+// finding in small type, the Korean in large serif, swept with a highlighter on '중과실로'; '판단했지만' is a held beat
+// on that one finding (no second quote: it could only flash for ~0.5 s before the card covered it). On '과실치사로' the
+// sheet dims and backs off, a status card rises; it waits (caret, dots) and on '없습니다' the value lands:
+// '없음 (2026.11 기준)'. The CoE caveat footnote stays visible under the focal area at a phone-legible size.
 (function () {
 const { W, H, E, P, clamp, lerp, hash, rgba, glow, text, measure, roundRect, setFont, FONT, godrays, motes, drift, camera, typeSub } = L;
 const { at, lerp2 } = window.PK;
@@ -114,7 +115,7 @@ function cover(ctx, t, r1, r2, sweepU) {
 }
 
 // ---------- the excerpt sheet ----------
-const SW = 920, SHt = 650, QX = -SW / 2 + 92, QW = SW - 92 - 70;
+const SW = 920, SHt = 540, QX = -SW / 2 + 92, QW = SW - 92 - 70;
 let LAY = null;
 function layout(ctx, data) {
   if (LAY) return LAY;
@@ -122,9 +123,7 @@ function layout(ctx, data) {
   const ko = ['파리아의 과실은 중과실,', '따라서 형사적 과실로', '규정될 수 있다'];
   const koL = ko.join(' ') === data.quote_ko ? ko : wrap(  // data changed: fall back to wrapping
     ctx, data.quote_ko, 52, FONT.serif, 900, QW);
-  const en2 = wrap(ctx, data.quote2_en, 23, FONT.sub, 500, QW);
-  let k2 = 38; while (k2 > 28 && measure(ctx, data.quote2_ko, k2, FONT.serif, 900) > QW) k2 -= 1;
-  return (LAY = { en, ko: koL, en2, k2 });
+  return (LAY = { en, ko: koL });
 }
 function excerpt(ctx, t, data, B) {
   const lay = layout(ctx, data);
@@ -170,18 +169,6 @@ function excerpt(ctx, t, data, B) {
     const a = E.outC(clamp(B.ko * 2.2 - i * .45)); if (a <= 0) return;
     text(ctx, ln, QX, koY + i * kLH + 10 * (1 - a), { size: kS, family: FONT.serif, weight: 900, color: '#0e1820', align: 'left', alpha: a });
   });
-  // second finding
-  if (B.q2 > 0) {
-    const dY = koY + 2 * kLH + 62, dw = 120 * E.inOutQ(clamp(B.q2 * 2));
-    ctx.fillStyle = 'rgba(40,58,72,.45)'; ctx.fillRect(QX, dY, dw, 2);
-    const a = E.outC(clamp(B.q2 * 1.6 - .25));
-    lay.en2.forEach((ln, i) => text(ctx, ln, QX, dY + 34 + i * 30, { size: 23, weight: 500, color: '#45535e', align: 'left', alpha: a }));
-    const y2 = dY + 34 + lay.en2.length * 30 + 30;
-    const [x0, w] = span(ctx, data.quote2_ko, '완전히 허비되었다', lay.k2, FONT.serif, 900);
-    marker(ctx, QX + x0, y2 + 3, w, lay.k2 * .74, B.mk2, 520, 'rgba(255,198,96,.9)');
-    const a2 = E.outC(clamp(B.q2 * 1.6 - .45));
-    text(ctx, data.quote2_ko, QX, y2 + 8 * (1 - a2), { size: lay.k2, family: FONT.serif, weight: 900, color: '#13202a', align: 'left', alpha: a2 });
-  }
   sheetLight(ctx, SW, SHt, B.sweep);
 }
 
@@ -233,7 +220,7 @@ function cam(ctx, t, { x = 0, y = 0, zoom = 1, rot = 0, shake = 0 }) {
 window.PK.scenes.verdict = function (ctx, t, d, info) {
   const data = info.sc.data;
   const tA = at(info, '조사위원회', 0), tP = at(info, '파리아의', .12), tK = at(info, '과실을', .18), tH = at(info, '형사적', .25),
-    tG = at(info, '중과실로', .31), tJ = at(info, '판단했지만', .45), tC = at(info, '과실치사로', .58), tKi = at(info, '기소된', .67),
+    tG = at(info, '중과실로', .31), tC = at(info, '과실치사로', .58), tKi = at(info, '기소된', .67),
     tCo = at(info, '회사는', .77), tY = at(info, '아직', .84), tN = at(info, '없습니다', .88);
 
   // ---- dawn: black -> cold grey-blue ----
@@ -252,9 +239,8 @@ window.PK.scenes.verdict = function (ctx, t, d, info) {
   // ---- camera: slow push, a small knock on '중과실로' and on '없습니다' ----
   const dr = drift(t, .45, 16);
   const bG = t > tG ? Math.exp(-(t - tG) * 8) : 0, bN = t > tN ? Math.exp(-(t - tN) * 8) : 0;
-  const camY = 22 * P(t, tJ - .3, tJ + .6, E.inOutQ) * (1 - P(t, tC - .2, tC + .6, E.inOutQ));
   ctx.save();
-  cam(ctx, t, { x: dr.x, y: dr.y + camY, zoom: lerp(1, 1.06, P(t, -.3, d + .4, E.inOutQ)) + .014 * bG + .012 * bN, rot: dr.r, shake: .3 * bG + .35 * bN });
+  cam(ctx, t, { x: dr.x, y: dr.y, zoom: lerp(1, 1.06, P(t, -.3, d + .4, E.inOutQ)) + .014 * bG + .012 * bN, rot: dr.r, shake: .3 * bG + .35 * bN });
 
   // ---- report cover ----
   const cIn = P(t, -.3, .55, E.outC), away = P(t, tK - .15, tK + .4, E.inOutC);
@@ -271,11 +257,12 @@ window.PK.scenes.verdict = function (ctx, t, d, info) {
   const eIn = P(t, tK + .08, tK + .68, E.outC), back = P(t, tC - .18, tC + .5, E.inOutC);
   if (eIn > 0) {
     ctx.save();
-    ctx.translate(540, lerp(930, 806, eIn) - 44 * back); ctx.rotate(lerp(.035, .006, eIn) - .006 * back); const sc = lerp(1.04, 1, eIn) * lerp(1, .9, back); ctx.scale(sc, sc);
+    // (sheet top stays where the 650-tall sheet had it: centre 55 px higher)
+    ctx.translate(540, lerp(875, 751, eIn) - 44 * back); ctx.rotate(lerp(.035, .006, eIn) - .006 * back); const sc = lerp(1.04, 1, eIn) * lerp(1, .9, back); ctx.scale(sc, sc);
     ctx.globalAlpha = eIn;
     excerpt(ctx, t, data, {
       en: P(t, tH - .12, tH + .5), enU: P(t, tG + .2, tG + .85, E.inOutQ), ko: P(t, tG - .14, tG + .5),
-      mk: P(t, tG + .02, tG + .95, E.lin), q2: P(t, tJ - .25, tJ + .5), mk2: P(t, tJ + .25, tJ + .85, E.inOutQ),
+      mk: P(t, tG + .02, tG + .95, E.lin),
       sweep: P(t, tK + .1, tK + 1.6, E.inOutQ) * 1.6 - .3,
     });
     shade(ctx, SW, SHt, .58 * back + .25 * (1 - eIn));
@@ -294,13 +281,13 @@ window.PK.scenes.verdict = function (ctx, t, d, info) {
   }
   ctx.restore();
 
-  // ---- footnote: the commission's finding is not a court judgment (screen-fixed, small, always readable once shown) ----
+  // ---- footnote: the commission's finding is not a court judgment (screen-fixed, phone-legible once shown) ----
   const fa = P(t, tG + .3, tG + 1.0, E.outQ);
   if (fa > 0) {
     const parts = data.foot.split(' · '), l1 = parts.slice(0, 2).join(' · '), l2 = parts.slice(2).join(' · ');
-    ctx.save(); ctx.globalAlpha = fa * .5; ctx.fillStyle = '#9fb4c4'; ctx.fillRect(540 - 40, 1150, 80, 1.5); ctx.restore();
-    text(ctx, l1, 540, 1180, { size: 25, weight: 700, color: '#a9bccb', alpha: fa * .92 });
-    text(ctx, l2, 540, 1213, { size: 25, weight: 700, color: '#a9bccb', alpha: fa * .92 });
+    ctx.save(); ctx.globalAlpha = fa * .5; ctx.fillStyle = '#9fb4c4'; ctx.fillRect(540 - 40, 1140, 80, 1.5); ctx.restore();
+    text(ctx, l1, 540, 1172, { size: 30, weight: 700, color: '#c3d3de', alpha: fa });
+    text(ctx, l2, 540, 1211, { size: 30, weight: 700, color: '#c3d3de', alpha: fa });
   }
 };
 })();

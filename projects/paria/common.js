@@ -126,11 +126,18 @@ function waveBars(ctx, t, x, y, w, h, a = 1, seed = 3) {
   }
   ctx.restore();
 }
-function topTitle(ctx, TL) {
+function topTitle(ctx, TL, a = 1, a2 = 1) {
+  if (a <= 0) return;
+  ctx.save(); ctx.globalAlpha *= a;
   const g = ctx.createLinearGradient(0, 0, 0, 560); g.addColorStop(0, 'rgba(0,0,0,.85)'); g.addColorStop(.62, 'rgba(0,0,0,.45)'); g.addColorStop(1, 'rgba(0,0,0,0)');
   ctx.fillStyle = g; ctx.fillRect(0, 0, W, 560);
   text(ctx, TL.title.l1, 540, 282, { size: 76, family: FONT.disp, weight: 400, color: '#fff', stroke: '#000', strokeW: 12 });
-  text(ctx, TL.title.l2, 540, 380, { size: 76, family: FONT.disp, weight: 400, color: C.yellow, stroke: '#000', strokeW: 12 });
+  if (a2 > 0) {  // second line is revealed with the hook's "단 한 명" (keeps the 5 -> 1 beat from being spoiled)
+    ctx.save(); ctx.translate(540, 380); const k = .85 + .15 * E.outBack(a2); ctx.scale(k, k);
+    text(ctx, TL.title.l2, 0, 0, { size: 76, family: FONT.disp, weight: 400, color: C.yellow, stroke: '#000', strokeW: 12, alpha: a2 });
+    ctx.restore();
+  }
+  ctx.restore();
 }
 // ---- heartbeat: 0..1 double thump at bpm ----
 function beat(t, bpm = 72) { const ph = ((t * bpm / 60) % 1 + 1) % 1; return Math.exp(-ph * 16) + (ph > .2 ? .55 * Math.exp(-(ph - .2) * 16) : 0); }
@@ -258,10 +265,25 @@ Object.assign(window.PK, { K, at, water, shafts, bubbles, silt, pipeSide, pipeIn
 
 window.PROJECT = {
   scenes: window.PK.scenes,
+  // warm up lazily-built textures/sprites once so the first frame of each scene is not a slow outlier
+  init(TL) {
+    const [, x] = L.buf('warm');
+    for (const sc of TL.scenes) {
+      const fn = window.PK.scenes[sc.id]; if (!fn) continue;
+      try { x.save(); fn(x, (sc.t1 - sc.t0) / 2, sc.t1 - sc.t0, { T: (sc.t0 + sc.t1) / 2, sc, TL }); } catch (e) { console.error('warm-up', sc.id, e.message); } finally { x.restore(); }
+    }
+  },
   post(ctx, T0, TL) {
     const bg = ctx.createLinearGradient(0, 1150, 0, 1920); bg.addColorStop(0, 'rgba(0,0,0,0)'); bg.addColorStop(1, 'rgba(0,0,0,.55)'); ctx.fillStyle = bg; ctx.fillRect(0, 1150, W, 770);
-    grain(ctx, T0, .08); dust(ctx, T0, .25); vignette(ctx, .55);
-    if (!window.COVER_MODE) { topTitle(ctx, TL); subtitles(ctx, T0, TL.subs, { y: 1345, size: 74 }); }
+    grain(ctx, T0, .08, 30); dust(ctx, T0, .25); vignette(ctx, .55);
+    const mem = TL.scenes.find(s => s.id === 'memoriam');
+    if (!window.COVER_MODE) {
+      const hk = TL.scenes[0], w1 = hk.words.find(w => w.w === '한');
+      const tr = w1 ? w1.t : 2.7;
+      const ta = mem ? 1 - P(T0, mem.t0 - .35, mem.t0 + .35, E.inOutQ) : 1;
+      topTitle(ctx, TL, ta, P(T0, tr - .05, tr + .3));
+      if (!mem || T0 < mem.t0 - .1) subtitles(ctx, T0, TL.subs, { y: 1345, size: 74 });  // memoriam shows the names itself
+    }
     else if (window.COVER) window.COVER(ctx, TL);
   },
 };

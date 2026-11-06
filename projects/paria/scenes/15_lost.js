@@ -1,8 +1,9 @@
 // lost: "네 사람은 끝내 돌아오지 못했습니다."
 // Very quiet. The same side cutaway of the dark line as before: high oily water, a thin air gap under the crown, four warm
-// lights spaced along it, lit only by themselves. From '끝내' they dim gently, one at a time (not in order along the pipe),
-// each taking almost a second; as each goes, the steel and the oil it was lighting go back to black. No bodies, no event,
-// nothing else happens: a slow pull back, a slight drift, the breath of the vignette. It ends almost black.
+// lights spaced along it, lit only by themselves, at the same dim level as in "rescue"/"blocked" (never brighter). From '끝내'
+// all four dim together, slowly, through '돌아오지 못했습니다' (no order, no one before another); the steel and the oil they
+// were lighting go back to black with them. No bodies, no event, nothing else happens: a slow pull back, a slight drift,
+// the breath of the vignette. It ends almost black.
 (function () {
 const { W, H, E, P, clamp, lerp, fbm, rgba, glow } = L;
 const { at, souls } = window.PK;
@@ -43,7 +44,7 @@ function iris(ctx, k, pulse, cx, cy) {
 const TB = { cy: 830, r: 190, wall: 18, X0: 560, SL: -.022 };
 const yc = x => TB.cy + TB.SL * (x - TB.X0), topY = x => yc(x) - TB.r, botY = x => yc(x) + TB.r;
 const S0 = TB.cy + TB.r - .8 * 2 * TB.r;
-const LX = [392, 486, 604, 712], ORDER = [1, 3, 0, 2];
+const LX = [392, 486, 604, 712];
 // streaked, oily steel of the inner wall (cached), used to texture the light in the air gap
 let WALL = null;
 function wallTexL() {
@@ -62,13 +63,14 @@ function band(ctx, x0, x1, f0, f1) { ctx.beginPath(); ctx.moveTo(x0, f0(x0)); ct
 
 window.PK.scenes.lost = function (ctx, t, d, info) {
   const tK = at(info, '끝내', .3);
-  // each light: a quiet fade of almost a second, one after another
-  const T0 = tK + .08, STEP = .4, DUR = .86;
-  const A = LX.map((_, i) => { const k = ORDER.indexOf(i); return .64 * (1 - P(t, T0 + k * STEP, T0 + k * STEP + DUR, E.inOutQ)); });
-  const lightSum = A.reduce((a, b) => a + b, 0) / (4 * .64);
+  // all four lights: the same dim level they had in rescue/blocked (AL), one slow fade together
+  const AL = .4, T0 = tK + .12, DUR = 1.7;
+  const fade = 1 - P(t, T0, T0 + DUR, E.inOutQ);
+  const A = LX.map(() => AL * fade);
+  const lightSum = fade;
   const surf = x => S0 + Math.sin(x * .021 - t * 1.1) * 1.6 + Math.sin(x * .057 + t * .8) * 1.1;
 
-  const z = lerp(1.56, 1.36, P(t, -.4, d + .3, E.inOutQ)), cx = 552 + fb(t * .3, 7) * 10, cy = 738 + fb(t * .25, 8) * 8;
+  const z = lerp(1.66, 1.48, P(t, -.4, d + .3, E.inOutQ)), cx = 552 + fb(t * .3, 7) * 10, cy = 738 + fb(t * .25, 8) * 8;
   darkFastL(ctx, t, .28 * (.4 + .6 * lightSum), 23);
   ctx.save();
   ctx.translate(540, 850); ctx.rotate(fb(t * .22, 9) * .004); ctx.scale(z, z); ctx.translate(-cx, -cy);
@@ -120,7 +122,7 @@ window.PK.scenes.lost = function (ctx, t, d, info) {
   for (let i = 0; i < 4; i++) {
     const a = A[i]; if (a < .004) continue; const lx = LX[i] + nz(t * .3, 50 + i) * 1.5, ly = (topY(lx) + S0) / 2 + nz(t * .25, 60 + i) * 1.5;
     glow(ctx, lx, ly, 150, '#ff9a3c', .07 * a);
-    souls(ctx, t + ph[i], [{ x: lx, y: ly, a, s: .8 + .2 * (a / .64) }], { bpm: 60 });
+    souls(ctx, t + ph[i], [{ x: lx, y: ly, a, s: .8 + .2 * (a / AL) }], { bpm: 60 });
   }
   ctx.restore();
   { const g = ctx.createLinearGradient(0, 1060, 0, 1250); g.addColorStop(0, 'rgba(1,2,3,0)'); g.addColorStop(1, 'rgba(1,2,3,.9)'); ctx.fillStyle = g; ctx.fillRect(0, 1060, W, 190); ctx.fillStyle = 'rgba(1,2,3,.9)'; ctx.fillRect(0, 1250, W, H - 1250); }

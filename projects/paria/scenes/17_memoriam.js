@@ -3,13 +3,15 @@
 // each one is lit exactly on its name's last word (with the bell): the flame catches, a soft ring spreads on the water,
 // the warm reflection lengthens. The Korean name comes up with the first word, the English with the light. A small
 // light in the centre of each row is lit with its lantern. 'In memoriam · 2022 파리아 잠수부 참사' sits at the foot of
-// the focal area from the start; in the last ~2.5 s '고인들의 명복을 빕니다' fades in. No heartbeat here: candle flicker only.
+// the focal area from the start; in the last ~2.5 s '고인들의 명복을 빕니다' fades in while the view drifts very slowly
+// toward the four lit lanterns. No heartbeat here: candle flicker only.
 (function () {
 const { W, H, E, P, clamp, lerp, hash, noise1, fbm, rgba, glow, text, measure, roundRect, FONT } = L;
 const { at, lerp2 } = window.PK;
 
 const HZ = 628;                                     // horizon (screen y)
 const LAN = [{ x: 206, y: 792, s: 1.36 }, { x: 428, y: 748, s: 1.14 }, { x: 652, y: 772, s: 1.25 }, { x: 872, y: 738, s: 1.08 }];
+const LS = 1.45;                                    // lantern size multiplier (body, float, reflection, ring)
 const ROW0 = 894, ROWH = 60, RIPY = 1162, MEMY = 1224;
 
 function sky(ctx, t, k) {
@@ -60,28 +62,30 @@ function sea(ctx, t, k) {
   }
   ctx.restore();
 }
-// a small floating lantern: dark float, tapered paper body, a cap; lit = 0..1, boost = brief bloom after lighting
-function lantern(ctx, t, i, x, y, s, lit, boost, ring) {
+// a small floating lantern: dark float, tapered paper body, a cap; lit = 0..1, boost = brief bloom after lighting.
+// s = drawn size; gs = glow size (grows less than the body so four lanterns don't wash the name list in amber)
+function lantern(ctx, t, i, x, y, s, gs, lit, boost, ring) {
   const fl = 1 + .07 * noise1(t * 6 + i * 13, 70 + i) + .04 * noise1(t * 15 + i * 7, 80 + i), Lt = lit * fl;
   const rot = Math.sin(t * .9 + i * 2.3) * .035;
   // ring on the water when it is lit
   if (ring > 0 && ring < 1) {
     for (let r = 0; r < 2; r++) {
-      const q = clamp(ring * 1.15 - r * .15); if (q <= 0 || q >= 1) continue; const rx = (16 + q * 210) * s;
+      const q = clamp(ring * 1.15 - r * .15); if (q <= 0 || q >= 1) continue; const rx = 16 * s + q * 230 * gs;
       ctx.strokeStyle = rgba('#ffd9a8', .32 * (1 - q) * (1 - r * .4)); ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(x, y + 4 * s, rx, rx * .14, 0, 0, 7); ctx.stroke();
     }
   }
-  // reflection, broken by the swell
+  // reflection, broken by the swell (long column; it thins out where the name list starts so the names stay clean)
   if (Lt > 0) {
     ctx.save(); ctx.globalCompositeOperation = 'lighter';
-    for (let k = 0; k < 11; k++) {
-      const yy = y + 8 * s + k * 10 * s, ww = (24 - k * 1.7) * s * (.55 + .45 * Math.sin(t * 2.2 + k * 1.3 + i * 1.7));
-      const off = Math.sin(t * 1.5 + k * .8 + i * 2) * 4 * s;
-      ctx.fillStyle = rgba('#ffb347', (.34 * Lt + .2 * boost) * (1 - k / 11)); ctx.fillRect(x - ww + off, yy, ww * 2, 2.4 * s);
+    const NK = 15;
+    for (let k = 0; k < NK; k++) {
+      const yy = y + 8 * s + k * 9 * s, ww = (24 - k * 1.3) * s * (.55 + .45 * Math.sin(t * 2.2 + k * 1.3 + i * 1.7));
+      const off = Math.sin(t * 1.5 + k * .8 + i * 2) * 4 * s, under = 1 - .82 * P(yy, ROW0 - 62, ROW0 - 26);
+      ctx.fillStyle = rgba('#ffb347', (.34 * Lt + .2 * boost) * (1 - k / NK) * under); ctx.fillRect(x - ww + off, yy, ww * 2, 2.2 * s);
     }
     ctx.restore();
-    ctx.save(); ctx.translate(x, y + 26 * s); ctx.scale(1, .3); glow(ctx, 0, 0, 170 * s, '#ff9a3c', .16 * Lt + .1 * boost); ctx.restore();
-    glow(ctx, x, y - 22 * s, 300 * s, '#ff9a3c', .13 * Lt + .12 * boost); glow(ctx, x, y - 26 * s, 80 * s, '#ffb347', .22 * Lt + .2 * boost);
+    ctx.save(); ctx.translate(x, y + 26 * s); ctx.scale(1, .3); glow(ctx, 0, 0, 170 * gs, '#ff9a3c', .16 * Lt + .1 * boost); ctx.restore();
+    glow(ctx, x, y - 22 * s, 300 * gs, '#ff9a3c', .13 * Lt + .12 * boost); glow(ctx, x, y - 26 * s, 80 * s, '#ffb347', .22 * Lt + .2 * boost);
   }
   ctx.save(); ctx.translate(x, y); ctx.rotate(rot); ctx.scale(s, s);
   // float
@@ -115,13 +119,16 @@ window.PK.scenes.memoriam = function (ctx, t, d, info) {
 
   // ---- world: sky + sea + lanterns, under a very slow push ----
   const z = lerp(1, 1.035, P(t, -.4, d + .2, E.inOutQ)), dx = fbm(t * .16, 91) * 6, dy = fbm(t * .14, 92) * 4;
+  // closing push: while '고인들의 명복을 빕니다' holds, the world drifts a little closer to the four lit lanterns
+  const zp = lerp(1, 1.06, P(t, tR, d + .5, E.inOutQ));
   ctx.save(); ctx.translate(540, 820); ctx.rotate(fbm(t * .12, 93) * .002); ctx.scale(z, z); ctx.translate(-540 - dx, -820 - dy);
+  ctx.translate(540, 766); ctx.scale(zp, zp); ctx.translate(-540, -766);
   sky(ctx, t, k); sea(ctx, t, k);
   for (let i = 0; i < 4; i++) {
     const L0 = LAN[i], tw = N[i] - .05;
     const bx = L0.x + Math.sin(t * .23 + i * 1.9) * 7, by = L0.y + Math.sin(t * 1.05 + i * 1.7) * 2.6 * L0.s;
     const lit = P(t, tw - .04, tw + .4, E.outQ), boost = t > tw ? Math.exp(-(t - tw) * 2.2) * P(t, tw - .04, tw + .08) : 0;
-    lantern(ctx, t, i, bx, by, L0.s, lit, boost, P(t, tw, tw + 2.6, E.outQ));
+    lantern(ctx, t, i, bx, by, L0.s * LS, L0.s * 1.12, lit, boost, P(t, tw, tw + 2.6, E.outQ));
   }
   ctx.restore();
   // keep the subtitle band and the lower frame dark

@@ -416,7 +416,18 @@ def block_tracks(S, V, B, cache, P):
         t0 = t0s[k]
         t1 = t0s[k + 1] if k + 1 < len(rows) else max(vend, cursor) + S.get('end_pad', 1.0)
         words = [{'w': w, 't': round(t, 3)} for w, t in zip(dw, ws)]
-        if kind == 'narr':
+        if kind == 'narr' and sc.get('subs'):
+            # manual chunks: list of strings whose words follow `say` in order ('|' = line break)
+            idx, man = 0, []
+            for ch in sc['subs']:
+                man.append((idx, ch))
+                idx += len(ch.replace('|', ' ').split())
+            assert idx == len(dw), f"manual subs of {sc['id']} cover {idx} words, say has {len(dw)}"
+            for j, (wi, ch) in enumerate(man):
+                a = ws[wi]
+                b = ws[man[j + 1][0]] if j + 1 < len(man) else min(vend + .12, t1 + .1)
+                subs.append({'t0': round(a, 3), 't1': round(b, 3), 'lines': [clean_sub(x) for x in ch.split('|')], 'hl': sc.get('hl', [])})
+        elif kind == 'narr':
             chs = chunk_words(dw, sc.get('maxu', S.get('maxu', 10.5)))
             for j, ch in enumerate(chs):
                 a = ws[ch[0][0]]

@@ -284,6 +284,14 @@ function subtitles(ctx, t, chunks, { y = 1270, size = 74, maxW = 900, color = '#
   const p = clamp((t - c.t0) / .12); const sc = lerp(1.12, 1, E.outBack(p)); const a = clamp((t - c.t0) / .05);
   let lines = c.lines || [c.text];
   if (c.quote) lines = lines.map((l, i) => (i === 0 ? '“' : '') + l + (i === lines.length - 1 ? '”' : ''));
+  // keep long lines inside maxW (the pop-in overshoot is 1.12x)
+  const widest = Math.max(...lines.map(l => measure(ctx, l, size, FONT.sub, 900)));
+  if (widest * 1.04 > maxW) size = Math.floor(size * maxW / (widest * 1.04));
+  // transcript lines (speaker-labelled text cards) type on instead of popping
+  if (c.who && c.typed !== false) {
+    const n = Math.ceil(clamp((t - c.t0) / .4) * lines.join('').length); let k = n;
+    lines = lines.map(l => { const s2 = l.slice(0, Math.max(0, k)); k -= l.length; return s2; });
+  }
   const base = c.quote ? '#cfe8ff' : color;  // real testimony audio: quoted, cool tint
   ctx.save(); ctx.translate(W / 2, y); ctx.scale(sc, sc); ctx.globalAlpha = a;
   lines.forEach((ln, i) => {

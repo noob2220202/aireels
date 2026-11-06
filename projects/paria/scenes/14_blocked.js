@@ -1,8 +1,9 @@
 // blocked: "그는 동료들이 살아 있다고 외쳤지만, 파리아는 구조자 안전을 이유로 관 진입을 허가하지 않았습니다."
-// Dusk at the berth, side cutaway (sky above, sea below). His light at the surface by the riser, calling out: rings go out
-// on each word ('동료들이' '살아' '있다고' '외쳤지만') and keep coming, fainter, through the scene; they fade before they reach
-// anything. Far below, the line runs off into the dark with the four dim lights, unchanged. '파리아는' -> the camera pulls back
-// and two sober cards come in under a brief static flicker (data.a, then data.b on '안전을'). '관 진입을' -> push in on the
+// Dusk at the berth, side cutaway (sky above, sea below). Opens close (z 1.8) on his light at the surface by the riser,
+// calling out: a large bright ring goes out on each word ('동료들이' '살아' '있다고' '외쳤지만'), then fainter ones keep coming
+// through the scene; they fade before they reach anything. '파리아는' -> the camera pulls back to the wide berth, revealing
+// the line running off into the dark with the four dim lights (unchanged), and two sober cards come in under a brief static
+// flicker (data.a, then data.b on '안전을'). '관 진입을' -> push in on the
 // habitat / riser opening; '허가하지' -> a red bar closes over the opening and a '진입 불허' stamp lands (thunk, small shake).
 // Then a slow drift down toward the four lights in the dark line (hand-off to "lost").
 (function () {
@@ -73,8 +74,10 @@ window.PK.scenes.blocked = function (ctx, t, d, info) {
   const tSt = tHe;                                                        // the stamp lands on the thunk
 
   // ---- camera ----
-  const back = P(t, tPa - .25, tPa + .9, E.inOutQ), inn = P(t, tGw - .2, tHe + .1, E.inOutQ), down = P(t, tHe + .45, d + .6, E.inOutQ);
-  let cx = lerp(520, 540, back), cy = lerp(816, 862, back), z = lerp(1.22, 1.0, back) * (1 + .025 * P(t, -.3, tPa));
+  // opens close on him calling at the surface (he sits at screen y ~790), pulls back on '파리아는' to the wide berth + line
+  const back = P(t, tPa - .3, tPa + 1.0, E.inOutQ), inn = P(t, tGw - .2, tHe + .1, E.inOutQ), down = P(t, tHe + .45, d + .6, E.inOutQ);
+  const z0 = 1.8 * (1 + .04 * P(t, -.3, tPa, E.inOutQ));
+  let cx = lerp(RXB + 178, 540, back), cy = lerp(SF - 10 + 60 / z0, 862, back), z = lerp(z0, 1.0, back);
   cx = lerp(cx, RXB + 60, inn); cy = lerp(cy, HB + 10, inn); z = lerp(z, 1.18, inn);
   cx = lerp(cx, 640, down); cy = lerp(cy, 945, down); z *= 1 + .08 * down;
   const dr = { x: fb(t * .35, 61) * 14, y: fb(t * .3, 70) * 14, r: fb(t * .25, 65) * .005 };
@@ -189,14 +192,17 @@ window.PK.scenes.blocked = function (ctx, t, d, info) {
 
   // ---- him at the surface, calling out ----
   const hx = RXB + 178 + Math.sin(t * .9) * 3, hy = surfY(RXB + 178, t) - 10;
-  const calls = [-.1, tCol, tAl, tIt, tSh];
-  for (let k = 1; k < 8; k++) calls.push(tSh + .3 + k * 1.05);
+  // one strong call on each word ('동료들이' '살아' '있다고' '외쳤지만'), then fainter ones that keep coming
+  const calls = [[-.1, .6], [tCol, 1], [tAl, 1.15], [tIt, 1], [tSh, 1.15]];
+  for (let k = 1; k < 8; k++) calls.push([tSh + .3 + k * 1.05, .45]);
   let flare = 0;
-  ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.lineWidth = 2.4;
-  calls.forEach((c, i) => {
-    const age = t - c; if (age < 0 || age > 1.6) return;
-    const str = i < 5 ? 1 : .5, r = 22 + age * 300, a = .55 * str * Math.pow(1 - age / 1.6, 1.6);
-    flare = Math.max(flare, str * Math.exp(-age * 7));
+  ctx.save(); ctx.globalCompositeOperation = 'lighter';
+  calls.forEach(([c, str]) => {
+    const life = str > .5 ? 1.35 : 1.6, age = t - c; if (age < 0 || age > life) return;
+    const r = 22 + age * (str > .5 ? 250 : 300), a = (str > .5 ? .9 : .55) * str * Math.pow(1 - age / life, 1.5) * clamp((440 - r * z) / 140); // gone before the title band
+    flare = Math.max(flare, str * Math.exp(-age * 6));
+    if (str > .5) { ctx.lineWidth = 12; ctx.strokeStyle = rgba('#ff9a3c', a * .18); ctx.beginPath(); ctx.arc(hx, hy, r, Math.PI, Math.PI * 2); ctx.stroke(); }
+    ctx.lineWidth = str > .5 ? 3.4 : 2.4;
     ctx.strokeStyle = rgba('#ffcf8a', a); ctx.beginPath(); ctx.arc(hx, hy, r, Math.PI, Math.PI * 2); ctx.stroke();
     ctx.strokeStyle = rgba('#ffcf8a', a * .3); ctx.beginPath(); ctx.ellipse(hx, hy, r, r * .9, 0, 0, Math.PI); ctx.stroke();
     ctx.strokeStyle = rgba('#cfe8ff', a * .6); ctx.beginPath(); ctx.ellipse(hx, surfY(hx, t) + 1, r * 1.1, 3 + r * .03, 0, 0, Math.PI * 2); ctx.stroke();
@@ -206,8 +212,8 @@ window.PK.scenes.blocked = function (ctx, t, d, info) {
   ctx.save(); ctx.globalCompositeOperation = 'lighter';
   for (let k = 0; k < 9; k++) { const yy = SF + 5 + k * 10, w = (22 - k * 2) * (.7 + .3 * Math.sin(t * 2.6 + k * 1.9)); ctx.fillStyle = rgba('#ffb347', .2 * (1 - k / 9)); ctx.fillRect(hx - w + Math.sin(t * 2 + k) * 4, yy, w * 2, 2.2); }
   ctx.restore();
-  glow(ctx, hx, hy, 200, '#ff9a3c', .1 + .08 * flare);
-  souls(ctx, t, [{ x: hx, y: hy, a: 1, s: 1.2 + .35 * flare }], { bpm: 112 });
+  glow(ctx, hx, hy, 200, '#ff9a3c', .1 + .14 * flare);
+  souls(ctx, t, [{ x: hx, y: hy, a: 1, s: 1.2 + .5 * flare }], { bpm: 112 });
 
   // ---- '진입 불허': a red bar closes over the opening, the stamp lands ----
   const bar = P(t, tSt - .16, tSt, E.inQ);
@@ -226,6 +232,8 @@ window.PK.scenes.blocked = function (ctx, t, d, info) {
 
   // ---- screen space ----
   iris(ctx, .32 + .14 * P(t, tGw, tHe + .2, E.inOutQ) - .06 * down, .4 * beat(t, 112) + .6 * (.5 + .5 * Math.sin(t * Math.PI * 2 * .4)), 540, 820);
+  // while close on him the subtitle band sits over open water: keep it dark (the wide shot has the seabed there already)
+  if (back < 1) { const k = 1 - back, g = ctx.createLinearGradient(0, 1150, 0, 1290); g.addColorStop(0, 'rgba(1,2,3,0)'); g.addColorStop(1, rgba('#010203', .78 * k)); ctx.fillStyle = g; ctx.fillRect(0, 1150, W, 140); ctx.fillStyle = rgba('#010203', .78 * k); ctx.fillRect(0, 1290, W, H - 1290); }
   // keep the title band quiet over the bright sky
   { const g = ctx.createLinearGradient(0, 380, 0, 500); g.addColorStop(0, 'rgba(1,2,3,.55)'); g.addColorStop(1, 'rgba(1,2,3,0)'); ctx.fillStyle = g; ctx.fillRect(0, 380, W, 120); }
   if (stA > 0) {

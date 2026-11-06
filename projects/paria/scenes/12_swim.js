@@ -222,17 +222,20 @@ window.PK.scenes.swim = function (ctx, t, d, info) {
   ctx.restore();
 
   // ---- tunnel vision: more open than before, so the strokes read; on each stroke it snaps open (0.15 s), then clamps
-  // down past where it was; it breathes with the heart. Elliptical: open to the sides where the steel rushes past. ----
+  // down past where it was; it breathes with the heart. ----
   let kS = 0; pl.S.forEach(s0 => { const u = t - s0; kS += -.12 * Math.exp(-Math.pow((u - .05) / .08, 2)) + .1 * P(u, .14, .26) * (1 - P(u, .4, .95, E.inOutQ)); });
   const k = lerp(.4, .5, P(t, pl.v0, d, E.inOutQ)) + kS;
   const br = .5 * (.5 + .5 * Math.sin(t * Math.PI * 2 * .7)) + .5 * hb;
   const r0 = H * lerp(.4, .085, k) * (1 + .07 * br), r1 = r0 + H * lerp(.5, .3, k);
-  ctx.save(); ctx.translate(cx, cy - 10); ctx.scale(1.2, .9);
+  ctx.save(); ctx.translate(cx, cy - 10);
   const ig = ctx.createRadialGradient(0, 0, r0, 0, 0, r1);
   ig.addColorStop(0, 'rgba(1,2,3,0)'); ig.addColorStop(.5, `rgba(1,2,3,${(.5 + .3 * k).toFixed(3)})`); ig.addColorStop(1, 'rgba(1,2,3,.98)');
-  ctx.fillStyle = ig; ctx.fillRect(-W * 1.5, -H * 1.5, W * 3, H * 3); ctx.restore();
-  // keep the subtitle band dark under the brighter streaks
-  { const sb = ctx.createLinearGradient(0, 1200, 0, 1560); sb.addColorStop(0, 'rgba(1,2,3,0)'); sb.addColorStop(.25, 'rgba(1,2,3,.5)'); sb.addColorStop(.7, 'rgba(1,2,3,.5)'); sb.addColorStop(1, 'rgba(1,2,3,0)'); ctx.fillStyle = sb; ctx.fillRect(0, 1200, W, 360); }
+  ctx.fillStyle = ig; ctx.fillRect(-cx, -cy + 10, W, H); ctx.restore();
+  // keep the subtitle band dark under the brighter streaks: a feathered band drawn as thin solid strips (much cheaper than a
+  // full-width gradient in the software rasteriser)
+  ctx.fillStyle = 'rgb(1,2,3)';
+  for (let y = 1196; y < 1544; y += 8) { const yc = y + 4, a = .5 * E.inOutQ(P(yc, 1196, 1290)) * (1 - E.inOutQ(P(yc, 1450, 1544))); if (a < .01) continue; ctx.globalAlpha = a; ctx.fillRect(0, y, W, 8); }
+  ctx.globalAlpha = 1;
 
   // attribution: up while the voice plays
   const ca = P(t, .02, .32, E.outQ) * (1 - P(t, d - .05, d + .15));                            // voice starts at ~0.35 s
