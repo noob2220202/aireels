@@ -1,6 +1,6 @@
 # 업로드 패키지 — 도둑맞은 클림트, 22년 뒤 그 미술관 벽 속에서 (전체 경위판)
 
-- 영상: `out/klimt_wall_long.mp4` (1080×1920, 30fps, 약 72초, -14 LUFS)
+- 영상: `out/klimt_wall_long.mp4` (1080×1920, 30fps, 72.8초, -14.4 LUFS)
 - 커버: `out/klimt_wall_long_cover.png`
 
 ## 제목
@@ -35,7 +35,7 @@ B. 누군가 나중에 몰래 돌려놓았다
 7. 당시 관리인 조사도 증거 없이 끝났다.
 8. 4월에 찾았다 싶던 그림은 정교한 가짜.
 9. 훗날 액자에 남은 DNA로 재수사했지만 소득은 없었다.
-10. 그리고 2019년 12월, 정원사들이 미술관 담쟁이 속 철문을 열었다.
+10. 그리고 2019년 12월, 담쟁이를 걷어내던 정원사들이 미술관 철문을 열었다.
 11. 검은 쓰레기봉투 안에, 액자 없는 그 그림.
 12. 엑스레이와 뒷면 봉인을 대조한 결과 진품, 추정가 6천만 유로 이상.
 13. 상태는 비교적 양호했고, 검찰은 내내 벽 속에 있었는지 모른다고 했다.
@@ -79,6 +79,11 @@ B. 누군가 나중에 몰래 돌려놓았다
 - https://finestresullarte.info/en/exhibition-reviews/the-lady-returns-to-piacenza-here-is-the-gustav-klimt-exhibition-at-ricci-oddi
 - https://www.quotidiano.net/magazine/klimt-e-i-segreti-del-ritratto-di-signora-77e96a46
 - https://theartnewspaper.com/news/missing-klimt-turns-up-in-hidden-wall-cavity-in-good-condition
+
+## 발음 검수
+
+- Whisper(medium)로 16문장 전부를 다시 받아써서 대본과 일치하는지 확인했습니다.
+- '미술관 담쟁이 속'은 '담증이'로 뭉개져서, 실제 상황에 더 맞는 '담쟁이를 걷어내던 정원사들이'로 바꿨습니다.
 
 ## 다시 빌드하기
 

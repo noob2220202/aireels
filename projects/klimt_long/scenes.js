@@ -758,10 +758,10 @@ const scenes = {
   },
 
   found(ctx, t, d, info) {
-    const tG = at(info, '정원사들이', .35), tD = at(info, '담쟁이', .55), tH = at(info, '철문을', .78), tO = at(info, '열었다', .9);
-    const push = E.inOutC(P(t, tG - .1, tG + .55));
+    const tD = at(info, '담쟁이를', .3), tG = at(info, '정원사들이', .55), tH = at(info, '철문을', .78), tO = at(info, '열었다', .9);
+    const push = E.inOutC(P(t, tD - .15, tD + .45));
     const zoom = lerp(.58, 1.22, push), cy = lerp(940, 820, push);
-    const cut = tG + .45;
+    const cut = tD + .35;
     const op = E.outQ(P(t, tO, tO + .5));
     ivyWallScene(ctx, t, {
       cx: 540, cy, zoom, open: op, dust: P(t, tO, tO + .2) * (1 - P(t, tO + .6, tO + 1.2)),
@@ -770,10 +770,10 @@ const scenes = {
       after(c) {
         c.save(); c.globalCompositeOperation = 'screen'; c.fillStyle = 'rgba(70,80,90,.25)'; c.fillRect(-1000, -1000, 3200, 4000); c.restore();
         brackets(c, HATCH.x - HATCH.s / 2 - 26, HATCH.y - HATCH.s / 2 - 26, HATCH.s + 52, HATCH.s + 52, P(t, tH, tH + .25));
-        const hp = P(t, tG + .1, tG + .5, E.outC) * (1 - P(t, tO + .55, tO + .9, E.inQ));
+        const hp = P(t, tD - .05, tD + .3, E.outC) * (1 - P(t, tO + .55, tO + .9, E.inQ));
         if (hp > 0) {
           const snipA = (tt) => Math.exp(-Math.pow((t - tt) * 9, 2));
-          const openAng = .38 - .34 * Math.max(snipA(cut - .02), snipA(tD + .25), snipA(tD + .55));
+          const openAng = .38 - .34 * Math.max(snipA(cut - .02), snipA(cut + .38), snipA(cut + .78));
           shears(c, lerp(1050, 800, hp), lerp(1180, 990, hp), -.8, openAng, .72);
           const pull = P(t, tO - .1, tO + .4, E.inOutQ);
           glove(c, lerp(-150, 380, hp) + pull * 120, lerp(1000, 800, hp) - pull * 10, .62, .45 - pull * .25, true);
@@ -781,7 +781,7 @@ const scenes = {
       },
     });
     tint(ctx, '#7d8a96', .22, 'color');
-    const ws = P(t, .55, .8) * (1 - P(t, tG - .15, tG + .1));
+    const ws = P(t, .55, .8) * (1 - P(t, tD - .3, tD - .05));
     if (ws > 0) {
       ctx.save(); ctx.globalAlpha = ws; ctx.translate(760, 600); ctx.rotate(.05);
       ctx.fillStyle = '#ece6d8'; ctx.shadowColor = 'rgba(0,0,0,.6)'; ctx.shadowBlur = 25; ctx.fillRect(-140, -150, 280, 300); ctx.shadowColor = 'transparent';
