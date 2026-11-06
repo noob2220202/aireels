@@ -29,8 +29,8 @@ const HX = HATCH.x, HY = HATCH.y, HS = HATCH.s, HL = HX - HS / 2, HT = HY - HS /
 const GROUND = 1440;            // wall base line (world)
 const FEET = 1495;              // gardeners stand a step in front of the wall
 const Z0 = .61;                 // zoom at which the gardener layer and the wall layer coincide
-const WIDE = { sc: .64, x0: -520, y0: -820, w: 2120, h: 3600 };
-const CLOSE = { sc: 1.16, x0: -160, y0: -340, w: 1400, h: 2400 };
+const WIDE = { sc: .64, x0: -520, y0: -820, w: 2120, h: 3600, dark: [1450, .55] };
+const CLOSE = { sc: 1.16, x0: -160, y0: -340, w: 1400, h: 2400, dark: [780, .735] };
 const SNIP_PT = [[664, 655], [724, 798], [682, 944]];   // world points the shears close on
 const SNIP_ROT = [.66, .42, .16];
 const SHS = .66;                // shears scale
@@ -57,8 +57,8 @@ function genLeaves() {
   out.sort((a, b) => a.layer - b.layer || a.y - b.y);
   return out;
 }
-function leafImg(x, L0, px, py, rot, sc, sx = 1) {
-  const S0 = T.leaf[L0.v];
+function leafImg(x, L0, px, py, rot, sc, sx = 1, set = T.leaf) {
+  const S0 = set[L0.v];
   x.save(); x.translate(px, py); x.rotate(rot); x.scale(sc * sx, sc); x.drawImage(S0, -S0.width / 2, -S0.height / 2 - 10); x.restore();
 }
 
@@ -117,7 +117,17 @@ function bake(R) {
   plinthAndGround(x, R, 'plinth');
   for (const L0 of S.stat) { if (L0.y > GROUND - 26) continue; leafImg(x, L0, L0.x + Math.sin(L0.ph) * (2 + L0.layer * 1.5), L0.y + Math.cos(L0.ph) * 1.5, L0.rot + Math.sin(L0.ph) * (.05 + L0.layer * .02), L0.s / 64); }
   plinthAndGround(x, R, 'ground');
+  // overcast daylight lift, light falloff around the hatch + the cold daylight grade (per-shot values)
+  x.save(); x.globalCompositeOperation = 'screen'; x.fillStyle = 'rgba(64,76,92,.2)'; x.fillRect(R.x0, R.y0, R.w, GROUND - R.y0); x.restore();
+  darkness(x, HX, HY + 40, R.dark[0], R.dark[1], .3);
+  x.setTransform(1, 0, 0, 1, 0, 0); gradeCold(x, c.width, c.height);
   return c;
+}
+const GRADE = ['#7d8a96', .2];
+function gradeCold(x, w, h) { x.save(); x.globalCompositeOperation = 'color'; x.globalAlpha = GRADE[1]; x.fillStyle = GRADE[0]; x.fillRect(0, 0, w, h); x.restore(); }
+function gradedSprite(src, filter) {
+  const [c, x] = mk(src.width, src.height); if (filter) x.filter = filter; x.drawImage(src, 0, 0); x.filter = 'none';
+  gradeCold(x, c.width, c.height); x.globalCompositeOperation = 'destination-in'; x.drawImage(src, 0, 0); return c;
 }
 function makeFG() {
   // out-of-focus foreground ivy (blurred once)
@@ -144,7 +154,8 @@ function init() {
   S.wide = bake(WIDE); S.close = bake(CLOSE);
   S.fg = makeFG(); S.shadow = makeShadowFig();
   // leaves that are being handled catch more light than the wall behind them
-  S.bright = [2, 3, 4, 5].map(v => { const L0 = T.leaf[v], [c, x] = mk(L0.width, L0.height); x.filter = 'brightness(1.65) saturate(1.1)'; x.drawImage(L0, 0, 0); x.filter = 'none'; return c; });
+  S.bright = [2, 3, 4, 5].map(v => gradedSprite(T.leaf[v], 'brightness(1.65) saturate(1.1)'));
+  S.leafG = T.leaf.map(l => gradedSprite(l));                      // live leaves get the same grade as the baked wall
 }
 
 // ---------- timing ----------
@@ -206,7 +217,7 @@ function drawDyn(ctx, t, tm) {
       sx = .2 + .8 * Math.abs(Math.cos(f * (5 + j * 6) + L0.ph));
       a = 1 - clamp((f - .75) / .5);
     }
-    ctx.save(); ctx.globalAlpha *= a; leafImg(ctx, L0, x, y, rot, sc, sx); ctx.restore();
+    ctx.save(); ctx.globalAlpha *= a; leafImg(ctx, L0, x, y, rot, sc, sx, S.leafG); ctx.restore();
   }
 }
 // short-lived clipping bursts (leaf fragments + stem bits)
@@ -252,9 +263,10 @@ function strand(ctx, t, pts, n, seed, a = 1, ls = .44) {
 function gloveFX(ctx, x, y, s, rot, left, curl = 0, rim = .0) {
   // KL.glove with a grip (curl 0..1): shorter, bent fingers + knuckle shading
   ctx.save(); ctx.translate(x, y); ctx.rotate(rot); ctx.scale(left ? -s : s, s);
-  ctx.shadowColor = 'rgba(0,0,0,.55)'; ctx.shadowBlur = 26; ctx.shadowOffsetY = 14; ctx.shadowOffsetX = 10;
   // work-jacket sleeve: widens toward the elbow and falls off into shadow (reads as an arm, not a pole)
   const sleeve = () => { ctx.beginPath(); ctx.moveTo(-74, 96); ctx.lineTo(74, 96); ctx.bezierCurveTo(94, 400, 112, 800, 122, 1300); ctx.lineTo(-116, 1300); ctx.bezierCurveTo(-106, 800, -94, 400, -74, 96); ctx.closePath(); };
+  // soft-ish cast shadow on the ivy (two offset passes instead of a per-frame shadowBlur)
+  for (const [ox, oy, sa] of [[16, 22, .2], [28, 38, .14]]) { ctx.save(); ctx.translate(ox, oy); ctx.fillStyle = `rgba(0,0,0,${sa})`; sleeve(); ctx.fill(); ctx.beginPath(); ctx.ellipse(0, -40, 95, 120, 0, 0, 7); ctx.fill(); ctx.restore(); }
   sleeve(); const sl = ctx.createLinearGradient(-100, 0, 110, 0); sl.addColorStop(0, '#3b4550'); sl.addColorStop(.35, '#232a31'); sl.addColorStop(1, '#0b0e11'); ctx.fillStyle = sl; ctx.fill(); ctx.shadowColor = 'transparent';
   sleeve(); const fade = ctx.createLinearGradient(0, 260, 0, 1050); fade.addColorStop(0, 'rgba(4,5,7,0)'); fade.addColorStop(1, 'rgba(4,5,7,.94)'); ctx.fillStyle = fade; ctx.fill();
   ctx.lineCap = 'round'; ctx.strokeStyle = 'rgba(0,0,0,.42)'; ctx.lineWidth = 6;
@@ -284,13 +296,13 @@ function shearsPose(t, tm) {
   const tip2pivot = (k) => { const r = SNIP_ROT[k], L = 330 * SHS; return [SNIP_PT[k][0] + Math.cos(r) * L, SNIP_PT[k][1] + Math.sin(r) * L, r]; };
   const A = tip2pivot(0), B = tip2pivot(1), Cc = tip2pivot(2);
   const s = tm.snip;
-  const [x, y, r] = keys(t, [[tm.p0 + .2, 1400, 1500, .9, null], [s[0] - .08, A[0], A[1], A[2], E.outC], [s[0] + .14, A[0], A[1], A[2], E.lin],
+  const [x, y, r] = keys(t, [[tm.p0 + .18, 1640, 1640, .9, null], [s[0] - .08, A[0], A[1], A[2], E.outC], [s[0] + .14, A[0], A[1], A[2], E.lin],
     [s[1] - .08, B[0], B[1], B[2], E.inOutQ], [s[1] + .14, B[0], B[1], B[2], E.lin], [s[2] - .08, Cc[0], Cc[1], Cc[2], E.inOutQ], [s[2] + .2, Cc[0], Cc[1], Cc[2], E.lin], [s[2] + .62, 1420, 1500, .5, E.inQ]]);
   let close = 0; for (const ts of s) close = Math.max(close, P(t, ts - .07, ts, E.inQ) * (1 - P(t, ts + .05, ts + .3, E.outQ)));
   return { x, y, r, open: .5 * (1 - close) + .03, close };
 }
 function leftGlovePose(t, tm) {
-  const [x, y, r, curl] = keys(t, [[tm.p0 + .22, -80, 1500, .7, 0, null], [tm.p1a - .02, 440, 650, .52, .2, E.outC], [tm.p1a + .08, 440, 650, .52, 1, E.outQ],
+  const [x, y, r, curl] = keys(t, [[tm.p0 + .24, -420, 1820, .7, 0, null], [tm.p1a - .02, 440, 650, .52, .2, E.outC], [tm.p1a + .08, 440, 650, .52, 1, E.outQ],
     [tm.p1b, 290, 1050, .72, 1, E.inOutQ], [tm.p1b + .1, 300, 1040, .7, .1, E.outQ], [tm.p2a, 548, 690, .42, .3, E.inOutQ], [tm.p2a + .08, 548, 694, .42, 1, E.outQ],
     [tm.p2b, 462, 1130, .55, 1, E.inOutQ], [tm.p2b + .1, 462, 1124, .55, .2, E.outQ], [tm.p2b + .5, -40, 1560, .7, 0, E.inQ]]);
   return { x, y, r, curl };
@@ -300,8 +312,8 @@ function rightGlovePose(t, tm, door) {
   const hx = door.hx, hy = door.hy;
   const [x, y, r, curl] = keys(t, [[tm.tH - .05, 1240, 1300, -.35, 0, null], [tm.tH + .32, hx + 34, hy + 52, -.45, .15, E.outC], [tm.tH + .42, hx + 30, hy + 50, -.45, 1, E.outQ]]);
   if (t <= tm.open) return { x, y, r, curl, a: 1 };
-  const let_ = P(t, tm.open + .2, tm.open + .62, E.inQ);
-  return { x: hx + 30 + let_ * 380, y: hy + 50 + let_ * 520, r: -.45 - let_ * .3, curl: 1 - P(t, tm.open + .16, tm.open + .26), a: 1 };
+  const let_ = P(t, tm.open + .18, tm.open + .55, E.inQ);
+  return { x: hx + 30 + let_ * 520, y: hy + 50 + let_ * 760, r: -.45 - let_ * .3, curl: 1 - P(t, tm.open + .16, tm.open + .26), a: 1 };
 }
 
 // ---------- hatch (variant of KL.drawHatch: no per-frame blur, glint sweep, rattle, richer interior) ----------
@@ -404,8 +416,8 @@ function puff(ctx, t, t0) {
     const sy = side === 0 ? HT : side === 1 ? HT + h1 * HS : side === 2 ? HT + h1 * HS : HT + HS;
     const k = E.outC(clamp(f / (1 + h2 * .5)));
     const x = sx + (sx - HX) * .9 * k - 60 * k + Math.sin(f * 2 + i) * 10, y = sy + (sy - HY) * .7 * k + 40 * k * k;
-    const r = 30 + 90 * k * (.6 + h2), a = (1 - clamp(f / 1.5)) * .22 * (.5 + h1);
-    const g = ctx.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, `rgba(190,185,175,${a})`); g.addColorStop(1, 'rgba(190,185,175,0)');
+    const r = 24 + 62 * k * (.6 + h2), a = (1 - clamp(f / 1.1)) * .15 * (.5 + h1) * P(f, 0, .08);
+    const g = ctx.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, `rgba(170,160,145,${a})`); g.addColorStop(1, 'rgba(170,160,145,0)');
     ctx.fillStyle = g; ctx.fillRect(x - r, y - r, r * 2, r * 2);
   }
   ctx.restore();
@@ -431,14 +443,15 @@ function poseArms(p, hl, hr, bl = 1, br = -1) {
   p.armR = ik(1.008 * u, -6.6 * u, rx, ry, 1.45 * u, 1.35 * u, br);
   return p;
 }
+const G1A = [-40, 430], G2A = [1120, 400];          // where each gardener's strand is still attached to the wall
 function g1Pose(t) {
-  const cyc = Math.sin(t * 2.4 * 6.283);
-  const hl = [44 + 12 * Math.sin(t * 2.1), 712 + 10 * Math.cos(t * 2.7)], hr = [302 + 6 * Math.sin(t * 1.3), 1140 + 8 * Math.sin(t * 1.6)];
-  return Object.assign(poseArms({ x: 200, y: FEET, h: 700, lean: -.022 - .01 * Math.sin(t * 1.25) }, hl, hr), { cut: .5 + .5 * cyc, hl, hr });
+  const ph = (t + .9) / 1.1 * 6.283, pull = .5 - .5 * Math.cos(ph);
+  const hl = [lerp(38, 74, pull), lerp(690, 846, pull)], hr = [302 + 6 * Math.sin(t * 1.3), 1140 + 8 * Math.sin(t * 1.6)];
+  return Object.assign(poseArms({ x: 200, y: FEET, h: 700, lean: -.022 + .03 * pull }, hl, hr), { pull, hl, hr });
 }
 function g2Pose(t) {
   const ph = (t + .25) / 1.3 * 6.283, pull = .5 - .5 * Math.cos(ph);      // 0 = arms up, 1 = hauled down
-  const hr = [lerp(1000, 1046, pull), lerp(690, 902, pull)], hl = [lerp(952, 968, pull), lerp(722, 934, pull)];
+  const hr = [lerp(1012, 1050, pull), lerp(680, 880, pull)], hl = [lerp(968, 990, pull), lerp(730, 922, pull)];
   return Object.assign(poseArms({ x: 880, y: FEET, h: 720, lean: .02 - .04 * pull }, hl, hr, -1, -1), { pull, hl, hr });
 }
 function drawFigure(ctx, p, extra, rimA) {
@@ -462,20 +475,20 @@ function gardeners(ctx, t, a) {
   for (const [x, w] of [[205, 170], [900, 180]]) { const g = ctx.createRadialGradient(x, FEET, 0, x, FEET, w); g.addColorStop(0, 'rgba(0,0,0,.55)'); g.addColorStop(1, 'rgba(0,0,0,0)'); ctx.save(); ctx.translate(x, FEET); ctx.scale(1, .16); ctx.translate(-x, -FEET); ctx.fillStyle = g; ctx.fillRect(x - w, FEET - w, w * 2, w * 2); ctx.restore(); }
   ctx.save(); ctx.globalAlpha *= .2; ctx.drawImage(S.shadow, 205 - 150 + 50, FEET - 720 - 40, 300, 740); ctx.drawImage(S.shadow, 900 - 150 + 50, FEET - 740 - 40, 300, 760); ctx.restore();
   // G2 hauls a long strand (its wall anchor peels downward over time) onto a pile
-  // (strands are drawn first: the gardeners face the wall, so the ivy they hold is partly behind them)
-  const p2 = g2Pose(t), ay = lerp(470, 600, clamp(t / 2.2)), ax = 1030, sw = Math.sin(t * 2.3);
-  strand(ctx, t, [[ax, ay], [lerp(ax, p2.hr[0], .5) + 14, lerp(ay, p2.hr[1], .5)], p2.hr, p2.hl, [p2.hl[0] + 30 + sw * 18, p2.hl[1] + 190], [p2.hl[0] + 90 + sw * 26, FEET - 40], [1110, FEET - 26]], 13, 3, 1, .6);
+  // The gardeners face the wall: the part of each strand hanging below the hands is behind the body,
+  // the part running up to the wall is in front.
+  const sw = Math.sin(t * 2.3);
+  const p2 = g2Pose(t), a2 = [G2A[0], G2A[1] + 130 * clamp(t / 2.2)];
+  strand(ctx, t, [p2.hl, [p2.hl[0] + 30 + sw * 18, p2.hl[1] + 190], [p2.hl[0] + 90 + sw * 26, FEET - 40], [1110, FEET - 26]], 9, 3, 1, .6);
   drawFigure(ctx, p2, {}, 1);
-  // G1 snips with pruners (left hand) and carries a cut bunch (right hand)
-  const p1 = g1Pose(t); drawFigure(ctx, p1, {}, 1);
+  strand(ctx, t, [a2, [lerp(a2[0], p2.hr[0], .5) + 10, lerp(a2[1], p2.hr[1], .5) + 26 * (1 - p2.pull)], p2.hr, p2.hl], 6, 7, 1, .62);
+  const p1 = g1Pose(t), a1 = [G1A[0], G1A[1] + 120 * clamp(t / 2.2)], sw1 = Math.sin(t * 1.9 + .6);
+  strand(ctx, t, [p1.hl, [p1.hl[0] - 24 + sw1 * 16, p1.hl[1] + 200], [p1.hl[0] + 10 + sw1 * 24, FEET - 50]], 7, 5, 1, .56);
+  drawFigure(ctx, p1, {}, 1);
+  strand(ctx, t, [a1, [lerp(a1[0], p1.hl[0], .5) - 6, lerp(a1[1], p1.hl[1], .5) + 22 * (1 - p1.pull)], p1.hl], 5, 9, 1, .6);
   strand(ctx, t, [p1.hr, [p1.hr[0] + 14 + Math.sin(t * 1.9) * 10, p1.hr[1] + 110], [p1.hr[0] + 2 + Math.sin(t * 1.9 + .7) * 16, p1.hr[1] + 220]], 6, 5, 1, .52);
-  const [hx, hy] = p1.hl, sh = [p1.x - 1.008 * p1.h / 8, p1.y - 6.6 * p1.h / 8], n = Math.hypot(hx - sh[0], hy - sh[1]), dx = (hx - sh[0]) / n, dy = (hy - sh[1]) / n, op = .08 + .34 * p1.cut;
-  ctx.save(); ctx.translate(hx, hy); ctx.rotate(Math.atan2(dy, dx)); ctx.fillStyle = '#d3dae0';
-  for (const sg of [-1, 1]) { ctx.save(); ctx.rotate(sg * op / 2); ctx.beginPath(); ctx.moveTo(0, -5); ctx.lineTo(66, 0); ctx.lineTo(0, 6); ctx.closePath(); ctx.fill(); ctx.restore(); }
-  ctx.fillStyle = '#8a2323'; ctx.fillRect(-30, -7, 30, 14);
   ctx.restore();
-  ctx.restore();
-  return { tip: [hx + dx * 64, hy + dy * 64], hm: p2.hl };
+  return { a1, a2 };
 }
 
 // ---------- screen-space text ----------
@@ -492,7 +505,7 @@ function flapDate(ctx, s, x, y, t, o) {
     const hl = o.hl(i), col = hl > 0 ? `rgb(${Math.round(lerp(244, 246, hl))},${Math.round(lerp(241, 215, hl))},${Math.round(lerp(234, 127, hl))})` : (locked ? '#f4f1ea' : '#9aa3b4');
     const pop = locked ? 1 + .14 * Math.exp(-(t - tl) * 14) * Math.sin((t - tl) * 30) : 1;
     ctx.save(); ctx.translate(cx + cw / 2, y); ctx.scale(pop, pop);
-    ctx.shadowColor = 'rgba(0,0,0,.6)'; ctx.shadowBlur = 22; ctx.shadowOffsetY = 10; ctx.fillStyle = '#121419'; roundRect(ctx, -cw / 2, -ch / 2, cw, ch, 10); ctx.fill(); ctx.shadowColor = 'transparent';
+    ctx.fillStyle = 'rgba(0,0,0,.45)'; roundRect(ctx, -cw / 2 + 2, -ch / 2 + 9, cw, ch, 12); ctx.fill(); ctx.fillStyle = '#121419'; roundRect(ctx, -cw / 2, -ch / 2, cw, ch, 10); ctx.fill();
     if (hl > 0) { ctx.strokeStyle = rgba('#f6d77f', .7 * hl); ctx.lineWidth = 3; roundRect(ctx, -cw / 2, -ch / 2, cw, ch, 10); ctx.stroke(); }
     const half = (str, top, sy) => { ctx.save(); ctx.beginPath(); ctx.rect(-cw / 2, top ? -ch / 2 : 0, cw, ch / 2); ctx.clip(); ctx.scale(1, sy); text(ctx, str, 0, size * .04, { size, family: FONT.disp, color: col, weight: 400 }); ctx.restore(); };
     const flipP = locked ? clamp((t - tl) * rate) : ph;
@@ -570,7 +583,6 @@ window.KL.scenes.found = function (ctx, t, d, info) {
   const bp = P(t, tm.tH, tm.tH + .28), bo = 1 - P(t, tm.open + .35, tm.open + .7);
   if (bp > 0 && bo > 0) { ctx.save(); ctx.globalAlpha *= bo; const ex = 26 + 30 * P(t, tm.open + .2, tm.open + .7, E.inQ); brackets(ctx, HL - ex, HT - ex, HS + ex * 2, HS + ex * 2, bp); ctx.restore(); }
   // daylight grade: cool bounce from the upper left, falloff around the focus
-  darkness(ctx, HX, HY + 40, lerp(1450, 760, P(cam.z, .62, 1.1)), lerp(.55, .74, P(cam.z, .62, 1.1)), .3);
   ctx.restore();
 
   // ---------------- gardener layer (nearer the lens: stronger parallax) ----------------
@@ -578,10 +590,10 @@ window.KL.scenes.found = function (ctx, t, d, info) {
     ctx.save();
     const zf = cam.z * Math.pow(cam.z / Z0, 3.0);
     ctx.translate(W / 2, H / 2); ctx.rotate(cam.r); ctx.scale(zf, zf); ctx.translate(-cam.x, -cam.y);
-    const gw = gardeners(ctx, t, wideA);
+    gardeners(ctx, t, wideA);
     // clippings around the gardeners (fall to the ground)
-    for (const tb of [.36, .97, 1.58]) { const pp = gardeners_tip(tb); burst(ctx, t, tb, pp[0], pp[1], 7, Math.round(tb * 10), { s: .9, sp: .6, floor: FEET - 10 }); }
-    for (const tb of [.62, 1.92]) burst(ctx, t, tb, gw.hm[0], gw.hm[1] + 60, 6, 40 + Math.round(tb * 10), { s: .9, sp: .5, floor: FEET - 10 });
+    for (const tb of [.2, 1.3]) burst(ctx, t, tb, G1A[0] + 30, G1A[1] + 120 * clamp(tb / 2.2) + 20, 7, Math.round(tb * 10), { s: .9, sp: .6, floor: FEET - 10 });
+    for (const tb of [.4, 1.7]) burst(ctx, t, tb, G2A[0] - 20, G2A[1] + 130 * clamp(tb / 2.2) + 20, 7, 40 + Math.round(tb * 10), { s: .9, sp: .6, floor: FEET - 10 });
     fogLayer(ctx, t, FEET - 40, 160, '#8f9bb0', .07, 3, 14);
     ctx.restore();
   }
@@ -590,7 +602,7 @@ window.KL.scenes.found = function (ctx, t, d, info) {
   const sh = P(t, tm.tG - .25, tm.tG + .15) * (1 - P(t, tm.tM + .1, tm.tM + .5));
   if (sh > 0 && cam.z > .9) { ctx.save(); ctx.globalAlpha = .3 * sh; const sx = lerp(1060, 860, P(t, tm.tG - .3, tm.tM + .5, E.inOutQ)); ctx.drawImage(S.shadow, sx - 330, 380, 660, 1180); ctx.restore(); }
   // out-of-focus foreground ivy (wide shot), flies out during the dolly
-  if (cam.z < 1.05) {
+  if (cam.z < 1.02) {
     const zf = Math.pow(cam.z / Z0, 2.6), a = 1 - P(cam.z, .8, 1.02);
     ctx.save(); ctx.globalAlpha = .92 * a;
     for (const [fx, fy, s, rot] of [[-40, 1500, 1.15, 0], [1120, 520, .9, 2.6], [1160, 1640, 1.0, 1.4]]) {
@@ -610,7 +622,6 @@ window.KL.scenes.found = function (ctx, t, d, info) {
     }
     ctx.restore();
   }
-  tint(ctx, '#7d8a96', .2, 'color');
   // date flap + caption (wide shot), lift away on the dolly
   const fo = 1 - P(t, tm.p0 - .05, tm.p0 + .22, E.inQ);
   if (fo > 0) {
@@ -640,9 +651,4 @@ window.KL.scenes.found = function (ctx, t, d, info) {
     ctx.save(); ctx.globalAlpha = la; pill(ctx, s, 540, ly, P(t, tm.tM - .05, tm.tM + .15), typeSub(s, P(t, tm.tM, tm.tM + .5)), { size: 34 }); ctx.restore();
   }
 };
-function gardeners_tip(tb) {
-  // pruner tip of gardener 1 at time tb (for the clipping bursts)
-  const p = g1Pose(tb), [hx, hy] = p.hl, sx = p.x - 1.008 * p.h / 8, sy = p.y - 6.6 * p.h / 8, n = Math.hypot(hx - sx, hy - sy);
-  return [hx + (hx - sx) / n * 64, hy + (hy - sy) / n * 64];
-}
 })();
