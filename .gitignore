@@ -11,3 +11,4 @@ assets/fonts/*.ttf
 # personal voice samples (never commit)
 assets/voices/
 .vendor/
+projects/_klimt_preview/
