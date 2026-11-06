@@ -39,6 +39,18 @@ const LW = (function () {
     x.save(); x.translate(L0.x, L0.y); x.rotate(L0.rot); const sc = L0.s / 64; x.scale(sc, sc);
     const S = T.leaf[L0.v]; x.drawImage(S, -S.width / 2, -S.height / 2 - 10); x.restore();
   }
+  // leaf sprites cropped to their opaque bounds (per-leaf drawing is fill-rate bound; this saves ~30% of the pixels)
+  let CROP = null;
+  function cropLeaves() {
+    CROP = T.leaf.map(S => {
+      const w = S.width, h = S.height, dta = S.getContext('2d').getImageData(0, 0, w, h).data;
+      let x0 = w, y0 = h, x1 = 0, y1 = 0;
+      for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if (dta[(y * w + x) * 4 + 3] > 2) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+      x0 = Math.max(0, x0 - 1); y0 = Math.max(0, y0 - 1); x1 = Math.min(w - 1, x1 + 1); y1 = Math.min(h - 1, y1 + 1);
+      const [c, x] = mk(x1 - x0 + 1, y1 - y0 + 1); x.drawImage(S, -x0, -y0);
+      return { c, ox: x0 - w / 2, oy: y0 - h / 2 - 10 };
+    });
+  }
   function edgeFade(x) {
     const f = (x0, y0, x1, y1, rx, ry, rw, rh) => { const g = x.createLinearGradient(x0, y0, x1, y1); g.addColorStop(0, '#000'); g.addColorStop(1, 'rgba(0,0,0,0)'); x.fillStyle = g; x.fillRect(rx, ry, rw, rh); };
     f(0, WALL_Y, 0, WALL_Y + 200, WALL_X, WALL_Y, 1700, 200);
@@ -56,37 +68,60 @@ const LW = (function () {
     x.filter = 'none';
     return c;
   }
+  const RING = 440;                                       // half-size of the cached ring of leaves around the hatch
+  let RINGC = null, SEAM = null, CANV = null;
   function build() {
     if (LV) return;
-    LV = placeLeaves(); DYN = LV.filter(l => l.cover || l.late);
-    LAY = [0, 1, 2].map(n => {
+    LV = placeLeaves(); DYN = LV.filter(l => l.cover || l.late); cropLeaves();
+    // far layers 0+1 are merged with the bricks (one blit); layer 2 is separate so it can breathe
+    LAY = [0, 2].map(n => {
       const [c, x] = mk(CW, CH); x.translate(-CX0, -CY0);
       if (n === 0) {
         x.drawImage(T.bricks, WALL_X, WALL_Y); edgeFade(x);
         const lg = x.createRadialGradient(300, 300, 50, 400, 600, 1300); lg.addColorStop(0, 'rgba(120,150,200,.10)'); lg.addColorStop(1, 'rgba(0,0,0,.45)');
         x.fillStyle = lg; x.fillRect(CX0, CY0, CW, CH);
       }
-      for (const L0 of LV) if (L0.layer === n && !L0.cover && !L0.late) stampLeaf(x, L0);
+      for (const L0 of LV) if ((n === 0 ? L0.layer < 2 : L0.layer === 2) && !L0.cover && !L0.late) stampLeaf(x, L0);
       return c;
     });
+    // the fully grown ring of leaves around the hatch (drawn per leaf only while it regrows)
+    { const [c, x] = mk(RING * 2, RING * 2); x.translate(RING - HX, RING - HY); for (const L0 of DYN) if (L0.late) stampLeaf(x, L0); RINGC = c; }
+    // glowing seam outline of the closed door (blurred once)
+    { const p = 80, [c, x] = mk(HS + p * 2, HS + p * 2); x.strokeStyle = '#ffcf6a'; x.lineWidth = 5; x.shadowColor = '#ffb22e'; x.shadowBlur = 44;
+      for (let i = 0; i < 3; i++) x.strokeRect(p + 2, p + 2, HS - 4, HS - 4); SEAM = c; }
+    // unframed canvas on its stretcher with a soft drop shadow (replaces canvasPiece's per-frame shadowBlur)
+    { const [c, x] = mk(800, 920); x.translate(400, 450); x.shadowColor = 'rgba(0,0,0,.7)'; x.shadowBlur = 40; x.shadowOffsetY = 20;
+      x.fillStyle = '#6a5236'; x.fillRect(-309, -359, 618, 718); x.shadowColor = 'transparent'; x.fillStyle = '#cbbd9e'; x.fillRect(-304, -354, 608, 708);
+      x.drawImage(T.portrait, -300, -350); CANV = c; }
     FG = [fgSprite(0), fgSprite(1)];
   }
+  function canvasSprite(ctx, x, y, s, rot) { ctx.save(); ctx.translate(x, y); ctx.rotate(rot); ctx.scale(s, s); ctx.drawImage(CANV, -400, -450); ctx.restore(); }
 
-  // leaves near the hatch: drawn one by one (they sway, regrow and cover the hatch). o.late / o.cover: grow 0..1 (null = full / hidden)
+  // group motion of the ivy ring around the hatch: slow breathing + wind gust (shared by the cached and per-leaf paths)
+  function ringXf(tau, sw, g) {
+    return { dx: (Math.sin(tau * 1.1 + 4) * 3 + g * 9) * sw, dy: Math.cos(tau * .9 + 6) * 1.6 * sw, s: 1 + (.007 * Math.sin(tau * 1.25) + .004 * g) * sw, r: (.006 * Math.sin(tau * .8 + 1) + .01 * g * Math.sin(tau * 9)) * sw };
+  }
+  // leaves near the hatch. o.late / o.cover: grow 0..1 per leaf (null = full / hidden). Fully grown ring -> one cached blit.
+  // o.lateFade (0..1) fades the cached ring in instead of growing it leaf by leaf (cheap; used for the time-lapse).
   function drawDyn(ctx, tau, o) {
-    const m = ctx.getTransform(), sw = o.sway != null ? o.sway : 1, g = o.gust || 0;
-    for (const L0 of DYN) {
-      let sc = L0.s / 64;
-      if (L0.cover) { if (o.cover == null) continue; const k = clamp((o.cover - (1 - L0.dist / 200) * .6) / .4); if (k <= 0) continue; sc *= E.outBack(k); }
-      else if (o.late != null) { const k = clamp((o.late - (1 - L0.dist / 340) * .6) / .4); if (k <= 0) continue; sc *= E.outBack(k); }
-      const x = L0.x + Math.sin(tau * 1.1 + L0.ph) * (2 + L0.layer * 1.5) * sw + g * 7 * (.6 + L0.fj);
-      const y = L0.y + Math.cos(tau * .9 + L0.ph) * 1.5 * sw;
-      const r = L0.rot + Math.sin(tau * 1.6 + L0.ph) * (.05 + L0.layer * .02) * sw + g * .22 * Math.sin(tau * 11 + L0.ph * 3);
-      const cs = Math.cos(r) * sc, sn = Math.sin(r) * sc;
-      ctx.setTransform(m.a * cs + m.c * sn, m.b * cs + m.d * sn, m.c * cs - m.a * sn, m.d * cs - m.b * sn, m.a * x + m.c * y + m.e, m.b * x + m.d * y + m.f);
-      const S = T.leaf[L0.v]; ctx.drawImage(S, -S.width / 2, -S.height / 2 - 10);
+    const sw = o.sway != null ? o.sway : 1, X = ringXf(tau, sw, o.gust || 0);
+    ctx.save(); ctx.translate(HX + X.dx, HY + X.dy); ctx.rotate(X.r); ctx.scale(X.s, X.s); ctx.translate(-HX, -HY);
+    const fade = o.lateFade != null, lateFull = fade || o.late == null || o.late >= 1;
+    if (fade) { if (o.lateFade > 0) { ctx.save(); ctx.globalAlpha *= clamp(o.lateFade); ctx.drawImage(RINGC, HX - RING, HY - RING); ctx.restore(); } }
+    else if (lateFull) ctx.drawImage(RINGC, HX - RING, HY - RING);
+    if (!lateFull || o.cover != null) {
+      const m = ctx.getTransform();
+      for (const L0 of DYN) {
+        let sc = L0.s / 64;
+        if (L0.cover) { if (o.cover == null) continue; const k = clamp((o.cover - (1 - L0.dist / 200) * .6) / .4); if (k <= 0) continue; sc *= E.outBack(k); }
+        else { if (lateFull) continue; const k = clamp((o.late - (1 - L0.dist / 340) * .6) / .4); if (k <= 0) continue; sc *= E.outBack(k); }
+        const cs = Math.cos(L0.rot) * sc, sn = Math.sin(L0.rot) * sc, x = L0.x, y = L0.y;
+        ctx.setTransform(m.a * cs + m.c * sn, m.b * cs + m.d * sn, m.c * cs - m.a * sn, m.d * cs - m.b * sn, m.a * x + m.c * y + m.e, m.b * x + m.d * y + m.f);
+        const S = CROP[L0.v]; ctx.drawImage(S.c, S.ox, S.oy);
+      }
+      ctx.setTransform(m);
     }
-    ctx.setTransform(m);
+    ctx.restore();
   }
 
   // hatch (variant of common.js drawHatch: soft gradient door shadow instead of a blur filter, door jitter, overshoot)
@@ -140,9 +175,9 @@ const LW = (function () {
       const g = ctx.createLinearGradient(x0, y0, x0 + dx * ll, y0 + dy * ll); g.addColorStop(0, rgba('#ffd27a', al)); g.addColorStop(1, 'rgba(255,210,122,0)');
       ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(x0 - dy * ww * .3, y0 - dx * ww * .3); ctx.lineTo(x0 + dx * ll - dy * ww, y0 + dy * ll - dx * ww); ctx.lineTo(x0 + dx * ll + dy * ww, y0 + dy * ll + dx * ww); ctx.lineTo(x0 + dy * ww * .3, y0 + dx * ww * .3); ctx.closePath(); ctx.fill();
     }
-    ctx.strokeStyle = rgba('#ffd98a', Math.min(1, a * .95)); ctx.lineWidth = 2.5 + 2.5 * clamp(s); ctx.shadowColor = '#ffb22e'; ctx.shadowBlur = 26 + 26 * clamp(s);
-    ctx.strokeRect(L0 + 2, T0 + 2, HS - 4, HS - 4);
-    ctx.shadowBlur = 0; ctx.strokeStyle = rgba('#fff4d6', Math.min(1, a * .8)); ctx.lineWidth = 1.5; ctx.strokeRect(L0 + 2, T0 + 2, HS - 4, HS - 4);
+    ctx.globalAlpha = Math.min(1, a * 1.1); ctx.drawImage(SEAM, L0 - 80, T0 - 80);
+    if (s > .7) { ctx.globalAlpha = Math.min(1, (s - .7) * 1.5); ctx.drawImage(SEAM, L0 - 80, T0 - 80); }
+    ctx.globalAlpha = 1; ctx.strokeStyle = rgba('#fff4d6', Math.min(1, a * .85)); ctx.lineWidth = 1.5 + clamp(s); ctx.strokeRect(L0 + 2, T0 + 2, HS - 4, HS - 4);
     ctx.restore();
   }
 
@@ -167,12 +202,14 @@ const LW = (function () {
     build();
     const c = o.cam, dr = drift(tau, c.hh != null ? c.hh : .7, 3);
     ctx.save();
-    camera(ctx, { x: c.x + dr.x, y: c.y + dr.y, zoom: c.zoom, rot: dr.r + (c.rot || 0), shake: c.shake || 0, t: tau, seed: 0 });
+    // handheld drift and shake are translation only (a rotated full-frame blit costs ~60% more in the software rasterizer)
+    const sh = c.shake || 0, sx = sh * noise1(tau * 22, 1) * 18, sy = sh * noise1(tau * 22, 2) * 18;
+    camera(ctx, { x: c.x + dr.x - sx / c.zoom, y: c.y + dr.y - sy / c.zoom, zoom: c.zoom, rot: c.rot || 0, shake: 0, t: tau, seed: 0 });
     const m = ctx.getTransform();
     ctx.drawImage(LAY[0], CX0, CY0);
     hatch(ctx, o.open || 0, o.inside, o);
     const sw = o.sway != null ? o.sway : 1, g = o.gust || 0;
-    for (const n of [1, 2]) ctx.drawImage(LAY[n], CX0 + (Math.sin(tau * 1.1 + n * 2) * (1 + n) + g * (5 + 3 * n)) * sw, CY0 + Math.cos(tau * .9 + n * 3) * (.6 + .5 * n) * sw);
+    ctx.drawImage(LAY[1], CX0 + (Math.sin(tau * 1.1 + 4) * 3 + g * 11) * sw, CY0 + Math.cos(tau * .9 + 6) * 1.6 * sw);
     drawDyn(ctx, tau, o);
     seep(ctx, tau, o.seep || 0);
     if (o.world) o.world(ctx, m);
@@ -232,7 +269,7 @@ const LW = (function () {
     }
     ctx.restore();
   }
-  return { draw, ws, seepRest, SEEP0, yearCounter, glint, streak, HX, HY, HS };
+  return { draw, ws, seepRest, SEEP0, yearCounter, glint, streak, canvasSprite, HX, HY, HS };
 })();
 window.KL.loopWall = LW;
 
@@ -243,19 +280,22 @@ function keys(t, ks) {
   for (let i = 1; i < ks.length; i++) if (t <= ks[i][0]) return lerp(ks[i - 1][1], ks[i][1], (ks[i][2] || E.inOutQ)(clamp((t - ks[i - 1][0]) / (ks[i][0] - ks[i - 1][0]))));
   return ks[ks.length - 1][1];
 }
+// E.outBack(0) is 2e-16, not 0: guard so 'not started' really is zero
+const OB = (x, s) => (x <= 0 ? 0 : E.outBack(x, s));
 const pulse = (t, t0, w = 7) => (t > t0 - .04 ? Math.exp(-Math.pow((t - t0) * w, 2)) : 0);
 // museum facade schematic drawn in world space around the hatch (a generic elevation outline, no real building details)
 const FACADE = (() => {
-  const X0 = -300, X1 = 1380, Y0 = -150;
+  const X0 = -300, X1 = 1380, Y0 = -100;
   const arch = (cx, w, yt, yb) => { const p = [[cx - w / 2, yb], [cx - w / 2, yt]]; for (let i = 1; i < 12; i++) { const a = Math.PI + i / 12 * Math.PI; p.push([cx + Math.cos(a) * w / 2, yt + Math.sin(a) * w / 2]); } p.push([cx + w / 2, yt], [cx + w / 2, yb], [cx - w / 2, yb]); return p; };
   const rect = (cx, w, yt, yb) => [[cx - w / 2, yb], [cx - w / 2, yt], [cx + w / 2, yt], [cx + w / 2, yb], [cx - w / 2, yb]];
+  // s = start offset from '바로' (s), u = duration; drawn bottom-up so nothing traces through the title band mid-move
   return [
-    { pts: [[540, Y0], [X0 - 40, Y0]], d: 0 }, { pts: [[540, Y0], [X1 + 40, Y0]], d: 0 },
-    { pts: [[540, Y0 + 34], [X0 - 16, Y0 + 34]], d: .05 }, { pts: [[540, Y0 + 34], [X1 + 16, Y0 + 34]], d: .05 },
-    { pts: [[X0, Y0 + 34], [X0, 1640]], d: .12 }, { pts: [[X1, Y0 + 34], [X1, 1640]], d: .12 },
-    { pts: [[X0, 470], [X1, 470]], d: .3, a: .55 },
-    { pts: arch(90, 180, 40, 380), d: .22 }, { pts: arch(540, 180, 40, 380), d: .3 }, { pts: arch(990, 180, 40, 380), d: .38 },
-    { pts: rect(90, 190, 610, 1030), d: .42 }, { pts: rect(990, 190, 610, 1030), d: .48 },
+    { pts: [[X0, 1150], [X0, Y0 + 34]], s: .08, u: .5 }, { pts: [[X1, 1150], [X1, Y0 + 34]], s: .08, u: .5 },
+    { pts: rect(90, 190, 610, 1030), s: .22, u: .4 }, { pts: rect(990, 190, 610, 1030), s: .27, u: .4 },
+    { pts: [[X0, 470], [X1, 470]], s: .33, u: .35, a: .55 },
+    { pts: arch(90, 180, 70, 390), s: .38, u: .38 }, { pts: arch(540, 180, 70, 390), s: .44, u: .38 }, { pts: arch(990, 180, 70, 390), s: .5, u: .38 },
+    { pts: [[540, Y0], [X0 - 40, Y0]], s: .56, u: .3 }, { pts: [[540, Y0], [X1 + 40, Y0]], s: .56, u: .3 },
+    { pts: [[540, Y0 + 34], [X0 - 16, Y0 + 34]], s: .6, u: .3 }, { pts: [[540, Y0 + 34], [X1 + 16, Y0 + 34]], s: .6, u: .3 },
   ];
 })();
 
@@ -271,11 +311,11 @@ window.KL.scenes.hook = function (ctx, t, d, info) {
     + .035 * pulse(t, tM + .03, 6) + .02 * pulse(t, t22 + .03, 7);
   const cy = keys(t, [[0, 805], [tMan - .02, 868], [tMus + .26, 640, E.inOutC], [tRush, 636, E.lin], [tArr, 812, E.inOutC], [d, 792, E.outC]]);
   const rush = Math.sin(Math.PI * P(t, tRush, tArr));
-  const shake = .5 * P(t, 0, .05) * Math.exp(-t * 5) + .22 * P(t, tWall, tOpen) * (t < tOpen + .02 ? 1 : 0) + .4 * (t > tOpen ? Math.exp(-(t - tOpen) * 4.5) : 0);
+  const shake = .3 * P(t, 0, .12, E.inOutQ) * Math.exp(-t * 4) + .22 * P(t, tWall, tOpen) * (t < tOpen + .02 ? 1 : 0) + .4 * (t > tOpen ? Math.exp(-(t - tOpen) * 4.5) : 0);
   const cam = { x: 540, y: cy, zoom, shake, hh: lerp(.7, 1.15, P(t, 0, 1.2)) * (1 - .5 * rush) };
 
   // ---- hatch state
-  const open = E.outBack(P(t, tOpen, tOpen + .5), 1.3);
+  const open = OB(P(t, tOpen, tOpen + .5), 1.3);
   const rattle = P(t, tWall - .05, tOpen) * (t < tOpen ? 1 : 0) + .7 * P(t, 0, .03) * Math.exp(-t * 7);
   const jf = Math.floor(t * 40);
   const jx = rattle * (hash(jf) - .5) * 6, jy = rattle * (hash(jf + 77) - .5) * 4;
@@ -290,25 +330,35 @@ window.KL.scenes.hook = function (ctx, t, d, info) {
 
   // canvas pose (shared by the in-cavity view and the emergence)
   const cv = { x: lerp(HX, HX + 8, kE), y: lerp(HY - 5, HY - 40, kE) + Math.sin(t * 2.2) * 4 * kE, s: lerp(.3, .64, kE), r: lerp(.04, -.045, E.outBack(kE, 1.4)) };
-  const bagSlide = E.inQ(P(t, tN + .1, tN + .78));
-  const drawBagOn = (c) => { const bs = cv.s; c.save(); c.globalAlpha *= 1 - P(t, tN + .45, tN + .8); c.translate(cv.x - 6 * bagSlide, cv.y + 217 * bs + bagSlide * 430); c.rotate(cv.r + bagSlide * .35); drawBag(c, 0, 0, 750 * bs, 417 * bs, 0, t); c.restore(); };
+  const bagSlide = E.inOutQ(P(t, tN - .02, tN + .6));
+  const drawBagOn = (c) => { const bs = cv.s; c.save(); c.globalAlpha *= 1 - P(t, tN + .3, tN + .6); c.translate(cv.x - 10 * bagSlide, cv.y + 235 * bs + bagSlide * 380); c.rotate(cv.r + bagSlide * .4); drawBag(c, 0, 0, 690 * bs, 380 * bs, 0, t); c.restore(); };
 
   const m = LW.draw(ctx, t, {
-    cam, open, jx, jy, doorLight: light, sway, gust, seep: seepV, light, amb: 1,
+    cam, open, jx, jy, doorLight: light, sway, gust, seep: seepV, light: light * (1 - kE), amb: 1,
     inside(c, L0, T0, s) {
       const k = P(t, tOpen, tOpen + .55, E.outQ);
       glow(c, L0 + s / 2, T0 + s * .45, s * .95, K.gold, .95 * k);
       glow(c, L0 + s / 2, T0 + s * .4, s * .45, '#fff1c8', .5 * k);
-      if (kE <= 0) { canvasPiece(c, cv.x, cv.y, cv.s, cv.r); drawBagOn(c); }
+      if (kE <= 0) { LW.canvasSprite(c, cv.x, cv.y, cv.s, cv.r); drawBagOn(c); }
     },
     after(c) {
+      // the impact shakes dust off the hatch frame (the ending's slam dust has just settled at the loop seam)
+      if (t < 1.3) {
+        c.save(); c.globalCompositeOperation = 'lighter';
+        const k0 = P(t, 0, .06);
+        for (let i = 0; i < 30; i++) {
+          const dt = t - hash(i * 17 + 4) * .25; if (dt <= 0 || dt > 1.05) continue;
+          const u = hash(i * 7 + 2), px = HX - HS / 2 - 10 + u * (HS + 20) + Math.sin(dt * 5 + i) * 6, py = HY - HS / 2 - 12 + (30 + 120 * hash(i * 3 + 1)) * dt + 260 * dt * dt;
+          c.fillStyle = rgba(i % 4 ? '#d8d0c0' : '#ffe2a8', k0 * (1 - dt / 1.05) * (.35 + .4 * hash(i * 13))); c.beginPath(); c.arc(px, py, 1.4 + 2.4 * hash(i * 5), 0, 7); c.fill();
+        }
+        c.restore();
+      }
       // museum facade schematic (wide shot)
       const fa = P(t, tBaro - .08, tBaro + .2) * (1 - P(t, tRush - .02, tRush + .16));
       if (fa > 0) {
-        const pr = (dd) => P(t, tBaro - .02 + dd, tBaro + .6 + dd, E.inOutQ);
         c.save();
         for (const f of FACADE) {
-          const p = pr(f.d); if (p <= 0) continue; c.globalAlpha = fa * (f.a || 1);
+          const p = P(t, tBaro + f.s, tBaro + f.s + f.u, E.inOutQ); if (p <= 0) continue; c.globalAlpha = fa * (f.a || 1);
           pathReveal(c, f.pts, p, { color: 'rgba(246,215,127,.22)', w: 16, head: false });
           pathReveal(c, f.pts, p, { color: K.goldHi, w: 4.5, head: p < 1 });
         }
@@ -317,9 +367,9 @@ window.KL.scenes.hook = function (ctx, t, d, info) {
       // the canvas comes out of the wall
       if (kE > 0) {
         const w = 600 * cv.s, h = 700 * cv.s;
-        glow(c, cv.x, cv.y, 520 * kE + 60, K.gold, .45 * kE);
-        godrays(c, cv.x, cv.y, t * .25, 6.2, 760 * kE, '#ffe1a0', .05 * kE, t, 14);
-        c.save(); c.globalAlpha *= clamp(kE * 4); canvasPiece(c, cv.x, cv.y, cv.s, cv.r); drawBagOn(c); c.restore();
+        glow(c, cv.x, cv.y, 420 * kE + 60, K.gold, .5 * kE);
+        godrays(c, cv.x, cv.y, t * .25, 6.2, 640 * kE, '#ffe1a0', .06 * kE, t, 10);
+        c.save(); c.globalAlpha *= clamp(kE * 4); LW.canvasSprite(c, cv.x, cv.y, cv.s, cv.r); drawBagOn(c); c.restore();
         // light sweeping over the varnish
         const sw2 = P(t, tN + .25, tN + .85, E.inOutQ);
         if (sw2 > 0 && sw2 < 1) {
@@ -354,8 +404,8 @@ window.KL.scenes.hook = function (ctx, t, d, info) {
   const [sx, sy] = LW.ws(m, HX, HY);
   // rush: zoom echo + speed lines
   if (rush > .02) {
-    ctx.save(); ctx.globalAlpha = .22 * rush;
-    for (const k of [1.045, 1.1]) { ctx.save(); ctx.translate(sx, sy); ctx.scale(k, k); ctx.translate(-sx, -sy); ctx.drawImage(ctx.canvas, 0, 0); ctx.restore(); }
+    ctx.save(); ctx.globalAlpha = .3 * rush;
+    for (const k of [1.07]) { ctx.save(); ctx.translate(sx, sy); ctx.scale(k, k); ctx.translate(-sx, -sy); ctx.drawImage(ctx.canvas, 0, 0); ctx.restore(); }
     ctx.restore();
     ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.lineCap = 'round';
     const prog = P(t, tRush, tArr);
@@ -378,7 +428,7 @@ window.KL.scenes.hook = function (ctx, t, d, info) {
     const sz = HS * zoom * .5 + 16; ctx.strokeStyle = K.red; ctx.lineWidth = 5; ctx.shadowColor = K.red; ctx.shadowBlur = 14; ctx.strokeRect(sx - sz, sy - sz, sz * 2, sz * 2);
     ctx.restore();
   }
-  const lb = P(t, tMus - .05, tMus + .25, E.outBack) * (1 - P(t, tRush - .05, tRush + .1));
+  const lb = OB(P(t, tMus - .05, tMus + .25)) * (1 - P(t, tRush - .05, tRush + .1));
   if (lb > 0) {
     const ly = 1215 - 16 * (1 - lb);
     ctx.save(); ctx.globalAlpha = clamp(lb); ctx.strokeStyle = rgba(K.red, .9); ctx.lineWidth = 3; ctx.setLineDash([8, 7]);
@@ -395,10 +445,10 @@ window.KL.scenes.hook = function (ctx, t, d, info) {
     ctx.strokeStyle = 'rgba(255,255,255,.22)'; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(xa, y); ctx.lineTo(xb, y); ctx.stroke();
     for (let i = 1; i < 22; i++) { const x = lerp(xa, xb, i / 22); ctx.fillStyle = x <= hx ? 'rgba(255,230,170,.8)' : 'rgba(255,255,255,.2)'; ctx.fillRect(x - 1.5, y - 8, 3, 16); }
     if (lp > 0) { const g = ctx.createLinearGradient(xa, 0, xb, 0); g.addColorStop(0, K.red); g.addColorStop(1, K.goldHi); ctx.strokeStyle = g; ctx.lineWidth = 7; ctx.shadowColor = K.gold; ctx.shadowBlur = 14; ctx.beginPath(); ctx.moveTo(xa, y); ctx.lineTo(hx, y); ctx.stroke(); ctx.shadowBlur = 0; }
-    const n1 = E.outBack(P(t, tSt + .08, tSt + .38));
+    const n1 = OB(P(t, tSt + .08, tSt + .38));
     ctx.fillStyle = K.red; ctx.beginPath(); ctx.arc(xa, y, 12 * n1, 0, 7); ctx.fill();
     label(ctx, '1997.2 도난', xa + 95, y - 66, { size: 36, color: '#fff', bg: 'rgba(130,14,22,.94)', a: clamp(n1 * 1.5) });
-    const n2 = E.outBack(P(t, tMan - .06, tMan + .22), 2.2);
+    const n2 = OB(P(t, tMan - .06, tMan + .22), 2.2);
     if (n2 > 0) {
       ctx.fillStyle = K.goldHi; ctx.shadowColor = K.gold; ctx.shadowBlur = 18; ctx.beginPath(); ctx.arc(xb, y, 14 * n2, 0, 7); ctx.fill(); ctx.shadowBlur = 0;
       label(ctx, '2019.12.10 발견', xb - 128, y - 66, { size: 36, color: '#111', bg: K.goldHi, a: clamp(n2 * 1.5) });

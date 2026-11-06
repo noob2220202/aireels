@@ -35,8 +35,15 @@ function scribble(x, x0, y, w, seed, col = 'rgba(30,30,40,.55)') {
 function bust(x, cx, top, o) { // head & shoulders silhouette from the figure rig
   const h = 430; F.figure(x, cx, top + h * 7.45 / 8 - 6, h, Object.assign({ shadow: false, coat: true, armL: [.12, 0], armR: [-.12, 0] }, o));
 }
+// soft drop shadow: a pre-blurred rect stretched under a card (cheaper than shadowBlur every frame)
+function softShadow(ctx, x, y, w, h, a) {
+  const k = 48, sx = w / 160, sy = h / 160; ctx.save(); ctx.globalAlpha *= a; ctx.drawImage(S.shadow, x - k * sx, y - k * sy, 256 * sx, 256 * sy); ctx.restore();
+}
 function initSprites() {
   S = {};
+  { const [c, x] = mk(256, 256); x.filter = 'blur(20px)'; x.fillStyle = '#000'; x.fillRect(48, 48, 160, 160); S.shadow = c; }
+  // 미제 사건 rubber stamp, rendered once with the library's ink texture
+  { const [c, x] = mk(760, 300); stamp(x, '미제 사건', 380, 150, 1, { size: 70, color: '#d4202c', rot: 0, ls: 4 }); S.stamp = c; }
   // polaroid of the stolen painting
   { const [c, x] = mk(250, 290); paperFill(x, 250, 290, 2, '#ede7da');
     x.fillStyle = '#0e1418'; x.fillRect(16, 16, 218, 206);
@@ -88,17 +95,17 @@ function ik(sx, sy, tx, ty, l1, l2, bend = 1) {
 function yarn(ctx, x0, y0, x1, y1, p, sag, { a = 1, w = 5, vib = 0, t = 0 } = {}) {
   if (p <= 0) return; const N = 34, n = Math.max(1, Math.floor(N * clamp(p)));
   const nx = -(y1 - y0), ny = x1 - x0, nl = Math.hypot(nx, ny) || 1;
-  ctx.save(); ctx.globalAlpha *= a; ctx.strokeStyle = K.red; ctx.lineWidth = w; ctx.lineCap = 'round';
-  ctx.shadowColor = 'rgba(0,0,0,.55)'; ctx.shadowBlur = 8; ctx.shadowOffsetY = 6;
-  ctx.beginPath(); let hx = x0, hy = y0;
+  ctx.save(); ctx.globalAlpha *= a; ctx.lineCap = 'round';
+  const pth = new Path2D(); let hx = x0, hy = y0;
   for (let i = 0; i <= n; i++) {
     const k = i / N, s = Math.sin(k * Math.PI);
     const v = vib * Math.sin(k * Math.PI * 2) * Math.sin(t * 60);
     hx = lerp(x0, x1, k) + nx / nl * v; hy = lerp(y0, y1, k) + s * sag + ny / nl * v;
-    i ? ctx.lineTo(hx, hy) : ctx.moveTo(hx, hy);
+    i ? pth.lineTo(hx, hy) : pth.moveTo(hx, hy);
   }
-  ctx.stroke();
-  ctx.shadowColor = 'transparent'; ctx.globalAlpha *= .35; ctx.strokeStyle = '#ff8a7a'; ctx.lineWidth = w * .35; ctx.stroke();
+  ctx.save(); ctx.translate(2, 7); ctx.strokeStyle = 'rgba(0,0,0,.42)'; ctx.lineWidth = w + 3; ctx.stroke(pth); ctx.restore();
+  ctx.strokeStyle = K.red; ctx.lineWidth = w; ctx.stroke(pth);
+  ctx.globalAlpha *= .35; ctx.strokeStyle = '#ff8a7a'; ctx.lineWidth = w * .35; ctx.stroke(pth);
   ctx.restore();
   if (p < 1) { glow(ctx, hx, hy, 46, '#ff5a46', .9 * a); ctx.save(); ctx.fillStyle = '#fff2ec'; ctx.beginPath(); ctx.arc(hx, hy, 4.5, 0, 7); ctx.fill(); ctx.restore(); }
 }
@@ -107,8 +114,9 @@ function dangle(ctx, px, py, ang0, len, ts, side) {
   const hang = side * .1, th = hang + (ang0 - hang) * Math.exp(-ts * 3.2) * Math.cos(ts * 9.5);
   const ex = px + Math.sin(th) * len, ey = py + Math.cos(th) * len;
   const curl = side * 40 * Math.exp(-ts * 2) * Math.sin(ts * 14);
-  ctx.save(); ctx.strokeStyle = K.red; ctx.lineWidth = 5; ctx.lineCap = 'round'; ctx.shadowColor = 'rgba(0,0,0,.55)'; ctx.shadowBlur = 8; ctx.shadowOffsetY = 6;
-  ctx.beginPath(); ctx.moveTo(px, py); ctx.quadraticCurveTo((px + ex) / 2 + curl + side * 10, (py + ey) / 2 + 20, ex, ey); ctx.stroke(); ctx.restore();
+  const pth = new Path2D(); pth.moveTo(px, py); pth.quadraticCurveTo((px + ex) / 2 + curl + side * 10, (py + ey) / 2 + 20, ex, ey);
+  ctx.save(); ctx.lineCap = 'round'; ctx.save(); ctx.translate(2, 7); ctx.strokeStyle = 'rgba(0,0,0,.42)'; ctx.lineWidth = 8; ctx.stroke(pth); ctx.restore();
+  ctx.strokeStyle = K.red; ctx.lineWidth = 5; ctx.stroke(pth); ctx.restore();
   // frayed tip
   ctx.save(); ctx.strokeStyle = '#ff6b5c'; ctx.lineWidth = 1.6; for (let i = 0; i < 4; i++) { ctx.beginPath(); ctx.moveTo(ex, ey); ctx.lineTo(ex + (hash(i * 7 + side * 3) - .5) * 16, ey + 6 + hash(i * 3) * 10); ctx.stroke(); } ctx.restore();
 }
@@ -116,7 +124,7 @@ function hangingCard(ctx, img, px, py, w, h, rot, lx, ly, shadowA = .6) {
   // pinned at (px,py) near its top edge; rotates around the pin; drop shadow pushed away from the lamp
   ctx.save(); ctx.translate(px, py); ctx.rotate(rot);
   const ox = clamp((px - lx) * .045, -26, 26), oy = 16 + clamp((py - ly) * .02, -6, 14);
-  ctx.shadowColor = `rgba(0,0,0,${shadowA})`; ctx.shadowBlur = 34; ctx.shadowOffsetX = ox; ctx.shadowOffsetY = oy;
+  softShadow(ctx, -w / 2 + ox, -16 + oy, w, h, shadowA * 1.3);
   ctx.drawImage(img, -w / 2, -16, w, h); ctx.restore();
 }
 
@@ -168,7 +176,7 @@ window.KL.scenes.culprit = function (ctx, t, d, info) {
   const rock = .025 * Math.sin(t * 2.7) * Math.exp(-Math.max(0, t) * .5) + (after ? .12 * Math.sin(ts * 8.5) * Math.exp(-ts * 2.6) + .05 * (1 - Math.exp(-ts * 4)) : 0)
     + (t > tK ? .03 * Math.sin((t - tK) * 13) * Math.exp(-(t - tK) * 5) : 0);
   ctx.save(); ctx.translate(P2[0], P2[1]); ctx.rotate(.025 + rock);
-  { const ox = clamp((P2[0] - lx) * .045, -26, 26); ctx.save(); ctx.shadowColor = 'rgba(0,0,0,.62)'; ctx.shadowBlur = 40; ctx.shadowOffsetX = ox; ctx.shadowOffsetY = 20; ctx.drawImage(S.card, -CARD.w / 2, -16, CARD.w, CARD.h); ctx.restore(); }
+  { const ox = clamp((P2[0] - lx) * .045, -26, 26); softShadow(ctx, -CARD.w / 2 + ox, 4, CARD.w, CARD.h, .85); ctx.drawImage(S.card, -CARD.w / 2, -16, CARD.w, CARD.h); }
   ctx.translate(-CARD.w / 2, -16);
   // mugshot window: blank → cycling candidates with scan bar → unknown
   ctx.save(); ctx.beginPath(); ctx.rect(MUG.x, MUG.y, MUG.w, MUG.h); ctx.clip(); ctx.drawImage(S.mugBG, MUG.x, MUG.y);
@@ -190,7 +198,7 @@ window.KL.scenes.culprit = function (ctx, t, d, info) {
   ctx.strokeStyle = 'rgba(40,40,45,.8)'; ctx.lineWidth = 3; ctx.strokeRect(MUG.x, MUG.y, MUG.w, MUG.h);
   // 미제 사건 stamp slams onto the card
   const stp = P(t, tSnap + .06, tSnap + .38);
-  if (stp > 0) stamp(ctx, '미제 사건', CARD.w / 2 + 6, 186, stp, { size: 70, color: '#d4202c', rot: -.17, ls: 4 });
+  if (stp > 0) { const sc = lerp(2.6, 1, clamp(stp * 1.6)); ctx.save(); ctx.translate(CARD.w / 2 + 6, 186); ctx.rotate(-.17); ctx.scale(sc, sc); ctx.globalAlpha *= clamp(stp * 4) * .95; ctx.globalCompositeOperation = 'multiply'; ctx.drawImage(S.stamp, -380, -150); ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha *= .4; ctx.drawImage(S.stamp, -380, -150); ctx.restore(); }
   ctx.restore();
   // red string: photo → suspect, then the side leads
   const mainP = P(t, .02, .42, E.inOutQ);
@@ -224,9 +232,8 @@ window.KL.scenes.culprit = function (ctx, t, d, info) {
   ctx.save(); ctx.globalCompositeOperation = 'lighter';
   const pool = ctx.createRadialGradient(bsx, bsy + 330, 30, bsx, bsy + 330, 900); pool.addColorStop(0, `rgba(255,205,140,${.2 * fl})`); pool.addColorStop(.5, `rgba(255,190,120,${.07 * fl})`); pool.addColorStop(1, 'rgba(0,0,0,0)');
   ctx.fillStyle = pool; ctx.fillRect(0, 0, W, H); ctx.restore();
-  darkness(ctx, bsx, bsy + 380, 1080, lerp(.9, .82, fl), .22);
-  fogLayer(ctx, t, bsy + 260, 280, '#ffd7a0', .045 * fl, 3, 26);
-  godrays(ctx, bsx, bsy + 20, Math.PI / 2 + sw * .8, .95, 1100, '#ffd59a', .055 * fl, t, 8);
+  darkness(ctx, bsx, bsy + 380, 1080 - 120 * kick + 30 * Math.sin(t * 1.7), clamp(lerp(.9, .82, fl) + .08 * kick), .22);
+  godrays(ctx, bsx, bsy + 20, Math.PI / 2 + sw * .8, .95, 1000, '#ffd59a', .06 * fl, t, 6);
 
   // ---- layer 2: lamp (cord, conical shade, bulb) ----
   ctx.save(); layer(1.12);
@@ -257,8 +264,10 @@ window.KL.scenes.culprit = function (ctx, t, d, info) {
     if (after) { const sw2 = P(t, tSnap + .34, tSnap + .8); aL = [aL[0] - .1 * Math.sin(sw2 * Math.PI * 2) * (1 - sw2), aL[1]]; }
     const recoil = after ? .03 * Math.sin(Math.min(1, ts / .45) * Math.PI) + .012 * P(t, tSnap + .3, d, E.inOutQ) : 0;
     const breathe = .005 * Math.sin(t * 2.2);
-    F.figure(ctx, DX, DY, DH, { hat: 'fedora', coat: true, coatLen: 2.6, fill: '#040507', face: -1, rim: rgba('#ffc977', .85 * fl), rimX: -5, rimY: -4, rimBlur: 10,
-      armL: aL, armR: [-.1, .14], lean: breathe + recoil, headTurn: -.6, shadow: false, hatTilt: .06 }); }
+    const fo = { hat: 'fedora', coat: true, coatLen: 2.6, face: -1, armL: aL, armR: [-.1, .14], lean: breathe + recoil, headTurn: -.6, shadow: false, hatTilt: .06 };
+    F.figure(ctx, DX - 9, DY - 7, DH, Object.assign({ fill: rgba('#ffb85c', .22 * fl) }, fo));
+    F.figure(ctx, DX - 4, DY - 3, DH, Object.assign({ fill: rgba('#ffd28a', .8 * fl) }, fo));
+    F.figure(ctx, DX, DY, DH, Object.assign({ fill: '#040507' }, fo)); }
   ctx.restore();
 
   // dust motes floating in the beam (nearest depth)
@@ -271,7 +280,7 @@ window.KL.scenes.culprit = function (ctx, t, d, info) {
   const lift = after ? -10 * Math.exp(-ts * 6) : 0;
   if (nT > 0) {
     const head = typed.slice(0, Math.min(nT, s1.length));
-    text(ctx, head, x0, ty + lift, { size: fs, family: FONT.disp, weight: 400, color: '#f4f1ea', align: 'left', stroke: '#000', strokeW: 12, shadow: { color: 'rgba(0,0,0,.7)', blur: 24, y: 8 } });
+    text(ctx, head, x0, ty + lift, { size: fs, family: FONT.disp, weight: 400, color: '#f4f1ea', align: 'left', stroke: '#000', strokeW: 12 });
     if (nT > s1.length) {
       const q = typed.slice(s1.length); const qPop = 1 + .25 * Math.exp(-(t - (.15 + .37 * (nT / Array.from(full).length))) * 18);
       const gA = after ? .5 + .9 * glitchK + .25 * hash(Math.floor(t * 24)) : .25;
@@ -283,6 +292,5 @@ window.KL.scenes.culprit = function (ctx, t, d, info) {
 
   // snap hit: red rim flash + breathing vignette
   if (after && ts < .35) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = .11 * (1 - ts / .35); ctx.fillStyle = '#ff2a2a'; ctx.fillRect(0, 0, W, H); ctx.restore(); }
-  vignette(ctx, .42 + .05 * Math.sin(t * 1.7) + .3 * kick);
 };
 })();

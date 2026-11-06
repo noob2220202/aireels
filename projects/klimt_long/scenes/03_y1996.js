@@ -24,8 +24,8 @@ const IMG = { x: PX - FW * .39, y: PY - FH * .4, w: FW * .78, h: FH * .8 };
 const tw = (u, v) => [IMG.x + u / 600 * IMG.w, IMG.y + v / 700 * IMG.h]; // portrait texture → world
 const FACE = [[250, 214], [236, 250], [234, 270], [230, 300], [236, 338], [250, 370], [270, 390], [300, 396], [348, 370], [368, 328], [404, 250], [372, 180], [318, 166]];
 const CARDW = 232, CIMG = { x: 13, y: 13, w: 206, h: 240 }, CARDH = 13 + 240 + 48; // b/w reproduction card (world units at scale 1)
-const SIDE = { x: 872, y: 706, r: .06 };                       // where the card hovers next to the painting
-const STU = { y: 1610, h: 880 };                                // student: feet line + height (her own depth layer)
+const SIDE = { x: 948, y: 724, r: .05, s: 1.28 };                       // where the card hovers next to the painting
+const STU = { y: 1565, h: 880 };                                // student: feet line + height (her own depth layer)
 
 // ---------- sprites ----------
 function smallPainting(x, cx, cy, w, h, kind, seed) {
@@ -99,9 +99,13 @@ function makeCardFront() {
 }
 function initG() {
   G = { bg: makeGallery(), back: makeCardBack(), front: makeCardFront() };
+  { const [c, x] = mk(256, 256); x.filter = 'blur(20px)'; x.fillStyle = '#000'; x.fillRect(48, 48, 160, 160); G.shadow = c; }
 }
 
 // ---------- helpers ----------
+function softShadow(ctx, x, y, w, h, a) { // pre-blurred rect stretched under a card
+  const k = 48, sx = w / 160, sy = h / 160; ctx.save(); ctx.globalAlpha *= a; ctx.drawImage(G.shadow, x - k * sx, y - k * sy, 256 * sx, 256 * sy); ctx.restore();
+}
 const tri = (t, t0, t1) => { const p = clamp((t - t0) / (t1 - t0)); return Math.sin(p * Math.PI); };
 function poseLerp(a, b, k) { return [lerp(a[0], b[0], k), lerp(a[1], b[1], k)]; }
 function ik(sx, sy, tx, ty, l1, l2, bend = 1) {
@@ -127,11 +131,19 @@ function faceStroke(ctx, p, color, w, blur) {
 }
 
 // ---------- map (phase A) ----------
+let _italy = null;
+function italy() {
+  if (_italy) return _italy;
+  _italy = ITALY_();
+  if (!_italy) { try { const r = new XMLHttpRequest(); r.open('GET', '/projects/klimt_long/italy.json', false); r.send(); if (r.status === 200) _italy = JSON.parse(r.responseText); } catch (e) { /* map outline optional */ } }
+  if (!_italy) _italy = [];
+  return _italy;
+}
 function drawMap(ctx, t, tDive, a) {
-  const IT = ITALY_(); const mp = project(); const [pzx, pzy] = mp(9.69, 45.05);
-  const push = E.inOutQ(P(t, .55, tDive + .05)), dive = E.inExpo(P(t, tDive, tDive + .42));
+  const IT = italy(); const mp = project(); const [pzx, pzy] = mp(9.69, 45.05);
+  const push = E.inOutQ(P(t, .55, tDive + .05)), dive = E.inExpo(P(t, tDive, tDive + .33));
   const mz = (1 + .02 * t + .85 * push) * (1 + 13 * dive);
-  const mcx = lerp(540, pzx, push * .92 + dive * .08), mcy = lerp(930, pzy + 30, push * .92 + dive * .08) - 30 * dive;
+  const mcx = lerp(540, pzx, push), mcy = lerp(930, pzy + 30 / mz, push); // marker converges to (540,930) and stays there through the dive
   ctx.save(); ctx.globalAlpha *= a;
   gradBG(ctx, [[0, '#05070c'], [.6, '#0a0f19'], [1, '#05070b']]);
   ctx.save(); ctx.translate(540, 960); ctx.scale(mz, mz); ctx.translate(-mcx, -mcy);
@@ -162,7 +174,7 @@ function drawMap(ctx, t, tDive, a) {
   const sx = 540 + (pzx - mcx) * mz, sy = 960 + (pzy - mcy) * mz;
   const drop = P(t, .5, .68, E.inQ), mk2 = P(t, .62, .9);
   if (drop > 0 && dive < .6) {
-    const yy = lerp(sy - 260, sy, drop);
+    const yy = lerp(sy - 110, sy, drop);
     if (drop < 1) { ctx.save(); ctx.strokeStyle = rgba(K.red, .5); ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(sx, yy - 90); ctx.lineTo(sx, yy - 10); ctx.stroke(); ctx.restore(); }
     if (drop >= 1) { const q = P(t, .68, 1.1, E.outC); ctx.save(); ctx.strokeStyle = rgba(K.red, (1 - q) * .9); ctx.lineWidth = 6 * (1 - q) + 1; ctx.beginPath(); ctx.ellipse(sx, sy, 20 + 150 * q, (20 + 150 * q) * .55, 0, 0, 7); ctx.stroke(); ctx.restore(); }
     ctx.save(); ctx.globalAlpha *= 1 - P(dive, .2, .6); marker(ctx, sx, yy, t, 1, K.red); ctx.restore();
@@ -196,8 +208,8 @@ window.KL.scenes.y1996 = function (ctx, t, d, info) {
   // ---- phase B: gallery ----
   if (t >= tLand) {
     const arrive = P(t, tLand, tLand + .55, E.outExpo);
-    const keys = [[tLand, 540, 930, .74], [tLand + .45, 545, 900, .95], [tG, 560, 850, 1.07], [tO + .05, 650, 790, 1.22], [tF - .1, 655, 782, 1.27],
-      [tF + .2, 590, 760, 1.42], [tA + .2, 566, 748, 1.62], [d + .25, 560, 738, 1.92]];
+    const keys = [[tLand, 540, 930, .74], [tLand + .45, 545, 900, .95], [tG, 556, 852, 1.05], [tO, 590, 820, 1.09], [tO + .48, 748, 792, 1.12], [tF - .08, 754, 788, 1.13],
+      [tF + .26, 592, 768, 1.38], [tA + .25, 570, 770, 1.5], [d + .25, 562, 768, 1.62]]; // frame bottom stays above the subtitle band
     let [cx, cy, z] = camAt(keys, t);
     z += .018 * tri(t, tF + .08, tF + .4);                       // tiny punch on the match
     const dr = drift(t, .5, 7);
@@ -207,14 +219,13 @@ window.KL.scenes.y1996 = function (ctx, t, d, info) {
     const cloud = .75 + .25 * fbm(t * .6, 4);                   // daylight drifting through the skylight
 
     ctx.save();
+    if (z < 1.02) { ctx.fillStyle = '#05070a'; ctx.fillRect(0, 0, W, H); }
     ctx.globalAlpha = clamp((t - tLand) / .08);
     ctx.translate(W / 2, H / 2); ctx.rotate(dr.r); ctx.translate(-W / 2, -H / 2);
     // ---- wall layer ----
     ctx.save(); layer(1);
-    ctx.fillStyle = '#05070a'; ctx.fillRect(WX0 - 2000, WY0 - 2000, WW + 4000, WH + 4000);
     ctx.drawImage(G.bg, WX0, WY0);
-    godrays(ctx, 240, -380, Math.PI / 2 - .32, .55, 2300, '#bcd3ef', .055 * cloud, t, 7);
-    godrays(ctx, 820, -380, Math.PI / 2 + .3, .45, 2200, '#bcd3ef', .035 * cloud, t + 3, 6);
+    godrays(ctx, 300, -380, Math.PI / 2 - .26, .7, 2000, '#bcd3ef', .06 * cloud, t, 6);
     // picture light (brass bar) + warm wash on the painting
     const lampOn = .75 + .25 * P(t, tG - .1, tG + .2, E.outQ);
     { const ly = PY - FH / 2 - 44; ctx.fillStyle = '#2a2418'; ctx.fillRect(PX - 4, ly - 40, 8, 40); const bg = ctx.createLinearGradient(0, ly - 10, 0, ly + 12); bg.addColorStop(0, '#8a7448'); bg.addColorStop(1, '#2c2416');
@@ -233,21 +244,21 @@ window.KL.scenes.y1996 = function (ctx, t, d, info) {
         const e = E.outBack(clamp(q), 1.1), qq = E.inOutQ(clamp(q));
         const mx = lerp(bwx, SIDE.x, .45), my = Math.min(bwy, SIDE.y) - 260;
         const u = qq, x = (1 - u) * (1 - u) * bwx + 2 * (1 - u) * u * mx + u * u * SIDE.x, y = (1 - u) * (1 - u) * bwy + 2 * (1 - u) * u * my + u * u * SIDE.y;
-        return { x: lerp(x, SIDE.x, e - qq), y, s: lerp(.24, 1, e), r: lerp(-.5, SIDE.r, qq) + .05 * Math.sin(q * 9) * (1 - q), flip: lerp(-1, 1, E.inOutQ(clamp(q * 1.25))) };
+        return { x: lerp(x, SIDE.x, e - qq), y, s: lerp(.2, SIDE.s, e), r: lerp(-.35, SIDE.r, qq) + .05 * Math.sin(q * 9) * (1 - q), flip: 1, sy: lerp(.12, 1, E.outBack(clamp(q * 1.6), 1.4)) };
       };
-      const drawCard = (c, a, border, imgRect) => {
-        ctx.save(); ctx.globalAlpha *= a; ctx.translate(c.x, c.y); ctx.rotate(c.r); ctx.scale(c.s * (Math.abs(c.flip) < .02 ? .02 : c.flip), c.s);
+      const drawCard = (c, a, border, shad = true) => {
+        ctx.save(); ctx.globalAlpha *= a; ctx.translate(c.x, c.y); ctx.rotate(c.r); ctx.scale(c.s, c.s * (c.sy == null ? 1 : c.sy));
         const w = CARDW, h = CARDH;
-        if (c.flip < 0) { ctx.shadowColor = 'rgba(0,0,0,.6)'; ctx.shadowBlur = 30; ctx.shadowOffsetY = 14; ctx.drawImage(G.back, -w / 2, -h / 2, w, h); }
+        if (c.flip < 0) { if (shad) softShadow(ctx, -w / 2, -h / 2 + 14, w, h, .8); ctx.drawImage(G.back, -w / 2, -h / 2, w, h); }
         else {
-          ctx.save(); ctx.globalAlpha *= border; ctx.shadowColor = 'rgba(0,0,0,.6)'; ctx.shadowBlur = 30; ctx.shadowOffsetY = 14; ctx.drawImage(G.front, -w / 2, -h / 2, w, h); ctx.restore();
+          ctx.save(); ctx.globalAlpha *= border; if (shad) softShadow(ctx, -w / 2, -h / 2 + 14, w, h, .8); ctx.drawImage(G.front, -w / 2, -h / 2, w, h); ctx.restore();
           ctx.drawImage(T.oldphoto, -w / 2 + CIMG.x, -h / 2 + CIMG.y, CIMG.w, CIMG.h);
         }
         ctx.restore();
       };
       if (onto <= 0) {
         // motion trail while flying
-        if (fly < 1) for (let k = 3; k >= 1; k--) { const q = fly - k * .07; if (q > 0) drawCard(cardAt(q), .12 * (4 - k), 1); }
+        if (fly < 1) for (let k = 3; k >= 1; k--) { const q = fly - k * .07; if (q > 0) drawCard(cardAt(q), .12 * (4 - k), 1, false); }
         const c = cardAt(fly); drawCard(c, 1, 1);
         // glint across the reproduction on "클림트"
         const gl = P(t, tK - .05, tK + .4);
@@ -263,7 +274,7 @@ window.KL.scenes.y1996 = function (ctx, t, d, info) {
           const [fx, fy] = tw(312, 290); const pcx = c.x + (-CARDW / 2 + CIMG.x + 312 / 600 * CIMG.w) * c.s, pcy = c.y + (-CARDH / 2 + CIMG.y + 290 / 700 * CIMG.h) * c.s;
           ctx.save(); ctx.setLineDash([12, 9]); ctx.lineDashOffset = -t * 60; ctx.strokeStyle = K.goldHi; ctx.lineWidth = 4; ctx.shadowColor = K.gold; ctx.shadowBlur = 14;
           for (const off of [-34, 0, 34]) { ctx.beginPath(); ctx.moveTo(pcx, pcy + off * .6); ctx.lineTo(lerp(pcx, fx, ml), lerp(pcy + off * .6, fy + off, ml)); ctx.stroke(); }
-          ctx.setLineDash([]); ctx.globalAlpha *= ml; ctx.lineWidth = 4; ctx.beginPath(); ctx.ellipse(fx, fy, 74, 96, -.05, 0, 7); ctx.stroke(); ctx.beginPath(); ctx.ellipse(pcx, pcy, 50, 64, -.05, 0, 7); ctx.stroke(); ctx.restore();
+          ctx.setLineDash([]); ctx.globalAlpha *= ml; ctx.lineWidth = 4; ctx.beginPath(); ctx.ellipse(fx, fy, 74, 96, -.05, 0, 7); ctx.stroke(); ctx.beginPath(); ctx.ellipse(pcx, pcy, 50 * c.s, 64 * c.s, -.05, 0, 7); ctx.stroke(); ctx.restore();
         }
       } else {
         // slide & scale so the reproduction's picture lands exactly on the painting
@@ -273,7 +284,7 @@ window.KL.scenes.y1996 = function (ctx, t, d, info) {
         const rr = lerp(c0.r, 0, onto), sc = iw / CIMG.w;
         ctx.save(); ctx.translate(ix + iw / 2, iy + ih / 2); ctx.rotate(rr);
         // paper border fades as it lands
-        ctx.save(); ctx.globalAlpha *= 1 - P(onto, .3, 1); ctx.shadowColor = 'rgba(0,0,0,.6)'; ctx.shadowBlur = 30; ctx.drawImage(G.front, -iw / 2 - CIMG.x * sc, -ih / 2 - CIMG.y * sc, CARDW * sc, CARDH * sc); ctx.restore();
+        ctx.save(); ctx.globalAlpha *= 1 - P(onto, .3, 1); softShadow(ctx, -iw / 2 - CIMG.x * sc, -ih / 2 - CIMG.y * sc + 12, CARDW * sc, CARDH * sc, .8); ctx.drawImage(G.front, -iw / 2 - CIMG.x * sc, -ih / 2 - CIMG.y * sc, CARDW * sc, CARDH * sc); ctx.restore();
         // picture, clipped by the comparison wipe once it has landed
         const wx = lerp(IMG.x + IMG.w + 2, tw(316, 0)[0], wipeIn) + 9 * Math.sin((t - tA) * 7) * Math.exp(-Math.max(0, t - tA) * 2.5) * (t > tA ? 1 : 0);
         ctx.beginPath(); ctx.rect(-iw / 2 - 40, -ih / 2 - 40, onto < 1 ? iw + 80 : (wx - IMG.x) + 40, ih + 80); ctx.clip();
@@ -310,19 +321,19 @@ window.KL.scenes.y1996 = function (ctx, t, d, info) {
     ctx.restore();
 
     // ---- student layer ----
-    ctx.save(); layer(1.12);
+    ctx.save(); if (t < tLand + .09) ctx.globalAlpha = 0; layer(1.12);
     { const st = studentState(t);
-      // pointing arm: target the face of the painting, mapped into this layer
-      const [fsx, fsy] = toScreen(1, ...tw(300, 300)); const [fx, fy] = fromScreen(1.12, fsx, fsy);
-      const u = STU.h / 8, shX = .95 * u * .9, shY = -6.6 * u;
-      const dx = fx - st.x - shX, dy = fy - STU.y - shY, dl = Math.hypot(dx, dy), ext = 2.8 * u * .93;
-      const point = ik(shX, shY, shX + dx / dl * ext, shY + dy / dl * ext, 1.45 * u, 1.35 * u, -1);
-      const pk = E.outBack(P(t, tA - .12, tA + .22), 1.5), pdip = tri(t, tA - .3, tA - .1) * .2;
-      const armR = poseLerp(st.armR, point, pk); armR[0] -= pdip;
+      // recognition: hand rises to the chin (2-bone IK), with a small anticipation dip
+      const u = STU.h / 8, shX = .855 * u, shY = -6.6 * u;
+      const chin = ik(shX, shY, .62 * u, -7.0 * u, 1.45 * u, 1.35 * u, 1);
+      const pk = E.outBack(P(t, tA - .02, tA + .34), 1.4), pdip = tri(t, tA - .22, tA - .02) * .12;
+      const armR = poseLerp(st.armR, chin, pk); armR[0] -= pdip;
       const o = { female: true, hair: 'long', face: 1, headTurn: .7, fill: '#05070a', shadow: false, lean: st.lean, armL: st.armL, armR, walk: st.walk, stride: st.stride };
       // warm bounce from the painting on her front edge, cool skylight rim on top
-      ctx.save(); ctx.globalAlpha *= .9; F.figure(ctx, st.x + 4, STU.y - 2, STU.h, Object.assign({}, o, { fill: rgba('#ffcf8a', .55 * lampOn), shadow: false })); ctx.restore();
-      F.figure(ctx, st.x, STU.y, STU.h, Object.assign({}, o, { rim: rgba('#a9c8ff', .8 * cloud), rimX: -3, rimY: -5, rimBlur: 9 }));
+      F.figure(ctx, st.x - 6, STU.y - 8, STU.h, Object.assign({}, o, { fill: rgba('#a9c8ff', .22 * cloud) }));
+      F.figure(ctx, st.x - 3, STU.y - 4, STU.h, Object.assign({}, o, { fill: rgba('#b8d2ff', .75 * cloud) }));
+      F.figure(ctx, st.x + 4, STU.y - 2, STU.h, Object.assign({}, o, { fill: rgba('#ffcf8a', .5 * lampOn) }));
+      F.figure(ctx, st.x, STU.y, STU.h, o);
       // soft contact shadow
       const sg = ctx.createRadialGradient(st.x, STU.y, 4, st.x, STU.y, 150); sg.addColorStop(0, 'rgba(0,0,0,.55)'); sg.addColorStop(1, 'rgba(0,0,0,0)');
       ctx.save(); ctx.translate(st.x, STU.y); ctx.scale(1, .18); ctx.translate(-st.x, -STU.y); ctx.fillStyle = sg; ctx.fillRect(st.x - 150, STU.y - 150, 300, 300); ctx.restore();
@@ -353,8 +364,11 @@ window.KL.scenes.y1996 = function (ctx, t, d, info) {
     }
   }
   // landing flash between map and gallery
-  const fl = tri(t, tLand - .16, tLand + .3);
-  if (fl > 0) flash(ctx, fl * .8, '#dbe7ff');
+  const fl = tri(t, tLand - .1, tLand + .17);
+  if (fl > 0) { // luminous burst through the pin rather than a flat white-out
+    const f2 = Math.pow(fl, 1.4); ctx.save(); ctx.globalCompositeOperation = 'lighter';
+    const rg = ctx.createRadialGradient(540, 930, 0, 540, 930, 1250); rg.addColorStop(0, `rgba(255,250,235,${.95 * f2})`); rg.addColorStop(.35, `rgba(214,228,255,${.55 * f2})`); rg.addColorStop(1, 'rgba(120,150,210,0)');
+    ctx.fillStyle = rg; ctx.fillRect(0, 0, W, H); ctx.restore(); flash(ctx, f2 * .18, '#ffffff'); }
   // ---- year flap: big, then docks as a header (on the thunk), leaves with the dive ----
   const dock = E.outBack(P(t, .52, .8), 1.2), fa = 1 - P(t, tDive + .05, tDive + .3);
   if (fa > 0) {
@@ -365,37 +379,49 @@ window.KL.scenes.y1996 = function (ctx, t, d, info) {
 };
 
 function drawBook(ctx, t, st) {
-  const [bx, by] = st.book; const u = STU.h / 8, w = .95 * u, h = 1.25 * u, op = st.open;
+  const [bx, by] = st.book; const u = STU.h / 8, op = st.open, w = .6 * u, h = .82 * u;
   ctx.save(); ctx.translate(bx, by); ctx.rotate(st.bookRot || 0);
-  if (op <= .02) { ctx.fillStyle = '#16120c'; ctx.fillRect(-w * .2, -h / 2, w * .4, h); ctx.fillStyle = rgba('#a9c8ff', .5); ctx.fillRect(-w * .2, -h / 2, w * .4, 2); }
-  else {
-    const pw = w * op;
-    ctx.fillStyle = '#d9cfb6'; ctx.beginPath(); ctx.moveTo(0, -h * .42); ctx.lineTo(-pw, -h * .5); ctx.lineTo(-pw, h * .38); ctx.lineTo(0, h * .45); ctx.closePath(); ctx.fill();
-    ctx.fillStyle = '#e8dfc8'; ctx.beginPath(); ctx.moveTo(0, -h * .42); ctx.lineTo(pw, -h * .5); ctx.lineTo(pw, h * .38); ctx.lineTo(0, h * .45); ctx.closePath(); ctx.fill();
-    ctx.fillStyle = 'rgba(40,30,20,.45)'; ctx.fillRect(pw * .2, -h * .3, pw * .6, h * .4);
-    ctx.restore(); glow(ctx, bx, by, 120 * op, '#ffe6b0', .35 * op * st.glowK); return;
+  if (op <= .02) { // closed, held at her side
+    ctx.fillStyle = '#100c08'; roundRect(ctx, -w * .17, -h / 2, w * .34, h, 3); ctx.fill();
+    ctx.fillStyle = rgba('#a9c8ff', .4); ctx.fillRect(-w * .17, -h / 2, w * .34, 2);
+    ctx.restore(); return;
   }
+  // open, tipped toward her: foreshortened pages lit by the gallery light
+  const pw = w * op, hh = h * .55;
+  ctx.fillStyle = '#0f0b07'; ctx.beginPath(); ctx.moveTo(-pw - 4, -hh * .2); ctx.lineTo(0, 0); ctx.lineTo(pw + 4, -hh * .2); ctx.lineTo(pw + 4, hh * .65); ctx.lineTo(0, hh * .85); ctx.lineTo(-pw - 4, hh * .65); ctx.closePath(); ctx.fill();
+  for (const sd of [-1, 1]) {
+    const g = ctx.createLinearGradient(0, 0, sd * pw, 0); g.addColorStop(0, '#8f8571'); g.addColorStop(.25, '#d8cdb3'); g.addColorStop(1, '#b9ad93');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(0, 2); ctx.quadraticCurveTo(sd * pw * .5, -hh * .32, sd * pw, -hh * .16); ctx.lineTo(sd * pw, hh * .58); ctx.quadraticCurveTo(sd * pw * .5, hh * .42, 0, hh * .74); ctx.closePath(); ctx.fill();
+  }
+  ctx.strokeStyle = 'rgba(60,45,25,.35)'; ctx.lineWidth = 1.5;
+  for (let i = 0; i < 4; i++) { ctx.beginPath(); ctx.moveTo(pw * .18, hh * (.02 + i * .12)); ctx.lineTo(pw * .82, hh * (-.06 + i * .12)); ctx.stroke(); }
+  ctx.fillStyle = 'rgba(40,32,22,.55)'; ctx.fillRect(-pw * .8, -hh * .05, pw * .55, hh * .45);
   ctx.restore();
+  glow(ctx, bx, by, 110 * op, '#ffe6b0', .3 * op * st.glowK);
 }
 
 // student animation: walk in, stop before the painting, open the book, lower it (pointing is layered on top)
 function studentFn(info) {
-  const tS = at(info, '여고생이', .2), tG = at(info, '그림에서', .32), tO = at(info, '사라진', .5), tA = at(info, '알아봤다', .86);
-  const t0 = tS - .3, t1 = tG + .15, X0 = -170, X1 = 292, u = STU.h / 8;
+  const tS = at(info, '여고생이', .2), tG = at(info, '그림에서', .32), tO = at(info, '사라진', .5), tF = at(info, '초상화를', .75), tA = at(info, '알아봤다', .86);
+  const t0 = tS - .3, t1 = tG + .15, X0 = -230, X1 = 182, X2 = 296, s0 = tF + .22, s1 = tA + .3, u = STU.h / 8;
   return function (tt) {
     const p = clamp((tt - t0) / (t1 - t0)), e = 1 - Math.pow(1 - p, 2.2);
-    const x = lerp(X0, X1, e), dist = (X1 - X0) * e, speed = (X1 - X0) * 2.2 * Math.pow(1 - p, 1.2) / (t1 - t0);
-    const moving = clamp(speed / 520);
+    const p2 = clamp((tt - s0) / (s1 - s0)), e2 = E.inOutQ(p2);
+    const x = lerp(X0, X1, e) + (X2 - X1) * e2, dist = (X1 - X0) * e + (X2 - X1) * e2, speed = (X1 - X0) * 2.2 * Math.pow(1 - p, 1.2) / (t1 - t0);
+    const moving = Math.max(clamp(speed / 520), .75 * Math.sin(p2 * Math.PI));
     const walk = dist / 330 * Math.PI, stride = .4 * moving;
     const openK = E.inOutQ(P(tt, tO - .32, tO - .04)) * (1 - E.inOutQ(P(tt, tO + .55, tO + .95)));
     const swing = Math.sin(walk) * stride * .8;
-    const armL = poseLerp([.12 - swing * .5, -.55], [.62, -.95], openK), armR = poseLerp([-swing + .05, .15], [.4, -1.05], openK);
+    const armL = poseLerp([.12 - swing * .5, -.55], [.5, 1.0], openK), armR = poseLerp([-swing + .05, .15], [.36, 1.12], openK);
     const sh = [-.855 * u, -6.6 * u], e1 = [sh[0] + Math.sin(armL[0]) * 1.45 * u, sh[1] + Math.cos(armL[0]) * 1.45 * u];
     const hand = [e1[0] + Math.sin(armL[0] + armL[1]) * 1.35 * u, e1[1] + Math.cos(armL[0] + armL[1]) * 1.35 * u];
-    const lean = -.02 * P(tt, t1 - .1, t1 + .5, E.inOutQ) + .025 * tri(tt, tA - .05, tA + .45) - .01 * tri(tt, tA - .3, tA - .05) + .015 * moving;
+    const shR = [.855 * u, -6.6 * u], eR = [shR[0] + Math.sin(armR[0]) * 1.45 * u, shR[1] + Math.cos(armR[0]) * 1.45 * u];
+    const handR = [eR[0] + Math.sin(armR[0] + armR[1]) * 1.35 * u, eR[1] + Math.cos(armR[0] + armR[1]) * 1.35 * u];
+    const bookL = [lerp(hand[0] + .2 * u, (hand[0] + handR[0]) / 2, openK), lerp(hand[1] - .1 * u, (hand[1] + handR[1]) / 2 - .2 * u, openK)];
+    const lean = -.02 * P(tt, t1 - .1, t1 + .5, E.inOutQ) * (1 - p2) + .04 * E.inOutQ(P(tt, tA - .05, tA + .45)) + .012 * moving;
     const bob = Math.abs(Math.sin(walk)) * u * .08;
     return { x, walk, stride, lean, armL, armR, open: E.outBack(P(tt, tO - .2, tO + .05)) * (1 - P(tt, tO + .55, tO + .8)), glowK: 1 - P(tt, tO + .3, tO + .8),
-      book: [x + hand[0] + .25 * u, STU.y + hand[1] - .15 * u + bob], bookRot: lerp(.25, 0, openK) };
+      book: [x + bookL[0], STU.y + bookL[1] + bob], bookRot: lerp(.25, -.08, openK) };
   };
 }
 })();
