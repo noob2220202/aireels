@@ -179,7 +179,7 @@ function faceF(ctx, c, ex) {
   ctx.save(); ctx.clip(fp);
   ctx.fillStyle = rg(ctx, -10, 20, 10, 120, [[0, 'rgba(255,255,255,.22)'], [.6, 'rgba(255,220,200,0)'], [1, 'rgba(235,150,130,.22)']]); ctx.fillRect(-100, -110, 200, 230);
   // cel shadow: thin cast under the fringe + under the side lock + far jaw
-  shape(ctx, 'M -90,-110 L 90,-110 L 90,-46 C 60,-54 30,-58 14,-58 C -10,-56 -36,-50 -54,-30 C -60,-4 -58,40 -52,70 L -90,90 Z', c.skinSh);
+  shape(ctx, 'M -90,-110 L 90,-110 L 90,-50 C 60,-58 30,-62 14,-62 C -10,-60 -36,-54 -54,-32 C -60,-4 -58,40 -52,70 L -90,90 Z', c.skinSh);
   ctx.globalAlpha = .9; shape(ctx, 'M 20,104 C 36,100 52,82 62,58 C 58,80 44,98 30,106 Z', c.skinSh); ctx.globalAlpha = 1;
   const bl = ex.blush;
   ctx.fillStyle = rg(ctx, -30, 45, 2, 28, [[0, `rgba(${c.blush},${.5 * bl})`], [1, `rgba(${c.blush},0)`]]); ctx.fillRect(-70, 10, 80, 80);
@@ -240,11 +240,11 @@ function hairFrontF(ctx, c) {
     .forEach((d, i) => ink(ctx, d, 1.3, c.hairLn, .25, .4, i === 2 ? .9 : .55));
   // see-through bangs: slim curved strands with the forehead visible between them
   const hl = x => -69 + Math.pow(Math.abs(x - 14) / 60, 2) * 12;               // hairline height at x
-  const fr = [[-40,9,1],[-31,3,0],[-25,7,1],[-15,2.6,0],[-9,8,1],[0,3,0],[6,6,1],[20,5.5,1],[26,2.6,0],[33,7.5,1],[41,3,0],[47,6.5,1]]; // x, width, long?
   ctx.save(); ctx.globalAlpha = .96;
+  const fr = [[-40,8,1],[-31,2.6,0],[-24,6.5,1],[-15,3,0],[-8,7.5,1],[-1,2.4,0],[5,6,1],[20,5.5,1],[26,2.4,0],[32,7,1],[40,3,0],[46,6,1]]; // x, width, long?
   fr.forEach((q, i) => { const x = q[0], side = x < 14 ? -1 : 1, d = Math.abs(x - 14);
-    const tx = x + side * (4 + d * .34), ty = (q[2] ? -15 : -30) + hash(i * 2.3) * 7 + d * .12;
-    shape(ctx, lockPath(x, hl(x) - 3, tx, ty, -side * (3 + d * .1), q[1], q[1] * 1.15), c.hair, q[1] > 4 ? .9 : .5, c.hairLn); });
+    const tx = x + side * (5 + d * .36), ty = (q[2] ? -13 : -26) + hash(i * 2.3) * 6 + d * .1;
+    shape(ctx, lockPath(x, hl(x) - 8, tx, ty, -side * (5 + d * .12), q[1], q[1] * .9).replace(' Z', ''), c.hair, q[1] > 4 ? .9 : .5, c.hairLn); });
   // face-framing side strands (longer, curling in at the cheek)
   shape(ctx, 'M -34,-62 C -53,-50 -65,-24 -65,6 C -65,24 -62,38 -56,50 C -64,34 -71,14 -69,-10 C -67,-34 -57,-52 -43,-60 Z', c.hair, .9, c.hairLn);
   shape(ctx, 'M 46,-64 C 58,-52 65,-30 65,-6 C 65,6 63,16 60,24 C 68,10 73,-12 69,-34 C 65,-50 58,-60 53,-63 Z', c.hair, .9, c.hairLn);
@@ -365,7 +365,7 @@ function sleevesF(ctx, c) {
   const cream = '#f8eedb', creamSh = '#e6d2b3', band = '#efdfc2', ln = '#5a382b';
   // far arm: wraps round the right edge a little higher than the near hand, fingers on the front face
   [[536,1316,-.10,36],[532,1336,-.04,43],[532,1356,.03,41],[536,1375,.09,33]].forEach(q => finger(ctx, q[0], q[1], q[2], q[3], 15.5, c.skin, c.skinSh, true));
-  const fs = shape(ctx, 'M 566,1226 C 590,1290 600,1392 588,1440 C 576,1468 548,1464 534,1440 C 528,1408 528,1348 534,1300 C 540,1280 550,1250 566,1226 Z', cream, 3.2, ln);
+  const fs = shape(ctx, 'M 580,1262 C 595,1320 600,1396 588,1440 C 576,1468 548,1464 534,1440 C 528,1408 528,1348 534,1304 C 544,1282 562,1266 580,1262 Z', cream, 3.2, ln);
   ctx.save(); ctx.clip(fs);
   shape(ctx, 'M 600,1380 C 580,1410 556,1418 530,1410 L 530,1480 L 600,1480 Z', creamSh);
   shape(ctx, 'M 526,1296 L 552,1290 L 554,1450 L 528,1446 Z', band); ctx.restore();
@@ -391,18 +391,18 @@ function torsoM(ctx, c) {
   ink(ctx, 'M 741,782 C 736,792 737,800 741,808', 1.6, INK, .3, .3, .6);
   shape(ctx, 'M 716,826 C 756,872 846,876 890,822 L 906,910 L 700,910 Z', '#fdf9f3', 2.4, ln);                 // tee collar
   ink(ctx, 'M 728,846 C 768,884 838,886 880,846', 1.4, '#cfc6c0', .1, .1, .9);
-  const bd = shape(ctx, 'M 712,824 C 676,848 600,866 552,892 C 512,914 494,966 488,1050 C 480,1200 474,1500 470,1920 L 1090,1920 L 1090,905 C 1040,880 944,856 890,818 C 850,900 756,902 712,824 Z', grey, 3.4, ln);
+  const bd = shape(ctx, 'M 712,824 C 680,846 622,862 582,886 C 546,908 530,962 524,1050 C 516,1200 510,1500 506,1920 L 1090,1920 L 1090,905 C 1040,880 944,856 890,818 C 850,900 756,902 712,824 Z', grey, 3.4, ln);
   ctx.save(); ctx.clip(bd);
   shape(ctx, 'M 1100,990 C 1040,1010 1000,1100 990,1920 L 1100,1920 Z', greySh);                              // side turned from the window
   shape(ctx, 'M 712,824 C 756,910 850,908 890,818 L 906,872 C 860,960 750,958 696,872 Z', greySh);             // under the hood rim
   shape(ctx, 'M 470,1300 C 560,1240 606,1100 592,1000 L 650,1920 L 470,1920 Z', greySh);                       // behind her
-  ctx.globalAlpha = .8; shape(ctx, 'M 552,892 C 520,912 500,960 494,1040 C 520,970 566,930 640,896 Z', greyHi); ctx.globalAlpha = 1;
+  ctx.globalAlpha = .8; shape(ctx, 'M 582,886 C 550,908 534,960 528,1040 C 552,972 592,930 660,894 Z', greyHi); ctx.globalAlpha = 1;
   ctx.fillStyle = lg(ctx, 0, 1000, 0, 1920, [[0, 'rgba(84,86,116,0)'], [1, 'rgba(84,86,116,.42)']]); ctx.fillRect(460, 1000, 640, 920);
   ctx.fillStyle = rg(ctx, 700, 1010, 20, 330, [[0, 'rgba(255,226,190,.34)'], [1, 'rgba(255,226,190,0)']]); ctx.fillRect(460, 700, 640, 700);
   
   ctx.restore();
-  ink(ctx, 'M 592,1004 C 596,1100 588,1220 568,1330', 2, ln, .2, .5, .6);
-  ink(ctx, 'M 642,902 C 630,930 628,960 632,992', 1.8, ln, .3, .5, .5);
+  ink(ctx, 'M 618,1004 C 622,1100 614,1220 596,1330', 2, ln, .2, .5, .6);
+  ink(ctx, 'M 664,900 C 654,930 652,960 656,992', 1.8, ln, .3, .5, .5);
   ink(ctx, 'M 1000,966 C 950,1004 900,1022 850,1024', 1.8, ln, .1, .7, .5);
   ink(ctx, 'M 1012,1050 C 964,1086 930,1104 896,1110', 1.6, ln, .1, .7, .4);
   ink(ctx, 'M 668,1560 C 680,1500 700,1470 724,1456 L 960,1450 C 990,1466 1004,1500 1012,1560', 2, ln, .1, .1, .45);

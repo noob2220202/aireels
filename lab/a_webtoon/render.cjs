@@ -27,4 +27,5 @@ html,body{margin:0;background:#222}</style></head><body><canvas id="c" width="10
   fs.writeFileSync(path.join(out, 'faces.png'), Buffer.from(res.faces.split(',')[1], 'base64'));
   console.log('drawn in', res.ms.toFixed(0), 'ms');
   await browser.close();
+  fs.unlinkSync(page0);
 })();
