@@ -199,13 +199,13 @@ def syn_piano(midi, dur, vel):
     n = int((dur + 0.5) * SR)
     t = _tb(n)
     tau1 = 2.5 * 2.0 ** ((60.0 - midi) / 20.0)
-    slope = (9.5 - 4.5 * vel) * 2.0 ** ((midi - 60.0) / 28.0)      # dB per partial
+    slope = (7.2 - 3.2 * vel) * 2.0 ** ((midi - 60.0) / 40.0)      # dB per partial
     inh = max(6e-5, 2.0e-4 * 2.0 ** ((midi - 60.0) / 10.0))
     out = np.zeros(n)
     a1 = 0.35 + 0.65 * abs(math.sin(math.pi * 0.118 + 0.25))
     for k in range(1, 40):
         fk = k * f0 * math.sqrt(1.0 + inh * k * k)
-        if fk > 6500.0:
+        if fk > 8000.0:
             break
         a = 10.0 ** (-slope * (k - 1) / 20.0) * (0.35 + 0.65 * abs(math.sin(math.pi * k * 0.118 + 0.25))) / a1
         if k > 2 and a < 0.003:
@@ -418,9 +418,9 @@ def perc(kind, var=0):
     elif kind == 'kick':
         n = int(0.42 * SR)
         t = _tb(n)
-        ph = TWO_PI * (50.0 * t + 62.0 * 0.028 * (1.0 - np.exp(-t / 0.028)))
-        x = np.sin(ph) * np.exp(-t / 0.11)
-        x += 0.22 * np.sin(2.0 * ph) * np.exp(-t / 0.05)
+        ph = TWO_PI * (60.0 * t + 70.0 * 0.026 * (1.0 - np.exp(-t / 0.026)))
+        x = np.sin(ph) * np.exp(-t / 0.085)
+        x += 0.30 * np.sin(2.0 * ph) * np.exp(-t / 0.045)
         x += 0.10 * lp(r.standard_normal(n), 1500.0, 2) * np.exp(-t / 0.006)
         x = _norm(lp(x, 2500.0, 1)) * 0.9
     elif kind == 'brush':
@@ -441,13 +441,13 @@ _NOTE_CACHE = {}
 # instrument -> (synth, gain, reverb send, default pan)
 INSTR = {
     'piano': (lambda m, d, v: syn_piano(m, d, v), 0.50, 0.26, 0.0),
-    'celesta': (lambda m, d, v: syn_celesta(m, d, v, 'celesta'), 0.34, 0.34, 0.12),
-    'musicbox': (lambda m, d, v: syn_celesta(m, d, v, 'musicbox'), 0.24, 0.40, -0.15),
+    'celesta': (lambda m, d, v: syn_celesta(m, d, v, 'celesta'), 0.42, 0.34, 0.12),
+    'musicbox': (lambda m, d, v: syn_celesta(m, d, v, 'musicbox'), 0.28, 0.40, -0.15),
     'mallet': (lambda m, d, v: syn_celesta(m, d, v, 'mallet'), 0.42, 0.24, 0.10),
     'pluck': (lambda m, d, v: syn_pluck(m, d, v, 'pizz'), 0.42, 0.24, -0.10),
     'mute': (lambda m, d, v: syn_pluck(m, d, v, 'mute'), 0.50, 0.14, 0.0),
-    'bass': (lambda m, d, v: syn_bass(m, d, v), 0.55, 0.03, 0.0),
-    'pad': (lambda m, d, v: syn_pad(m, d, v), 1.00, 0.30, 0.0),
+    'bass': (lambda m, d, v: syn_bass(m, d, v), 0.48, 0.03, 0.0),
+    'pad': (lambda m, d, v: syn_pad(m, d, v), 0.24, 0.30, 0.0),
 }
 PERC_GAIN = {'shaker': (0.30, 0.10, 0.25), 'hat': (0.26, 0.08, 0.20), 'rim': (0.42, 0.14, -0.15),
              'wood': (0.40, 0.16, 0.20), 'kick': (0.70, 0.0, 0.0), 'brush': (0.34, 0.14, -0.10)}
@@ -565,13 +565,23 @@ PROG = {
 
 # key = tonic pitch class, base = MIDI note of scale degree 0 of the melody
 MOODS = {
-    'sweet': dict(bpm=84, key=5, base=65, mode='maj', swing=0.5, lead='celesta', comp='piano', trim=0.0),
-    'flutter': dict(bpm=96, key=7, base=67, mode='maj', swing=0.5, lead='celesta', comp='pluck', trim=0.0),
-    'comic': dict(bpm=112, key=0, base=72, mode='maj', swing=0.6, lead='mallet', comp='pluck', trim=0.0),
-    'calm': dict(bpm=72, key=10, base=58, mode='maj', swing=0.5, lead='piano', comp='piano', trim=0.0),
-    'sad': dict(bpm=66, key=2, base=62, mode='min', swing=0.5, lead='piano', comp='piano', trim=0.0),
-    'tension': dict(bpm=100, key=2, base=62, mode='sus', swing=0.5, lead='piano', comp='pluck', trim=0.0),
+    'sweet': dict(bpm=84, key=5, base=65, mode='maj', swing=0.5, lead='celesta', comp='piano', trim=-1.0),
+    'flutter': dict(bpm=96, key=7, base=67, mode='maj', swing=0.5, lead='celesta', comp='pluck', trim=-0.6),
+    'comic': dict(bpm=112, key=0, base=72, mode='maj', swing=0.6, lead='mallet', comp='pluck', trim=3.1),
+    'calm': dict(bpm=72, key=10, base=58, mode='maj', swing=0.5, lead='piano', comp='piano', trim=2.4),
+    'sad': dict(bpm=66, key=2, base=62, mode='min', swing=0.5, lead='piano', comp='piano', trim=3.2),
+    'tension': dict(bpm=100, key=2, base=62, mode='sus', swing=0.5, lead='piano', comp='pluck', trim=2.7),
     'bright': dict(bpm=92, key=7, base=67, mode='maj', swing=0.5, lead='piano', comp='piano', trim=0.0),
+}
+# stem balance per mood, dB by role (roles not listed: 0)
+MIX = {
+    'sweet': {'pad': -0.5},
+    'flutter': {'comp': 3.5, 'bass': -1.0, 'pad': 2.0, 'perc': 8.0, 'fill': 2.0},
+    'comic': {'comp': -1.0, 'bass': -3.0, 'perc': 4.5},
+    'calm': {'mel': 1.0, 'comp': -2.0, 'pad': -5.0, 'bass': -2.5},
+    'sad': {'comp': -1.0, 'pad': -1.0},
+    'tension': {'pulse': -2.0, 'pad': -2.0, 'perc': -5.5, 'bass': -4.0},
+    'bright': {'comp': -2.0, 'bass': -2.5, 'perc': -1.5},
 }
 SILENT_MOODS = ('none', 'silence', 'off')
 MIN_SEGMENT_S = 1.6
@@ -594,15 +604,8 @@ def nearest_pitch(pc, target, lo, hi):
     return min(c, key=lambda p: (abs(p - target), p))
 
 
-def choose_voicing(pcs, lo, hi, n, prev=None, center=None, pull=0.35):
-    """Pick n ascending pitches in [lo, hi] covering the chord's pitch classes, as close as
-    possible to the previous voicing (voice leading), with no muddy or cramped spacing."""
-    pcs = list(dict.fromkeys(p % 12 for p in pcs))
-    if len(pcs) > n:                       # drop the fifth first
-        pcs = ([pcs[0], pcs[1]] + pcs[3:])[:n]
+def _voicing_search(pcs, lo, hi, n, prev, center, pull):
     cands = [p for p in range(lo, hi + 1) if p % 12 in pcs]
-    if center is None:
-        center = (lo + hi) / 2.0
     best, bc = None, 1e9
     for combo in combinations(cands, n):
         if len({p % 12 for p in combo}) < len(pcs):
@@ -610,8 +613,12 @@ def choose_voicing(pcs, lo, hi, n, prev=None, center=None, pull=0.35):
         gaps = [b - a for a, b in zip(combo, combo[1:])]
         if min(gaps) < 2 or max(gaps) > 9 or combo[-1] - combo[0] > 17:
             continue
+        if any(g == 2 and a < 57 for a, g in zip(combo, gaps)):              # no seconds down low
+            continue
+        if any(g1 == 2 and g2 == 2 for g1, g2 in zip(gaps, gaps[1:])):       # no three-note clusters
+            continue
         cost = pull * abs(sum(combo) / n - center)
-        cost += sum(1.2 for g in gaps if g == 2)
+        cost += sum((1.5 if a >= 62 else 6.0) for a, g in zip(combo, gaps) if g == 2)
         if combo[0] < 55 and gaps[0] < 4:
             cost += 2.0
         if prev and len(prev) == n:
@@ -620,13 +627,23 @@ def choose_voicing(pcs, lo, hi, n, prev=None, center=None, pull=0.35):
             cost += abs(combo[-1] - prev[-1]) + abs(combo[0] - prev[0])
         if cost < bc - 1e-9:
             best, bc = combo, cost
-    if best is None:                       # fall back to a close-position stack
-        best, p = [], lo
-        for pc in pcs[:n]:
-            p = nearest_pitch(pc, p + 3, p, p + 11)
-            best.append(p)
-        best = sorted(best)
-    return list(best)
+    return list(best) if best else None
+
+
+def choose_voicing(pcs, lo, hi, n, prev=None, center=None, pull=0.35):
+    """Pick n ascending pitches in [lo, hi] covering the chord's pitch classes, as close as
+    possible to the previous voicing (voice leading), with no muddy or cramped spacing. With more
+    pitch classes than voices the root is left to the bass. Returns None when nothing fits."""
+    pcs = list(dict.fromkeys(p % 12 for p in pcs))
+    if len(pcs) > n:
+        pcs = pcs[1:][:n]
+    if center is None:
+        center = (lo + hi) / 2.0
+    for dlo, dhi in ((0, 0), (-3, 0), (-5, 0), (-5, 2), (-7, 4)):
+        v = _voicing_search(pcs, lo + dlo, hi + dhi, n, prev, center, pull)
+        if v:
+            return v
+    return None
 
 
 class Bar:
@@ -827,7 +844,9 @@ class Arr:
         self.scale = mood_scale(seg.mood)
         self.prev_v = {}
         self.prev_bass = {}
-        self.gain = from_db(seg.cfg['trim'])
+        trim = seg.cfg['trim']
+        self.gains = {r: from_db(trim + d) for r, d in MIX[seg.mood].items()}
+        self.gain = from_db(trim)
 
     def t(self, bar, beat):
         sw = self.cfg['swing']
@@ -845,11 +864,12 @@ class Arr:
 
     def put(self, inst, t, dur, midi, vel, role='comp', pan=None):
         v = min(1.0, max(0.05, vel * (1.0 + self._jit(0.04))))
-        self.ev.append((max(0.0, t), inst, midi, dur, v, pan, self.gain, role, self.seg.index))
+        self.ev.append((max(0.0, t), inst, midi, dur, v, pan, self.gains.get(role, self.gain), role, self.seg.index))
 
     def hit(self, kind, bar, beat, vel, var=0, human=0.002):
         v = min(1.0, max(0.05, vel * (1.0 + self._jit(0.06))))
-        self.ev.append((max(0.0, self.t(bar, beat) + self._jit(human)), kind, var, 0.0, v, None, self.gain, 'perc', self.seg.index))
+        self.ev.append((max(0.0, self.t(bar, beat) + self._jit(human)), kind, var, 0.0, v, None,
+                        self.gains.get('perc', self.gain), 'perc', self.seg.index))
 
     def chord(self, name):
         return CHORDS[self.cfg['mode']][name]
@@ -865,10 +885,20 @@ class Arr:
         self.prev_bass[slot] = p
         return p
 
-    def voicing(self, ch, lo, hi, n=3, rich=False, slot='v', center=None, pull=0.35):
-        pcs = self.pcs(ch, rich)
-        n = min(n, len(pcs)) if rich else n
-        v = choose_voicing(pcs, lo, hi, n, self.prev_v.get(slot), center, pull)
+    def voicing(self, ch, lo, hi, n=3, rich=False, slot='v', center=None, pull=0.35, bar=None):
+        """Voice-led chord in [lo, hi]; with `bar`, kept below that bar's lowest melody note so a
+        passing dissonance is never a bare minor second against the accompaniment."""
+        if bar is not None and bar.mel:
+            floor = min(m for _, _, m in self.melody(bar))
+            hi = max(lo + 9, min(hi, floor - 2))
+        v = None
+        if rich and ch['add'] is not None and n >= 4:
+            v = choose_voicing(self.pcs(ch, True), lo, hi, 4, self.prev_v.get(slot), center, pull)
+        if v is None:
+            pcs = self.pcs(ch)
+            v = choose_voicing(pcs, lo, hi, min(n, len(pcs)), self.prev_v.get(slot), center, pull)
+        if v is None:                          # cannot happen with the chords above; stay safe
+            v = sorted(nearest_pitch(pc, (lo + hi) // 2, lo, hi) for pc in self.pcs(ch)[:3])
         self.prev_v[slot] = v
         return v
 
@@ -922,7 +952,7 @@ def arr_sweet(A, bar):
         ch = A.chord(name)
         bass = A.bass_pitch(ch, 36, 47)
         A.note('bass', bar, b0, min(ln, 3.6), bass, 0.50, 'bass')
-        v = A.voicing(ch, 55, 69, 4, rich=True)
+        v = A.voicing(ch, 55, 69, 4, rich=True, bar=bar)
         n0 = bass + 12
         while n0 >= v[0] - 1:
             n0 -= 12
@@ -930,12 +960,11 @@ def arr_sweet(A, bar):
         ne = int(round(ln * 2))
         for e, i in enumerate(_arp_order(len(notes), ne)):
             vel = (0.46 if e == 0 else 0.31 + 0.05 * i / len(notes) + (0.03 if e % 2 == 0 else 0.0)) * dyn
-            A.note('piano', bar, b0 + e * 0.5, min(ln - e * 0.5 + 0.4, 2.5), notes[i], vel)
-        A.pad(bar, b0, ln, v[:3], 0.27 + 0.05 * min(bar.rep, 1))
+            A.note('piano', bar, b0 + e * 0.5, min(ln - e * 0.5 + 0.1, 2.5), notes[i], vel)
+        A.pad(bar, b0, ln, A.voicing(ch, 53, 67, 3, slot='pad', bar=bar), 0.27 + 0.05 * min(bar.rep, 1))
     for b, d, m in A.melody(bar):
-        A.note('celesta', bar, b, d + 0.6, m, 0.62 * dyn, 'mel')
-        if bar.rep >= 1:
-            A.note('musicbox', bar, b, d, m + 12, 0.42 * dyn, 'mel2')
+        A.note('celesta', bar, b, d + 0.25, m, 0.62 * dyn, 'mel')
+        A.note('musicbox', bar, b, d, m + 12, (0.42 if bar.rep >= 1 else 0.30) * dyn, 'mel2')
 
 
 def arr_flutter(A, bar):
@@ -947,13 +976,13 @@ def arr_flutter(A, bar):
         A.note('bass', bar, b0, 0.9, bass, 0.40, 'bass')
         if ln >= 4:
             A.note('bass', bar, b0 + 2, 0.9, A.fifth_of(ch, bass, 43, 57), 0.34, 'bass')
-        v = A.voicing(ch, 59, 76, 3, center=64.0 + 0.6 * bar.idx, pull=1.3)
+        v = A.voicing(ch, 59, 76, 3, center=64.0 + 0.6 * bar.idx, pull=1.3, bar=bar)
         for e in range(int(round(ln * 2))):
             p = (v[0], v[2], v[1], v[2])[e % 4]
             A.note('pluck', bar, b0 + e * 0.5, 0.36, p, (0.42 if e % 2 == 0 else 0.31) * dyn)
         A.pad(bar, b0, ln, v, 0.22 + 0.012 * bar.idx)
     for b, d, m in A.melody(bar):
-        A.note('celesta', bar, b, d + 0.5, m, 0.60 * dyn, 'mel')
+        A.note('celesta', bar, b, d + 0.25, m, 0.60 * dyn, 'mel')
         if full:
             A.note('musicbox', bar, b, d, m + 12, 0.38 * dyn, 'mel2')
     if full:
@@ -998,21 +1027,21 @@ def arr_calm(A, bar):
     dyn = DYN[bar.idx]
     for b0, ln, name in bar.spans:
         ch = A.chord(name)
-        p0 = A.bass_pitch(ch, 36, 47)
+        p0 = A.bass_pitch(ch, 39, 50)
         A.note('bass', bar, b0, ln * 0.95, p0, 0.36, 'bass')
-        v = A.voicing(ch, 53, 67, 4, rich=True)
+        v = A.voicing(ch, 53, 65, 3, bar=bar)
         A.pad(bar, b0, ln, v, 0.36)
         p1 = A.tone_above(ch, p0 + 6)
         p2 = A.tone_above(ch, p1 + 3)
-        A.note('piano', bar, b0, ln + 0.5, p0, 0.40 * dyn)
+        A.note('piano', bar, b0, ln + 0.1, p0, 0.40 * dyn)
         if ln >= 2:
-            A.note('piano', bar, b0 + 1, ln - 0.5, p1, 0.30 * dyn)
+            A.note('piano', bar, b0 + 1, ln - 0.9, p1, 0.30 * dyn)
         if ln >= 3:
-            A.note('piano', bar, b0 + 2, ln - 1.5, p2, 0.33 * dyn)
+            A.note('piano', bar, b0 + 2, ln - 1.9, p2, 0.33 * dyn)
         if ln >= 4 and bar.rep >= 1:
-            A.note('piano', bar, b0 + 3, 1.5, A.tone_above(ch, p2 + 3, True), 0.26 * dyn)
+            A.note('piano', bar, b0 + 3, 1.1, A.tone_above(ch, p2 + 3, True), 0.26 * dyn)
     for b, d, m in A.melody(bar, thin=True):
-        A.note('piano', bar, b, d + 1.0, m, 0.54 * dyn, 'mel', human=0.007)
+        A.note('piano', bar, b, d + 0.2, m, 0.54 * dyn, 'mel', human=0.007)
         if bar.rep >= 1 and d >= 1.5:
             A.note('celesta', bar, b, d, m + 12, 0.24, 'mel2')
 
@@ -1026,11 +1055,11 @@ def arr_sad(A, bar):
         p2 = A.tone_above(ch, p1 + 3)
         for o, p, vel in ((0, p0, 0.38), (1, p1, 0.28), (2, p2, 0.32), (3, p1, 0.26)):
             if o < ln:
-                A.note('piano', bar, b0 + o, min(ln - o + 0.5, 3.0), p, vel * dyn, human=0.008)
-        v = A.voicing(ch, 53, 65, 3)
+                A.note('piano', bar, b0 + o, ln - o + 0.1, p, vel * dyn, human=0.008)
+        v = A.voicing(ch, 53, 65, 3, bar=bar)
         A.pad(bar, b0, ln, v, 0.21)
     for b, d, m in A.melody(bar):
-        A.note('piano', bar, b, d + 0.8, m, 0.56 * dyn, 'mel', human=0.009, late=0.012)
+        A.note('piano', bar, b, d + 0.2, m, 0.56 * dyn, 'mel', human=0.009, late=0.012)
         if bar.rep >= 1 and d >= 2:                       # a music-box memory an octave up
             A.note('celesta', bar, b + 1.0, 1.5, m + 12, 0.24, 'mel2')
 
@@ -1044,7 +1073,7 @@ def arr_tension(A, bar):
             A.note('mute', bar, b0 + e * 0.5, 0.4, ped, acc[e % 8], 'pulse', human=0.002)
         if bar.idx % 2 == 0 or bar.kind != 'theme':
             A.note('bass', bar, b0, 7.5 if bar.kind == 'theme' else ln, A.bass_pitch(ch, 38, 49), 0.44, 'bass')
-        v = A.voicing(ch, 57, 71, 3)
+        v = A.voicing(ch, 57, 71, 3, bar=bar)
         A.pad(bar, b0, ln, v, 0.34)
     A.hit('kick', bar, 0.0, 0.50)                         # a held-breath heartbeat
     if bar.nbeats >= 2:
@@ -1054,7 +1083,7 @@ def arr_tension(A, bar):
             if b < bar.nbeats:
                 A.hit('rim', bar, b, 0.22, var=b)
     for b, d, m in A.melody(bar):
-        A.note('piano', bar, b, d + 0.5, m, 0.50, 'mel')
+        A.note('piano', bar, b, d + 0.25, m, 0.50, 'mel')
         if bar.rep >= 1 and d >= 1:
             A.note('celesta', bar, b + 1.0, 1.0, m + 12, 0.22, 'mel2')
 
@@ -1084,15 +1113,15 @@ def arr_bright(A, bar):
         if ln >= 4:
             A.note('bass', bar, b0 + 2, 0.9, A.fifth_of(ch, root, 40, 54), 0.46, 'bass')
             A.note('bass', bar, b0 + 3.5, 0.45, root, 0.38, 'bass')
-        v = A.voicing(ch, 55, 68, 4, rich=True)
+        v = A.voicing(ch, 55, 69, 4, rich=True, bar=bar)
         for o, d, vel in ((0, 1.3, 0.42), (1.5, 0.9, 0.34)) + (((3, 0.9, 0.36),) if ln >= 4 else ()):
             if o < ln:
                 for j, p in enumerate(v):
-                    A.note('piano', bar, b0 + o, d, p, vel, late=0.008 * j)
-        A.pad(bar, b0, ln, v[:3], 0.26)
+                    A.note('piano', bar, b0 + o, min(d, ln - o + 0.05), p, vel, late=0.008 * j)
+        A.pad(bar, b0, ln, A.voicing(ch, 53, 67, 3, slot='pad', bar=bar), 0.26)
     for b, d, m in A.melody(bar):
-        A.note('piano', bar, b, d + 0.3, m, 0.66 * dyn, 'mel')
-        A.note('piano', bar, b, d + 0.3, m - 12, 0.42 * dyn, 'mel2')
+        A.note('piano', bar, b, d + 0.2, m, 0.66 * dyn, 'mel')
+        A.note('piano', bar, b, d + 0.2, m - 12, 0.42 * dyn, 'mel2')
         if bar.rep >= 1:
             A.note('celesta', bar, b, d, m + 12, 0.30 * dyn, 'mel2')
 
@@ -1115,7 +1144,7 @@ def arr_pivot(A, bar):
     pcs = [(nk + 7) % 12, nk % 12, (nk + 2) % 12, (nk + 5) % 12]
     bass = nearest_pitch(pcs[0], A.prev_bass.get('bass', 43), 36, 50)
     A.note('bass', bar, 0, nb - 0.25, bass, 0.44, 'bass')
-    v = choose_voicing(pcs, 53, 69, 4, A.prev_v.get('v'))
+    v = choose_voicing(pcs, 53, 69, 4, A.prev_v.get('v')) or sorted(nearest_pitch(pc, 61, 53, 69) for pc in pcs)
     A.pad(bar, 0, nb, v, 0.26)
     seq = v + [p + 12 for p in v]
     comp = A.cfg['comp']
@@ -1148,7 +1177,8 @@ def arr_end(A, bar):
     pcs = [key % 12, (key + (third if third is not None else 7)) % 12, (key + 7) % 12, (key + 2) % 12]
     bass = nearest_pitch(key, A.prev_bass.get('bass', 41), 36, 47)
     A.put('bass', t, min(ring, 2.4), bass, 0.50, 'bass')
-    v = choose_voicing(pcs, 53, 69, 4 if third is not None else 3, A.prev_v.get('v'))
+    pcs = list(dict.fromkeys(pcs))
+    v = choose_voicing(pcs, 53, 69, len(pcs), A.prev_v.get('v')) or sorted(nearest_pitch(pc, 61, 53, 69) for pc in pcs)
     for p in v:
         A.put('pad', t, max(0.3, ring - 0.9), p, 0.30, 'pad')
     for i, p in enumerate([bass + 12] + v):

@@ -95,7 +95,7 @@
   }
   const PUNCT = ',.…?!~';
   /* wrap by 어절, balanced, <= maxChars per line. MUST stay identical to wrap_ko() in engine/build.py */
-  T.wrapWords = (words, maxChars) => {
+  T.wrapWords = (words, maxChars, single) => {
     const n = words.length, lens = words.map(w => w.length);
     const len = (i, j) => { let s = j - i - 1; for (let k = i; k < j; k++) s += lens[k]; return s; };
     if (n <= 1) return [words];
@@ -105,11 +105,11 @@
       const a = len(0, i), b = len(i, n);
       if (Math.max(a, b) > maxChars) continue;
       const last = words[i - 1][words[i - 1].length - 1].ch;
-      let cost = Math.abs(a - b) + (a > b ? 0.4 : 0) - (PUNCT.indexOf(last) >= 0 ? 1.5 : 0);
+      let cost = Math.abs(a - b) + (a > b ? 0.4 : 0) - (PUNCT.indexOf(last) >= 0 ? 2.5 : 0);
       if (Math.min(a, b) < 2) cost += 4;
       if (!best || cost < best.cost) best = { i, cost };
     }
-    if (total <= maxChars && (total <= 8 || !best || best.cost > 5)) return [words];
+    if (total <= maxChars && (single || total <= 8 || !best || best.cost > 5)) return [words];
     if (best) return [words.slice(0, best.i), words.slice(best.i)];
     const lines = []; let cur = [];
     for (const w of words) {
@@ -119,12 +119,12 @@
     return lines;
     function len2(ws) { let s = ws.length - 1; for (const w of ws) s += w.length; return s; }
   };
-  T.wrap = (text, maxChars) => {              /* -> array of lines, each an array of words */
+  T.wrap = (text, maxChars, single) => {      /* -> array of lines, each an array of words; single: keep one line when it fits */
     const out = [];
-    for (const p of parseWords(text)) for (const l of T.wrapWords(p, maxChars || STYLE.maxChars)) out.push(l);
+    for (const p of parseWords(text)) for (const l of T.wrapWords(p, maxChars || STYLE.maxChars, single)) out.push(l);
     return out;
   };
-  T.lines = (text, maxChars) => T.wrap(text, maxChars).map(l => l.map(w => w.map(c => c.ch).join('')).join(' '));
+  T.lines = (text, maxChars, single) => T.wrap(text, maxChars, single).map(l => l.map(w => w.map(c => c.ch).join('')).join(' '));
   function lineRuns(words) {
     const runs = []; let cur = null;
     const push = (ch, em) => { if (cur && cur.em === em) cur.text += ch; else { cur = { text: ch, em }; runs.push(cur); } };
@@ -146,7 +146,7 @@
   /* layout: { lines:[{runs:[{text,em,w}], w}], w, h, size, lineH, st } ; shrinks until w <= maxWidth */
   T.layout = (ctx, text, st, opts) => {
     opts = opts || {};
-    const wrapped = opts.noWrap ? parseWords(text) : T.wrap(text, opts.maxChars || STYLE.maxChars);
+    const wrapped = opts.noWrap ? parseWords(text) : T.wrap(text, opts.maxChars || STYLE.maxChars, opts.single);
     let size = Math.round((opts.size || st.size) * (opts.scale || 1));
     const minSize = Math.min(size, opts.min || st.min || 36);
     let lay;
@@ -224,7 +224,8 @@
     const seed = strSeed((b.text || '') + '|' + (opts.seed || 0));
     const spec = { src: b, type, seed, st, fontScale: fs, dark: !!opts.dark, who: b.who || b.near || null, cx: 0, cy: 0, tip: null };
     if (type === 'sfx') return buildSfx(ctx, spec, b, opts, fs);
-    const lay = spec.lay = T.layout(ctx, b.text, st, { scale: fs, maxWidth: opts.maxTextW, spacing: type === 'caption' ? 2 : (type === 'shout' ? 1 : -0.5) });
+    const single = type === 'narration' || type === 'text' || type === 'caption';        /* these stay on one line when they fit */
+    const lay = spec.lay = T.layout(ctx, b.text, st, { size: Math.max(st.min, Math.round(st.size * fs)), single, maxWidth: opts.maxTextW, spacing: type === 'caption' ? 2 : (type === 'shout' ? 1 : -0.5) });
     const nl = lay.lines.length;
     if (type === 'speech' || type === 'whisper' || type === 'thought' || type === 'shout') {
       const padX = type === 'thought' ? 52 : type === 'shout' ? 40 : 40 + lay.w * 0.03, padY = type === 'thought' ? 44 : type === 'shout' ? 34 : (nl === 1 ? 40 : 36);
@@ -239,7 +240,7 @@
       if (worst > 0.9) { const k = Math.pow(worst / 0.9, 1 / n); a *= k; bb *= k; }
       spec.body = { a, b: bb, n };
       const grow = type === 'shout' ? 1.2 : type === 'thought' ? 1.06 : 1;
-      spec.bw = a * 2 * grow; spec.bh = bb * 2 * (type === 'shout' ? 1.3 : grow);
+      spec.bw = a * 2 * (type === 'shout' ? 1.32 : grow); spec.bh = bb * 2 * (type === 'shout' ? 1.42 : grow);
     } else if (type === 'narration') {
       spec.bw = lay.w + 76 * fs; spec.bh = lay.h + 56 * fs;
     } else if (type === 'text') {
@@ -260,7 +261,7 @@
     const txt = T.plain(b.text);
     let tone = null; for (const tn of SFX_TONES) if (tn.re.test(txt)) { tone = tn; break; }
     const impact = b.impact !== undefined ? !!b.impact : (b.style ? b.style === 'impact' : !!(tone && tone.impact));
-    const pm = opts.panel ? clamp(Math.min(opts.panel.w, opts.panel.h * 1.5) / 1000, 0.62, 1) : 1;
+    const pm = opts.panel ? clamp(Math.min(opts.panel.w, opts.panel.h * 2.3) / 1000, 0.66, 1.08) : 1;
     const chars = Array.from(txt);
     let size = Math.round(STYLE.sfx.size * fs * pm * (chars.length > 4 ? Math.max(0.6, 4.6 / chars.length) : 1));
     const fam = impact ? STYLE.sfx.impact : STYLE.sfx.family;
@@ -400,8 +401,8 @@
     T.draw(g, spec.lay, 0, y0 + h / 2 + 1, { color: me ? '#ffffff' : spec.st.color, emColor: me ? '#fff3a8' : '#e8356f' });
     if (spec.name) {
       g.font = '700 30px "Pretendard"'; g.textAlign = 'left'; g.textBaseline = 'middle'; g.lineJoin = 'round';
-      g.strokeStyle = 'rgba(255,255,255,0.9)'; g.lineWidth = 7; g.strokeText(spec.name, -w / 2 + 8, -h / 2 - spec.nameH / 2 + 14);
-      g.fillStyle = '#4a4352'; g.fillText(spec.name, -w / 2 + 8, -h / 2 - spec.nameH / 2 + 14);
+      g.save(); g.shadowColor = 'rgba(20,12,36,0.75)'; g.shadowBlur = 8; g.shadowOffsetY = 2; g.fillStyle = '#ffffff';
+      g.fillText(spec.name, -w / 2 + 10, -h / 2 - spec.nameH / 2 + 14); g.fillText(spec.name, -w / 2 + 10, -h / 2 - spec.nameH / 2 + 14); g.restore();
     }
   }
   function drawCaption(g, spec) {
@@ -446,7 +447,7 @@
   B.sprite = (spec) => {
     if (spec.sprite) return spec.sprite;
     const M = 48, tip = spec.tip ? [spec.tip[0] - spec.cx, spec.tip[1] - spec.cy] : null;
-    const ex = spec.type === 'shout' ? 26 : spec.type === 'narration' ? 14 : spec.type === 'sfx' ? spec.sfx.size * 0.3 : 6;
+    const ex = spec.type === 'shout' ? 30 : spec.type === 'narration' ? 14 : spec.type === 'sfx' ? spec.sfx.size * 0.3 : 6;
     let x0 = -spec.bw / 2 - ex, x1 = spec.bw / 2 + ex, y0 = -spec.bh / 2 - ex - (spec.nameH || 0) / 2, y1 = spec.bh / 2 + ex + (spec.nameH || 0) / 2;
     if (tip) { x0 = Math.min(x0, tip[0] - 16); x1 = Math.max(x1, tip[0] + 16); y0 = Math.min(y0, tip[1] - 16); y1 = Math.max(y1, tip[1] + 16); }
     x0 = Math.floor(x0 - M); y0 = Math.floor(y0 - M); x1 = Math.ceil(x1 + M); y1 = Math.ceil(y1 + M);
@@ -462,7 +463,7 @@
     g.drawImage(sp.c, 0, 0); g.globalCompositeOperation = 'source-atop'; g.fillStyle = L.DIM_COLOR; g.fillRect(0, 0, c.width, c.height);
     return (sp.cd = c);
   }
-  L.DIM_COLOR = 'rgba(24,18,44,0.30)';
+  L.DIM_COLOR = 'rgba(28,20,58,0.20)';
 
   /* draw a placed bubble. lt = seconds since it appeared; dim 0..1 (old panel) */
   B.draw = (g, spec, lt, dim) => {
@@ -526,6 +527,8 @@
       if (p.tip) { const tr = { x0: Math.min(p.tip[0], p.cx) , y0: Math.min(p.tip[1], p.cy), x1: Math.max(p.tip[0], p.cx), y1: Math.max(p.tip[1], p.cy) }; if (distPointRect(p.tip[0], p.tip[1], Rin) === 0) hard += 700; else if (rectOverlap(Rin, tr) > 0 && segHitsRect(p.cx, p.cy, p.tip[0], p.tip[1], Rin)) hard += 500; }
     }
     for (const u of env.unsafe || []) { const ov = rectOverlap(R, u); if (ov > 0) hard += 420 + 3200 * ov / area; }
+    /* a bubble must not swallow a whole (small) figure */
+    for (const h of env.heads) if (h.body && !h.back) { const ba = (h.body.x1 - h.body.x0) * (h.body.y1 - h.body.y0), cov = ba > 0 ? rectOverlap(Rin, h.body) / ba : 0; if (cov > 0.4) hard += 420 * (cov - 0.4); }
     for (const u of env.blocks || []) { const ov = rectOverlap(R, u); if (ov > 0) hard += (u.w || 800) * (0.25 + ov / Math.min(area, (u.x1 - u.x0) * (u.y1 - u.y0))); }
     return hard;
   }
@@ -598,6 +601,8 @@
             /* lean to the side with more room: over the speaker's outer shoulder rather than between two faces */
             if (env.heads.length > 1) { const mid = env.heads.reduce((s, h) => s + h.x, 0) / env.heads.length; if ((S.x - mid) * (cx - S.x) < 0) cost += Math.min(140, Math.abs(cx - S.x) * 0.35); }
           } else cost += (cy - A.y0) * 0.12 + Math.abs(cx - (A.x0 + A.x1) / 2) * 0.05;
+          /* prefer open background over covering somebody's body */
+          for (const h of env.heads) if (h.body) { const ov = rectOverlap(Rin, h.body); if (ov > 0) cost += (h.back ? 90 : 260) * ov / ((Rin.x1 - Rin.x0) * (Rin.y1 - Rin.y0)); }
           const side = b.side, ref = S ? [S.x, S.y, S.r] : [P.x + P.w / 2, P.y + P.h / 2, 0];
           if (side === 'left' && cx > ref[0] - ref[2] * 0.3) cost += 1500 + (cx - ref[0]) * 2;
           if (side === 'right' && cx < ref[0] + ref[2] * 0.3) cost += 1500 + (ref[0] - cx) * 2;
@@ -649,7 +654,7 @@
   };
 
   /* ================================================================== panel layouts */
-  const PAGE = L.PAGE = { x0: 44, x1: 1036, y0: 150, y1: 1610, gut: 22 };
+  const PAGE = L.PAGE = { x0: 44, x1: 1036, y0: 140, y1: 1690, gut: 22 };
   L.LAYOUTS = ['full', 'tall', 'stack2a', 'stack2b', 'big+small:a', 'big+small:b', 'small+big:a', 'small+big:b', 'stack3a', 'stack3b', 'stack3c', 'inset'];
   L.layoutRect = (name) => {
     const X = PAGE.x0, Wd = PAGE.x1 - PAGE.x0, Y = PAGE.y0, Hh = PAGE.y1 - PAGE.y0, G = PAGE.gut;

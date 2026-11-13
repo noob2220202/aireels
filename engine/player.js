@@ -55,8 +55,8 @@
 
   /* ------------------------------------------------------------ kit access (never let the kit crash a render) */
   const DEF_METRICS = { height: 1000, headTop: -1000, headCenter: [0, -905], headR: 95, eyeY: -898, chinY: -815, shoulderY: -785, chestY: -705, waistY: -610, hipY: -530, kneeY: -275 };
-  function metrics(id) {
-    try { const m = TOON.metrics(id); if (m && m.headR > 0 && m.headCenter) return m; L.warn('TOON.metrics("' + id + '") returned nothing usable'); } catch (e) { L.warn('TOON.metrics("' + id + '") failed: ' + e.message); }
+  function metrics(id, st) {          /* st = { pose } is a hint: a kit may return pose-adjusted head positions */
+    try { const m = TOON.metrics(id, st); if (m && m.headR > 0 && m.headCenter) return m; L.warn('TOON.metrics("' + id + '") returned nothing usable'); } catch (e) { L.warn('TOON.metrics("' + id + '") failed: ' + e.message); }
     return DEF_METRICS;
   }
   function kitCall(label, fn) { try { fn(); return true; } catch (e) { L.warn(label + ' failed: ' + e.message); return false; } }
@@ -108,9 +108,9 @@
   /* shot table: head diameter as a share of the usable panel height (kH) / of the width per actor (kW),
    * head-centre height in the usable area (hy), background zoom + blur */
   const SHOTS = {
-    closeup: { kH: 0.44, kW: 0.52, hy: 0.57, bgZ: 1.7, blur: 0.85 },
-    bust: { kH: 0.33, kW: 0.38, hy: 0.53, bgZ: 1.35, blur: 0.5 },
-    waist: { kH: 0.225, kW: 0.3, hy: 0.4, bgZ: 1.15, blur: 0.25 },
+    closeup: { kH: 0.58, kW: 0.56, hy: 0.57, bgZ: 1.7, blur: 0.85 },
+    bust: { kH: 0.4, kW: 0.42, hy: 0.53, bgZ: 1.35, blur: 0.5 },
+    waist: { kH: 0.25, kW: 0.34, hy: 0.4, bgZ: 1.15, blur: 0.25 },
     full: { figH: 0.8, bgZ: 1, blur: 0 },
     eyes: { bgZ: 2, blur: 1 },
     hands: { bgZ: 1.5, blur: 0.8 },
@@ -126,7 +126,7 @@
     const firstSpeaker = (c.bubbles || []).map(b => b.who).find(w => w && src.some(a => a.who === w));
     const defAt = n === 1 ? [0.5] : n === 2 ? [0.27, 0.73] : n === 3 ? [0.2, 0.5, 0.8] : front.map((_, i) => 0.12 + 0.76 * i / (n - 1));
     const acts = src.map((a, idx) => {
-      const m = metrics(a.who), shot = SHOTS[a.shot || 'bust'] ? (a.shot || 'bust') : (L.warn('unknown shot "' + a.shot + '" (bust)'), 'bust'), SH = SHOTS[shot];
+      const m = metrics(a.who, { pose: a.pose || 'stand' }), shot = SHOTS[a.shot || 'bust'] ? (a.shot || 'bust') : (L.warn('unknown shot "' + a.shot + '" (bust)'), 'bust'), SH = SHOTS[shot];
       const fi = front.indexOf(a), table = AT[Math.min(3, n)];
       let fr = typeof a.at === 'number' ? a.at : (a.at && table[a.at] !== undefined ? table[a.at] : null);
       if (a.at && fr === null) L.warn('unknown at "' + a.at + '"');
@@ -232,7 +232,9 @@
     const cam = cameraAt(c, Lc, c.t0 + c.dur * 0.6); cam.ox = cam.oy = 0;
     Lc.heads = Lc.actors.map(a => {
       const h = camPt(cam, a.hx, a.hy), f = camPt(cam, a.fxl, a.fyl);
-      return { who: a.who, x: h[0] + p.x, y: h[1] + p.y, r: a.hr * cam.z, fx: f[0] + p.x, fy: f[1] + p.y, fr: a.frl * cam.z, back: a.back };
+      const r = a.hr * cam.z, ft = camPt(cam, a.x, a.feetY);
+      return { who: a.who, x: h[0] + p.x, y: h[1] + p.y, r, fx: f[0] + p.x, fy: f[1] + p.y, fr: a.frl * cam.z, back: a.back,
+        body: { x0: Math.min(h[0], ft[0]) + p.x - r * 1.5, x1: Math.max(h[0], ft[0]) + p.x + r * 1.5, y0: h[1] + p.y + r * 0.9, y1: Math.max(ft[1], h[1] + r) + p.y } };
     });
     const list = c.bubbles || [];
     let allow;
@@ -252,7 +254,7 @@
     const kind = (a.emotes.find(e => e.kind) || {}).kind;
     const behind = kind === 'sweat' || kind === 'gloom' || kind === 'anger' || kind === 'zzz';
     const side = a.dir === 0 ? 1 : (behind ? -a.dir : a.dir);
-    return [head.x + side * head.r * 0.92, head.y - head.r * 0.98, head.r * 2 * 0.6 / 100];
+    return [head.x + side * head.r * 0.92, head.y - head.r * 0.98, Math.min(head.r * 2 * 0.6, head.lim || 1e9) / 100];
   }
 
   function ensureLayout(c) {
@@ -342,7 +344,7 @@
     /* emotes above the heads (panel space, following the camera) */
     for (const a of live) {
       if (!a.emotes.length) continue;
-      const st = a._st, hp = camPt(cam, a.hx + st.dx, a.hy + st.dy), head = { x: hp[0], y: hp[1], r: a.hr * cam.z };
+      const st = a._st, hp = camPt(cam, a.hx + st.dx, a.hy + st.dy), head = { x: hp[0], y: hp[1], r: a.hr * cam.z, lim: Math.min(w, h) * 0.4 };
       a.emotes.forEach((e, i) => {
         const et = t - e.t; if (et < 0 || !e.kind) return;
         const nx = a.emotes[i + 1], out = nx && t >= nx.t ? 1 - clamp((t - nx.t) / 0.2, 0, 1) : 1; if (out <= 0) return;
@@ -383,6 +385,21 @@
     const Lc = ensureLayout(c), bl = c.bubbles || [];
     for (let i = 0; i < Lc.bub.length; i++) L.bubble.draw(g, Lc.bub[i], t - bl[i].t0, dim);
   }
+  /* horizontal motion blur of a region of canvas `src`: halve the width n times (each step a 2-px box), then double it back */
+  const MB1 = buf(W / 2 + 2, H), MB2 = buf(W / 4 + 2, H);
+  function smear(g, src, x, y, w, h, k) {
+    const n = Math.max(1, Math.min(5, Math.round(Math.log2(Math.max(1, k)))));
+    let cur = src, cx = x, cy = y, cw = w;
+    const step = (dst, nw) => {
+      dst.g.imageSmoothingEnabled = true; dst.g.imageSmoothingQuality = 'low';
+      dst.g.clearRect(0, 0, nw + 2, h); dst.g.drawImage(cur, cx, cy, cw, h, 0, 0, nw, h);
+      cur = dst.c; cx = 0; cy = 0; cw = nw;
+    };
+    for (let i = 1; i <= n; i++) step(i % 2 ? MB1 : MB2, Math.max(2, Math.ceil(w / Math.pow(2, i))));
+    for (let i = n - 1; i >= 1; i--) step(cur === MB1.c ? MB2 : MB1, Math.max(2, Math.ceil(w / Math.pow(2, i))));
+    g.save(); g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'low';
+    g.drawImage(cur, 0, 0, cw, h, x, y, w, h); g.restore();
+  }
   /* composite a freshly drawn panel (in buffer C) with a panel-level transition */
   function panelTrans(g, c, t, type, u) {
     const Lc = ensureLayout(c), p = Lc.panel, m = p.inset ? 70 : 12;
@@ -392,7 +409,11 @@
     switch (type) {
       case 'scroll': blit(0, Math.round((1 - ease.outCubic(u)) * 150), clamp(u * 2.6, 0, 1)); break;
       case 'push': g.save(); g.beginPath(); g.rect(0, sy, W, sh); g.clip(); blit(Math.round((1 - ease.outCubic(u)) * (W - sx)), 0, 1); g.restore(); break;
-      case 'whip': { const e = ease.outQuint(u), v = 1 - e; for (let i = 3; i >= 0; i--) blit(Math.round(v * (W - sx) + i * v * 90), 0, i === 0 ? 1 : 0.22); break; }
+      case 'whip': {
+        const e = ease.outQuint(u), v = 1 - e, dx = Math.round(v * (W - sx)), k = 1 + v * 26;
+        if (k > 1.5) { smear(C.g, C.c, sx, sy, sw, sh, Math.min(k, sw / 4)); }
+        g.save(); g.beginPath(); g.rect(0, sy, W, sh); g.clip(); blit(dx, 0, 1); g.restore(); break;
+      }
       case 'flash': blit(0, 0, 1); g.save(); g.globalAlpha *= Math.pow(1 - u, 1.4); g.fillStyle = '#fff'; g.fillRect(p.x, p.y, p.w, p.h); g.restore(); break;
       case 'iris': g.save(); g.beginPath(); g.arc(p.x + p.w / 2, p.y + p.h / 2, ease.inOutCubic(u) * Math.hypot(p.w, p.h) * 0.56 + 1, 0, TAU); g.clip(); blit(0, 0, 1); g.restore(); break;
       case 'pop': { const s = lerp(0.8, 1, ease.outBack(u, 2.2)), cx = p.x + p.w / 2, cy = p.y + p.h / 2; g.save(); g.translate(cx, cy); g.scale(s, s); g.translate(-cx, -cy); blit(0, 0, clamp(u * 3.5, 0, 1)); g.restore(); break; }
@@ -417,8 +438,9 @@
       case 'fade': g.drawImage(A.c, 0, 0); g.save(); g.globalAlpha = ease.inOutSine(u); g.drawImage(Bf.c, 0, 0); g.restore(); break;
       case 'push': { const x = Math.round(e * W); g.drawImage(A.c, -x, 0); g.drawImage(Bf.c, W - x, 0); break; }
       case 'whip': {
-        const x = ease.inOutCubic(u) * W, v = Math.sin(Math.PI * u), n = 6;
-        for (let i = 0; i < n; i++) { const o = (i / (n - 1) - 0.5) * v * 190; g.save(); g.globalAlpha = 1 / (i + 1); g.drawImage(A.c, Math.round(-x + o), 0); g.drawImage(Bf.c, Math.round(W - x + o), 0); g.restore(); }
+        const x = Math.round(ease.inOutCubic(u) * W), v = Math.sin(Math.PI * u);
+        g.drawImage(A.c, -x, 0); g.drawImage(Bf.c, W - x, 0);
+        if (v > 0.04) { C.g.drawImage(g.canvas, 0, 0); smear(g, C.c, 0, 0, W, H, 1 + v * 30); }
         break;
       }
       case 'flash': g.drawImage(u < 0.42 ? A.c : Bf.c, 0, 0); g.save(); g.globalAlpha = u < 0.42 ? Math.pow(u / 0.42, 1.6) : Math.pow(1 - (u - 0.42) / 0.58, 1.5); g.fillStyle = '#fff'; g.fillRect(0, 0, W, H); g.restore(); break;
@@ -484,7 +506,7 @@
     if (E.teaser) {
       const a = clamp((u - 0.8) / 0.45, 0, 1);
       if (a > 0) {
-        const lay = L.text.layout(g, E.teaser, { family: 'Pretendard', weight: 600, emWeight: 800, size: 54, min: 40, lineH: 1.42, color: '#ffffff', emColor: '#ffb3cb' }, { maxChars: 15, maxWidth: 860 });
+        const lay = L.text.layout(g, E.teaser, { family: 'Pretendard', weight: 600, emWeight: 800, size: 54, min: 40, lineH: 1.42, color: '#ffffff', emColor: '#ffb3cb' }, { maxChars: 15, maxWidth: 860, single: true });
         g.save(); g.globalAlpha = a; g.shadowColor = 'rgba(20,8,40,0.6)'; g.shadowBlur = 14; L.text.draw(g, lay, W / 2, 1010 + lay.h / 2 - 30 + rise(a)); g.restore();
       }
     }

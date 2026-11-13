@@ -49,9 +49,20 @@
     if (!chars[id]) { warn('unknown character "' + id + '" (using a default body)'); defineCharacter(id, {}); }
     return chars[id];
   }
-  function metrics(id) {
+  /* metrics(id) per the SPEC; the optional 2nd argument { pose } returns the head where that pose puts it */
+  function metrics(id, st) {
     const c = getChar(id), k = c.k, m = {};
     for (const key in BASE) m[key] = Array.isArray(BASE[key]) ? BASE[key].map(v => v * k) : BASE[key] * k;
+    const P = st && st.pose && POSES[st.pose];
+    if (P && (P.torso || P.lean || P.sit)) {
+      let hx = BASE.headCenter[0], hy = BASE.headCenter[1], dy = 0;
+      if (P.sit) dy = 210;
+      if (P.torso) { const a = P.torso * DEG, ry = hy - BASE.hipY; hx = -ry * Math.sin(a); hy = BASE.hipY + ry * Math.cos(a); }
+      if (P.lean) { const a = P.lean * DEG, x0 = hx, y0 = hy; hx = x0 * Math.cos(a) - y0 * Math.sin(a); hy = x0 * Math.sin(a) + y0 * Math.cos(a); }
+      const sy = hy + dy - BASE.headCenter[1];
+      m.headCenter = [hx * k, (hy + dy) * k];
+      for (const key of ['headTop', 'eyeY', 'chinY']) m[key] += sy * k;
+    }
     return m;
   }
 
@@ -282,7 +293,7 @@
       ctx.quadraticCurveTo(cx - 28 + vx, cy - 24 - s2, cx - 56 + vx * 0.6, cy - 60);
       ctx.bezierCurveTo(cx - 80, cy - 58, cx - 96 + s2, cy - 30, cx - 100, cy + (hs === 'short' ? -6 : 30)); ctx.closePath();
       blob(ctx, col.hair);
-      ctx.beginPath(); ctx.moveTo(cx - 50, cy - 104); ctx.quadraticCurveTo(cx, cy - 122, cx + 50, cy - 104); ctx.strokeStyle = col.hair2; ctx.lineWidth = 5; ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(cx - 46, cy - 84); ctx.quadraticCurveTo(cx, cy - 100, cx + 46, cy - 84); ctx.strokeStyle = col.hair2; ctx.lineWidth = 5; ctx.stroke();
       ctx.restore();
     }
     torso();
