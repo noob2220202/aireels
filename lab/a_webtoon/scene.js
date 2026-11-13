@@ -144,6 +144,7 @@ function eye(ctx, o) {
     + (F ? ` L ${p(-1 - .22 * wg, .30 - .5 * wg)} C ${p(-1.06, -.6)} ${p(-.76, -1.26 - th * .7)} ${p(-.14, -1.20 - th)}`
          : ` L ${p(-1 - .12 * wg, -.06 - .14 * wg)} C ${p(-.98, -.7)} ${p(-.7, -1.1 - th * .8)} ${p(-.1, -1.12 - th)}`)
     + ` C ${p(.3, g.um[1] - th - .14)} ${p(.74, -.86 - th * .45)} ${p(g.ic[0] + .05, g.ic[1] - .12)} Z`;
+  ctx.save(); ctx.globalAlpha = F ? .55 : .5; shape(ctx, `M ${p(.74, -1.22 - th)} C ${p(.3, -1.74 - th)} ${p(-.5, -1.80 - th)} ${p(-1.06, -.96 - th * .5)} L ${p(-.9, -.5)} L ${p(.7, -.7)} Z`, c.lid); ctx.restore();
   shape(ctx, lash, c.lash || '#2a1512');
   if (F && wg > .5) { // a few outer lashes
     ink(ctx, `M ${p(-.98, -.35)} Q ${p(-1.14, -.56)} ${p(-1.30, -.52)}`, 1.4, c.lash, 0, .8);
@@ -165,10 +166,10 @@ function brow(ctx, x0, y0, x1, y1, arch, thick, color) { // inner (x0,y0) → ou
 const PAL = {
   her: { skin: '#ffe9dc', skinSh: '#f7c8b5', blush: '255,120,118',
          hair: '#96593a', hairSh: '#6c3a26', hairHi: '#d9a06c', hairLn: '#45221a',
-         eye: { top: '#3a1c12', mid: '#8a4f2a', bot: '#d9965a', ring: '#3a1c12', pupil: '#1e0e09', glow: '#ffc98a', crease: '#b77a66', lash: '#2a1512' } },
+         eye: { top: '#3a1c12', mid: '#8a4f2a', bot: '#d9965a', ring: '#3a1c12', pupil: '#1e0e09', glow: '#ffc98a', crease: '#b77a66', lash: '#2a1512', lid: '#f6c0b0' } },
   him: { skin: '#fbe1cf', skinSh: '#e8bca5', blush: '240,130,120',
          hair: '#26262f', hairSh: '#131319', hairHi: '#5a627c', hairLn: '#0b0b10',
-         eye: { top: '#100c0d', mid: '#33272a', bot: '#74605a', ring: '#141012', pupil: '#070506', glow: '#a48a7c', crease: '#8a5f50', lash: '#17110f' } }
+         eye: { top: '#100c0d', mid: '#33272a', bot: '#74605a', ring: '#141012', pupil: '#070506', glow: '#a48a7c', crease: '#8a5f50', lash: '#17110f', lid: '#e6b7a2' } }
 };
 
 /* ───────────── HEROINE head (head units, facing +x, 3/4) ───────────── */
@@ -238,18 +239,16 @@ function hairFrontF(ctx, c) {
   ['M 6,-118 C -24,-110 -56,-88 -70,-46', 'M 8,-118 C -8,-104 -30,-88 -40,-62', 'M 12,-118 C 9,-100 8,-84 14,-70', 'M 16,-118 C 32,-104 48,-88 54,-68', 'M 18,-118 C 48,-110 74,-86 82,-42', 'M 2,-118 C -40,-114 -82,-88 -88,-32']
     .forEach((d, i) => ink(ctx, d, 1.3, c.hairLn, .25, .4, i === 2 ? .9 : .55));
   // see-through bangs: slim curved strands with the forehead visible between them
-  const st = [
-    'M 12,-70 C 6,-52 -5,-34 -9,-15 C -11,-32 -6,-53 4,-70 Z',
-    'M -2,-69 C -15,-55 -26,-39 -30,-19 C -33,-38 -25,-57 -11,-68 Z',
-    'M -16,-67 C -33,-55 -46,-37 -50,-17 C -55,-37 -45,-57 -27,-65 Z',
-    'M -32,-62 C -52,-50 -65,-24 -65,6 C -65,24 -62,38 -56,50 C -64,34 -71,14 -69,-10 C -67,-34 -56,-52 -41,-60 Z',
-    'M 19,-70 C 24,-52 30,-36 30,-17 C 35,-34 33,-55 27,-70 Z',
-    'M 31,-69 C 42,-56 50,-38 50,-19 C 56,-36 52,-55 41,-66 Z',
-    'M 45,-64 C 58,-52 65,-30 65,-6 C 65,6 63,16 60,24 C 68,10 73,-12 69,-34 C 65,-50 58,-60 52,-63 Z'];
+  const hl = x => -69 + Math.pow(Math.abs(x - 14) / 60, 2) * 12;               // hairline height at x
+  const fr = [[-40,9,1],[-31,3,0],[-25,7,1],[-15,2.6,0],[-9,8,1],[0,3,0],[6,6,1],[20,5.5,1],[26,2.6,0],[33,7.5,1],[41,3,0],[47,6.5,1]]; // x, width, long?
   ctx.save(); ctx.globalAlpha = .96;
-  st.forEach(d => shape(ctx, d, c.hair, .9, c.hairLn));
+  fr.forEach((q, i) => { const x = q[0], side = x < 14 ? -1 : 1, d = Math.abs(x - 14);
+    const tx = x + side * (4 + d * .34), ty = (q[2] ? -15 : -30) + hash(i * 2.3) * 7 + d * .12;
+    shape(ctx, lockPath(x, hl(x) - 3, tx, ty, -side * (3 + d * .1), q[1], q[1] * 1.15), c.hair, q[1] > 4 ? .9 : .5, c.hairLn); });
+  // face-framing side strands (longer, curling in at the cheek)
+  shape(ctx, 'M -34,-62 C -53,-50 -65,-24 -65,6 C -65,24 -62,38 -56,50 C -64,34 -71,14 -69,-10 C -67,-34 -57,-52 -43,-60 Z', c.hair, .9, c.hairLn);
+  shape(ctx, 'M 46,-64 C 58,-52 65,-30 65,-6 C 65,6 63,16 60,24 C 68,10 73,-12 69,-34 C 65,-50 58,-60 53,-63 Z', c.hair, .9, c.hairLn);
   ctx.restore();
-  [[8,-68,3,-24,3,2.6],[36,-67,42,-26,-3,2.4],[-22,-64,-40,-26,5,2.6],[22,-68,25,-34,-1,2.2],[-46,-52,-62,-22,4,2.6]].forEach(q => shape(ctx, lockPath(q[0], q[1], q[2], q[3], q[4], q[5], 2), c.hair, .5, c.hairLn));
   // stray hairs (a little clumsy charm)
   ink(ctx, 'M -10,-119 C -20,-131 -34,-131 -42,-123', 1.3, c.hair, .2, .7);
   ink(ctx, 'M 20,-119 C 30,-129 42,-127 48,-119', 1.2, c.hair, .2, .7);
@@ -284,7 +283,7 @@ function faceM(ctx, c, ex) {
 function hairBackM(ctx, c) {
   shape(ctx, 'M -76,-44 C -90,-12 -86,24 -74,46 C -68,56 -58,56 -52,48 L -50,6 Z', c.hairSh, 2.2, c.hairLn);
   // slept-on flicks lying along the flow (not horns)
-  [[-34,-110,-60,-121,5,11],[14,-118,42,-128,-4,11],[-80,-44,-97,-30,-4,11],[-70,-88,-92,-86,4,10],[72,-92,90,-84,-4,9]]
+  [[-30,-112,-58,-120,5,10],[-80,-40,-95,-24,-4,10],[40,-110,62,-112,-3,8]]
     .forEach(q => shape(ctx, lockPath(q[0], q[1], q[2], q[3], q[4], q[5], q[5] * 1.4), c.hair, 2.0, c.hairLn));
 }
 function hairFrontM(ctx, c) {
@@ -366,7 +365,7 @@ function sleevesF(ctx, c) {
   const cream = '#f8eedb', creamSh = '#e6d2b3', band = '#efdfc2', ln = '#5a382b';
   // far arm: wraps round the right edge a little higher than the near hand, fingers on the front face
   [[536,1316,-.10,36],[532,1336,-.04,43],[532,1356,.03,41],[536,1375,.09,33]].forEach(q => finger(ctx, q[0], q[1], q[2], q[3], 15.5, c.skin, c.skinSh, true));
-  const fs = shape(ctx, 'M 580,1284 C 594,1336 598,1398 586,1440 C 574,1468 548,1464 534,1440 C 528,1408 528,1348 534,1300 C 548,1290 564,1284 580,1284 Z', cream, 3.2, ln);
+  const fs = shape(ctx, 'M 566,1226 C 590,1290 600,1392 588,1440 C 576,1468 548,1464 534,1440 C 528,1408 528,1348 534,1300 C 540,1280 550,1250 566,1226 Z', cream, 3.2, ln);
   ctx.save(); ctx.clip(fs);
   shape(ctx, 'M 600,1380 C 580,1410 556,1418 530,1410 L 530,1480 L 600,1480 Z', creamSh);
   shape(ctx, 'M 526,1296 L 552,1290 L 554,1450 L 528,1446 Z', band); ctx.restore();
@@ -398,6 +397,8 @@ function torsoM(ctx, c) {
   shape(ctx, 'M 712,824 C 756,910 850,908 890,818 L 906,872 C 860,960 750,958 696,872 Z', greySh);             // under the hood rim
   shape(ctx, 'M 470,1300 C 560,1240 606,1100 592,1000 L 650,1920 L 470,1920 Z', greySh);                       // behind her
   ctx.globalAlpha = .8; shape(ctx, 'M 552,892 C 520,912 500,960 494,1040 C 520,970 566,930 640,896 Z', greyHi); ctx.globalAlpha = 1;
+  ctx.fillStyle = lg(ctx, 0, 1000, 0, 1920, [[0, 'rgba(84,86,116,0)'], [1, 'rgba(84,86,116,.42)']]); ctx.fillRect(460, 1000, 640, 920);
+  ctx.fillStyle = rg(ctx, 700, 1010, 20, 330, [[0, 'rgba(255,226,190,.34)'], [1, 'rgba(255,226,190,0)']]); ctx.fillRect(460, 700, 640, 700);
   
   ctx.restore();
   ink(ctx, 'M 592,1004 C 596,1100 588,1220 568,1330', 2, ln, .2, .5, .6);
@@ -564,5 +565,5 @@ function draw(canvas) {
 }
 
 root.SCENE = { W, H, draw, parts: { eye, brow, faceF, faceM, hairBackF, hairFarF, hairFrontF, hairBackM, hairFrontM, torsoF, sleevesF, torsoM, armRaisedM, parcel, hallway, bubble, sfx, ink, lockPath, finger },
-  faces: [{ x: 322, y: 838, w: 380, h: 420 }, { x: 770, y: 592, w: 380, h: 420 }] };
+  faces: [{ x: 326, y: 836, w: 380, h: 420 }, { x: 772, y: 590, w: 380, h: 420 }] };
 })(window);
