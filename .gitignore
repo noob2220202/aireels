@@ -1,0 +1,9 @@
+out/
+node_modules/
+__pycache__/
+*.pyc
+assets/fonts/*.ttf
+series/*/build/
+lab/*/out/
+lab/*/stills/
+*.tmp
